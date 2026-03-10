@@ -1,0 +1,148 @@
+{
+  "es": {
+    "login": {
+      "title": "Iniciar Sesión",
+      "username": "Usuario",
+      "password": "Contraseña",
+      "submit": "ENTRAR",
+      "useFaceId": "Usar Face ID",
+      "enableFaceId": "Habilitar Face ID",
+      "rememberCredentials": "Recordar credenciales",
+      "faceidSuccess": "Autenticación biométrica exitosa",
+      "faceidError": "Error en autenticación biométrica",
+      "faceidNotAvailable": "Face ID no disponible"
+    },
+    "home": {
+      "almacen": "Almacén",
+      "despachos": "Despachos",
+      "inventario": "Inventario",
+      "configuracion": "Configuración",
+      "comingSoon": "Próximamente",
+      "featureNotAvailable": "Esta función estará disponible pronto"
+    },
+    "profile": {
+      "title": "Perfil",
+      "user": "Usuario",
+      "theme": "Tema",
+      "warehouse": "Almacén",
+      "language": "Idioma",
+      "save": "GUARDAR",
+      "themes": {
+        "light": "Claro",
+        "dark": "Oscuro",
+        "blue": "Azul",
+        "pink": "Rosa"
+      }
+    },
+    "almacen": {
+      "title": "Almacén",
+      "pickeo": "Pickeo",
+      "inventario": "Inventario",
+      "entradas": "Entradas",
+      "salidas": "Salidas"
+    },
+    "terminales": {
+      "title": "Terminales",
+      "loading": "Cargando terminales...",
+      "noTerminals": "No hay terminales disponibles"
+    },
+    "pickeo": {
+      "title": "Pickeo",
+      "hideComplete": "Oculta completos",
+      "showAll": "Ver todos",
+      "checkout": "Hacer Corte",
+      "checkoutConfirm": "¿Realizar Check Out de la terminal?",
+      "adjustQuantity": "Ajustar Cantidad",
+      "cancel": "CANCELAR",
+      "accept": "ACEPTAR",
+      "success": "Éxito",
+      "notice": "Aviso",
+      "error": "Error",
+      "connectionError": "No se pudo conectar con el servidor.",
+      "loadError": "No se pudieron obtener los productos del servidor."
+    },
+    "userMenu": {
+      "profile": "Perfil",
+      "logout": "Cerrar Sesión"
+    },
+    "common": {
+      "understood": "ENTENDIDO",
+      "loading": "Cargando...",
+      "error": "Error",
+      "success": "Éxito"
+    }
+  },
+  "en": {
+    "login": {
+      "title": "Login",
+      "username": "Username",
+      "password": "Password",
+      "submit": "LOGIN",
+      "useFaceId": "Use Face ID",
+      "enableFaceId": "Enable Face ID",
+      "rememberCredentials": "Remember credentials",
+      "faceidSuccess": "Biometric authentication successful",
+      "faceidError": "Biometric authentication error",
+      "faceidNotAvailable": "Face ID not available"
+    },
+    "home": {
+      "almacen": "Warehouse",
+      "despachos": "Dispatches",
+      "inventario": "Inventory",
+      "configuracion": "Settings",
+      "comingSoon": "Coming Soon",
+      "featureNotAvailable": "This feature will be available soon"
+    },
+    "profile": {
+      "title": "Profile",
+      "user": "User",
+      "theme": "Theme",
+      "warehouse": "Warehouse",
+      "language": "Language",
+      "save": "SAVE",
+      "themes": {
+        "light": "Light",
+        "dark": "Dark",
+        "blue": "Blue",
+        "pink": "Pink"
+      }
+    },
+    "almacen": {
+      "title": "Warehouse",
+      "pickeo": "Picking",
+      "inventario": "Inventory",
+      "entradas": "Incoming",
+      "salidas": "Outgoing"
+    },
+    "terminales": {
+      "title": "Terminals",
+      "loading": "Loading terminals...",
+      "noTerminals": "No terminals available"
+    },
+    "pickeo": {
+      "title": "Picking",
+      "hideComplete": "Hide complete",
+      "showAll": "Show all",
+      "checkout": "Checkout",
+      "checkoutConfirm": "Checkout from terminal?",
+      "adjustQuantity": "Adjust Quantity",
+      "cancel": "CANCEL",
+      "accept": "ACCEPT",
+      "success": "Success",
+      "notice": "Notice",
+      "error": "Error",
+      "connectionError": "Could not connect to server.",
+      "loadError": "Could not get products from server."
+    },
+    "userMenu": {
+      "profile": "Profile",
+      "logout": "Logout"
+    },
+    "common": {
+      "understood": "OK",
+      "loading": "Loading...",
+      "error": "Error",
+      "success": "Success"
+    }
+  }
+}
