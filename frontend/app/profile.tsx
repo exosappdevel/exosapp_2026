@@ -6,6 +6,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
+  Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
+
+const CODE_ZIP_URL = 'https://exos-credential-qr.preview.emergentagent.com/assets/code.zip';
 
 const themeOptions = [
   { id: 'light', color: '#f5f5f5', borderColor: '#e2e8f0' },
@@ -208,6 +212,21 @@ export default function ProfileScreen() {
             <Text style={styles.saveButtonText}>{t('profile.save')}</Text>
           )}
         </TouchableOpacity>
+
+        {/* Download Code Button */}
+        <TouchableOpacity 
+          style={[styles.codeButton, { backgroundColor: '#4a5568', borderColor: theme.border }]}
+          onPress={() => {
+            if (Platform.OS === 'web') {
+              window.open(CODE_ZIP_URL, '_blank');
+            } else {
+              Linking.openURL(CODE_ZIP_URL);
+            }
+          }}
+        >
+          <MaterialCommunityIcons name="code-tags" size={24} color="#fff" />
+          <Text style={styles.codeButtonText}>CODE</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Almacen Picker Modal */}
@@ -351,12 +370,27 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 10,
-    marginBottom: 30,
+    marginBottom: 15,
   },
   saveButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  codeButton: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 30,
+    borderWidth: 1,
+  },
+  codeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
   pickerOverlay: {
     ...StyleSheet.absoluteFillObject,
