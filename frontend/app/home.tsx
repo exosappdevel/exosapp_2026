@@ -17,9 +17,9 @@ import CustomModal from '../components/CustomModal';
 
 const menuItems = [
   { id: "1", title: "Almacén", titleKey: "home.almacen", icon: "warehouse", color: "#3182ce" },
-  { id: "2", title: "Despachos", titleKey: "home.despachos", icon: "truck-delivery", color: "#0b4e27" },
+  { id: "2", title: "Logística", titleKey: "home.logistica", icon: "truck-delivery", color: "#0b4e27" },
   { id: "3", title: "Inventario", titleKey: "home.inventario", icon: "clipboard-list", color: "#ecc94b" },
-  { id: "4", title: "Configuración", titleKey: "home.configuracion", icon: "cog", color: "#a0aec0" },
+  { id: "2", title: "Configuración", titleKey: "home.configuracion", icon: "cog", color: "#a0aec0" },
 ];
 
 export default function HomeScreen() {

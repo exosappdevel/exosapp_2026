@@ -17,7 +17,7 @@
     },
     "home": {
       "almacen": "Almacén",
-      "despachos": "Despachos",
+      "logistica": "Logística",
       "inventario": "Inventario",
       "configuracion": "Configuración",
       "comingSoon": "Próximamente",
@@ -98,7 +98,7 @@
     },
     "home": {
       "almacen": "Warehouse",
-      "despachos": "Dispatches",
+      "logistica": "Logistic",
       "inventario": "Inventory",
       "configuracion": "Settings",
       "comingSoon": "Coming Soon",
