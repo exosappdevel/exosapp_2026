@@ -1,0 +1,2587 @@
+ 
+/* PEDIDOS */  
+//	$("#btn-leer_csv_pedido").click(leer_csv_pedido); 
+//	$("#btn-iniciar_pedido").click(iniciar_pedido);  
+//	$("#btn-guardar_pedido").click(guardar_pedido);    
+//	$("#btn-registrar_pedido").click(registrar_pedido);   
+
+/*empleados*/
+$("#btn-guardar_empleado_nvo").click(function(){
+	tipoguardado = "nuevo";
+	guardar_empleado(); 
+});
+$("#btn-guardar_empleado_edit").click(function(){
+	tipoguardado = "editar";
+	guardar_empleado();
+});
+$("#btn-guardar_empleado_nvo_salir").click(function(){
+	tipoguardado = "nuevo_salir";
+	guardar_empleado(); 
+});  
+
+/*clientes*/
+$("#btn-guardar_cliente_nvo").click(function(){
+	tipoguardado = "nuevo";
+	guardar_cliente(); 
+});
+$("#btn-guardar_cliente_edit").click(function(){
+	tipoguardado = "editar";
+	guardar_cliente();
+});
+$("#btn-guardar_cliente_nvo_salir").click(function(){
+	tipoguardado = "nuevo_salir";
+	guardar_cliente(); 
+});  
+
+/*categoria carpetas*/
+$("#btn-guardar_categoria_carpeta_nvo").click(function(){
+	tipoguardado = "nuevo";
+	guardar_categoria_carpeta(); 
+});
+$("#btn-guardar_categoria_carpeta_edit").click(function(){
+	tipoguardado = "editar";
+	guardar_categoria_carpeta();
+});
+$("#btn-guardar_categoria_carpeta_nvo_salir").click(function(){
+	tipoguardado = "nuevo_salir";
+	guardar_categoria_carpeta(); 
+});  
+
+$("#btn-solicitar_vacaciones").click(solicitar_vacaciones);
+
+  
+
+//	$("#btn-subir_pdf_csf").click(subir_pdf_csf); // csv_file
+
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* **************** EMPLEADOS Y VACACIONES ********************** */
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ******************************************************************* */
+   
+function solicita_cancelar_vacaciones(id_vacaciones){	
+
+	swal({    
+		title: "Cancelar Solicitud de Vacaciones",   
+		text: "Desea continuar?",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		
+		$.post("controller5.php", 
+			{ 	action 			: "solicita_cancelar_vacaciones",
+				id_vacaciones 	: id_vacaciones
+			}, end_solicita_cancelar_vacaciones);	
+	});
+}  
+function end_solicita_cancelar_vacaciones(xml){    
+	$(xml).find("response").each(function(i){	 		
+		if ($(this).find("result").text()=="ok"){				
+ 			llenar_tabla_mis_vacaciones();
+			swal("CORRECTO",$(this).find("result_text").text(),"success"); 
+		}else{
+			swal("La solicitud NO fue procesada",$(this).find("result_text").text(),"error");
+		}		
+	}); 
+}
+function solicitar_vacaciones(){		
+
+	var id_empleado 	= $("#id_empleado").val();
+	var fecha_inicio 	= $("#fecha_inicio").val();
+	var fecha_fin 		= $("#fecha_fin").val();
+	var medio_dia 		= $("#medio_dia").val();
+	var toma_sueldo 	= $("#toma_sueldo").val();
+	var continua = 1;
+	
+	
+	var fecha_inicio_sql 	= conviertefechasql(fecha_inicio);
+	var fecha_fin_sql 		= conviertefechasql(fecha_fin);
+	
+	if(fecha_inicio_sql > fecha_fin_sql){
+		
+		continua = 0;
+		
+		$("#respuesta").html('<div class="alert alert-danger">La Fecha Inicio NO puede ser posterior a la Fecha Fin. Por favor verifique.</div>');		
+		setTimeout(function(){
+			$("#respuesta").html("");  
+		}, 5000);		
+		
+	}else{
+		
+		$("#nuevo_vacaciones_form .obligatorio").each(function (index) {
+			if($(this).val() == ""){
+				$(this).addClass("form-control-danger");
+				continua = 0;
+			}else{ 
+				$(this).removeClass("form-control-danger");
+			}		
+		});			  	
+		$("#nuevo_vacaciones_form .obligatorio_select").each(function (index) {
+			if($(this).val() == "0"){
+				$(this).addClass("form-control-danger");
+				continua = 0;
+			}else{ 
+				$(this).removeClass("form-control-danger");
+			}		
+		});	
+		
+		if(continua == 1){ 
+			$.post("controller5.php", 
+			{ 	action 			: "solicitar_vacaciones",
+				id_empleado 	: id_empleado,
+				fecha_inicio 	: fecha_inicio,
+				fecha_fin 		: fecha_fin, 
+				medio_dia 		: medio_dia,
+				toma_sueldo 	: toma_sueldo
+			}, end_solicitar_vacaciones);	
+		}else{		
+			$("#respuesta").html('<div class="alert alert-danger">Por favor llena los campos obligatorios</div>');		
+			setTimeout(function(){
+				$("#respuesta").html("");  
+			}, 5000);		
+		}
+		
+	}
+	
+	
+}  
+function end_solicitar_vacaciones(xml){  
+	$(xml).find("response").each(function(i){	 		
+		if ($(this).find("result").text()=="ok"){				
+ 			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			
+			$("#nuevo_vacaciones_form").trigger("reset");
+			
+			
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+		}
+		setTimeout(function(){
+			$("#respuesta").html("");  
+		}, 5000);	
+		
+	}); 
+}
+
+function llenar_tabla_empleados(){	
+	
+	$.post("controller5.php", 
+		{ 	action 	:"llenar_tabla_empleados"
+		}, end_llenar_tabla_empleados);
+	
+} 
+ 
+function end_llenar_tabla_empleados(xml){  
+	$(xml).find("response").each(function(i){	
+		
+		$("#loading").hide();
+		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Carpetas. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_empleados",ocultamiento_columnas,messageTop,"","1","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}
+    
+function llenar_tabla_vacaciones(){		
+	$.post("controller5.php", 
+		{ 	action 	:"llenar_tabla_vacaciones"
+		}, end_llenar_tabla_vacaciones);	
+} 
+ 
+function end_llenar_tabla_vacaciones(xml){  
+	$(xml).find("response").each(function(i){			
+		$("#loading").hide();		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Vacaciones. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_vacaciones",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+        
+		 
+		 
+/* ************ listado de vacaciones con registro de ENTERADO ************* */		
+function llenar_tabla_vacaciones_enteradas(){		
+	$.post("controller5.php", 
+		{ 	action 	:"llenar_tabla_vacaciones_enteradas"
+		}, end_llenar_tabla_vacaciones_enteradas);	
+} 
+ 
+function end_llenar_tabla_vacaciones_enteradas(xml){  
+	$(xml).find("response").each(function(i){			
+		$("#loading").hide();		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Vacaciones. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example2","table_vacaciones_enteradas",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+function llenar_tabla_vacaciones_sin_enterar(){		
+	$.post("controller5.php", 
+		{ 	action 	:"llenar_tabla_vacaciones_sin_enterar"
+		}, end_llenar_tabla_vacaciones_sin_enterar);	
+}  
+ 
+function end_llenar_tabla_vacaciones_sin_enterar(xml){  
+	$(xml).find("response").each(function(i){			
+		$("#loading").hide();		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Vacaciones. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_vacaciones_sin_enterar",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+    
+
+
+
+
+
+
+
+
+	
+function llenar_tabla_mis_vacaciones(){		
+	$.post("controller5.php", 
+		{ 	action 	:"llenar_tabla_mis_vacaciones"
+		}, end_llenar_tabla_mis_vacaciones);	
+} 
+ 
+function end_llenar_tabla_mis_vacaciones(xml){  
+	$(xml).find("response").each(function(i){			
+		$("#loading").hide();		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [9,10];	 
+			var messageTop = "Reporte de Vacaciones. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_vacaciones",ocultamiento_columnas,messageTop,"","","");
+			
+			$("#nombre_colaborador").html($(this).find("nombre_colaborador").text()); 
+			$("#jefe_inmediato").html($(this).find("jefe_inmediato").text()); 
+			
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+    
+function llenar_tabla_vacaciones_subordinados(){		
+	$.post("controller5.php", 
+		{ 	action 	:"llenar_tabla_vacaciones_subordinados"
+		}, end_llenar_tabla_vacaciones_subordinados);	
+} 
+  
+function end_llenar_tabla_vacaciones_subordinados(xml){  
+	$(xml).find("response").each(function(i){			
+		$("#loading").hide();		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Vacaciones. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_vacaciones",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+
+
+
+
+function eliminar_carpeta_evento(id_carpeta_evento){
+ 
+	swal({    
+		title: "Se eliminará este evento asociado",   
+		text: "Desea continuar?",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	
+	$.post("controller5.php", 
+		{ 	action :"eliminar_carpeta_evento", 
+			id_carpeta_evento 	: id_carpeta_evento
+		},end_eliminar_carpeta_evento);					
+	}); 	
+} 
+function end_eliminar_carpeta_evento(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){	
+			llenar_tabla_eventos(); 	 
+			llenar_tabla_carpeta_detalles(); 	 
+		}else{
+			alert("Ocurrio un error, vuelva a intentar");
+		}
+	}); 
+}
+  
+ 
+function llena_select_empleados(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_empleados"
+		}, end_llena_select_empleados);    		 
+}  
+function end_llena_select_empleados(xml){	    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){			
+			$(".select_empleados").html($(this).find("select_empleados").text()); 
+			
+			$('.single-select').select2({ 
+				theme: 'bootstrap4',
+				width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
+				placeholder: $(this).data('placeholder'),
+				allowClear: Boolean($(this).data('allow-clear')),
+			});
+			
+		}
+	}); 
+}    
+function llena_select_empleado_vacaciones(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_empleado_vacaciones"
+		}, end_llena_select_empleado_vacaciones);    		 
+}   
+function end_llena_select_empleado_vacaciones(xml){	    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){			
+			$(".select_empleados").html($(this).find("select_empleados").text()); 
+			
+			$('.single-select').select2({ 
+				theme: 'bootstrap4',
+				width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
+				placeholder: $(this).data('placeholder'),
+				allowClear: Boolean($(this).data('allow-clear')),
+			});
+			
+		}
+	}); 
+}   
+
+/*hospital*/
+function guardar_empleado(){ 	  
+	var nuevo_empleado_id				= $("#nuevo_empleado_id").val(); 
+	var nuevo_empleado_empresa			= $("#nuevo_empleado_empresa").val(); 
+	var nuevo_empleado_sucursal			= $("#nuevo_empleado_sucursal").val(); 
+	var nuevo_empleado_numero			= $("#nuevo_empleado_numero").val(); 
+	var nuevo_empleado_nombre			= $("#nuevo_empleado_nombre").val(); 
+	var nuevo_empleado_ingreso			= $("#nuevo_empleado_ingreso").val(); 
+	var nuevo_empleado_dias_oficiales	= $("#nuevo_empleado_dias_oficiales").val(); 
+	var nuevo_empleado_dias_utilizados	= $("#nuevo_empleado_dias_utilizados").val(); 
+	var nuevo_empleado_jefe				= $("#nuevo_empleado_jefe").val(); 
+	var nuevo_empleado_usuario			= $("#nuevo_empleado_usuario").val(); 
+	var continua = 1;		
+	
+	$("#nuevo_empleado_form .obligatorio").each(function (index) {
+		if($(this).val() == ""){
+			$(this).addClass("form-control-danger");
+			continua = 0; 
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});			 	
+	 $("#nuevo_empleado_form .obligatorio_select").each(function (index) {
+		if($(this).val() == "0"){
+			$(this).addClass("form-control-danger");
+			continua = 0;
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});				
+	   
+	if(continua == 1){
+		$.post("controller5.php",  
+			{ 	action :"guardar_empleado", 
+				tipo 							: tipoguardado, /*global*/  
+				nuevo_empleado_id 				: nuevo_empleado_id,
+				nuevo_empleado_empresa 			: nuevo_empleado_empresa,
+				nuevo_empleado_sucursal 		: nuevo_empleado_sucursal,
+				nuevo_empleado_numero 			: nuevo_empleado_numero,
+				nuevo_empleado_nombre 			: nuevo_empleado_nombre,
+				nuevo_empleado_ingreso 			: nuevo_empleado_ingreso,
+				nuevo_empleado_dias_oficiales 	: nuevo_empleado_dias_oficiales,
+				nuevo_empleado_dias_utilizados 	: nuevo_empleado_dias_utilizados,
+				nuevo_empleado_jefe 			: nuevo_empleado_jefe, 
+				nuevo_empleado_usuario 			: nuevo_empleado_usuario
+			},end_guardar_empleado);
+	}else{
+		swal("Revisa el formulario", "Llena todos los campos marcados como OBLIGATORIO", "error");
+	}
+} 
+function end_guardar_empleado(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			if(tipoguardado == "nuevo"){
+				$('#nuevo_empleado_form').trigger("reset");
+				$("#nuevo_empleado_id").val("0"); 
+				$(".obligatorio_select").val("0").trigger('change');
+			}else if(tipoguardado == "editar"){
+				//$("#nuevo__nombre").attr("readonly", "readonly");  // se utiliza cuando algun campo NO puede ser modificado al editar
+				$("#nuevo_empleado_id").val($(this).find("nuevo_empleado_id").text()); 
+			}else if(tipoguardado == "nuevo_salir"){
+				location.href ="ver_empleados.php"; 
+			} 
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+		}
+		setTimeout(function(){
+			$("#respuesta").html("");  
+		}, 5000);		
+	});
+}
+  
+function autorizar_vacaciones(id_vacaciones){
+	
+	swal({    
+		title: "Se autorizarán las vacaciones de este registro",   
+		text: "Desea continuar?",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "green",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	
+		$.post("controller5.php",  
+			{ 	action :"autorizar_vacaciones", 
+				id_vacaciones 	: id_vacaciones
+			},end_autorizar_vacaciones);
+	});
+}
+function end_autorizar_vacaciones(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			//	llenar_tabla_vacaciones();
+			llenar_tabla_vacaciones_subordinados();
+		}else{
+			//	$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			swal("Error", $(this).find("result_text").text(),"error");
+		}
+			
+	});
+} 
+   
+function enteradas_vacaciones(id_vacaciones){
+	
+	swal({
+		title: "DAR POR ENTERADAS ESTAS VACACIONES", 
+			text: "Confirma con tu PIN que das por enteradas estas vacaciones",
+			type: "input",
+			showCancelButton: true,
+			closeOnConfirm: false,
+			inputPlaceholder: "PIN"
+	}, function(inputValue) {
+		if (inputValue === false) return false; // Si cancela
+		if (inputValue === "") {
+			swal.showInputError("POR FAVOR ESCRIBE TU PIN");
+			return false; 
+		}
+		//	swal("¡Perfecto!", "Tu nombre es: " + inputValue, "success");
+     
+		$.post("controller5.php",
+			{ 	action 	: "enteradas_vacaciones",
+				id_vacaciones : id_vacaciones,
+				pin : inputValue 
+		}, end_enteradas_vacaciones);
+	
+	});
+}
+function end_enteradas_vacaciones(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			//	llenar_tabla_vacaciones();
+			swal("Correcto", $(this).find("result_text").text(),"success");
+			
+			setTimeout(function(){ 
+				swal.close();
+			}, 2000);	
+			
+			
+			llenar_tabla_vacaciones_enteradas();
+			llenar_tabla_vacaciones_sin_enterar();
+		}else{
+			//	$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			swal("Error", $(this).find("result_text").text(),"error");
+		}
+			
+	});
+} 
+  
+function cancelar_vacaciones(id_vacaciones){
+	
+	swal({    
+		title: "Se cancelaran las vacaciones de este registro",   
+		text: "Desea continuar?",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "red",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	 
+		$.post("controller5.php",  
+			{ 	action :"cancelar_vacaciones", 
+				id_vacaciones 	: id_vacaciones
+			},end_cancelar_vacaciones);
+	});
+} 
+function end_cancelar_vacaciones(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			//	llenar_tabla_vacaciones();
+			llenar_tabla_vacaciones_subordinados();
+		}else{
+			//	$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			swal("Error", $(this).find("result_text").text(),"error");
+		}			
+	});
+}  
+  
+function rechazar_vacaciones(id_vacaciones){
+	
+	swal({    
+		title: "Se rechazarán las vacaciones de este registro",   
+		text: "Desea continuar?",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "red",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	
+		$.post("controller5.php",  
+			{ 	action :"rechazar_vacaciones", 
+				id_vacaciones 	: id_vacaciones
+			},end_rechazar_vacaciones);
+	});
+} 
+function end_rechazar_vacaciones(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			//	llenar_tabla_vacaciones();
+			llenar_tabla_vacaciones_subordinados();
+		}else{
+			//	$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			swal("Error", $(this).find("result_text").text(),"error");
+		}			
+	});
+}  
+ 
+function obtener_comentarios_vacaciones(id_vacaciones){
+	
+	$.post("controller5.php",   
+			{ 	action :"obtener_comentarios_vacaciones", 
+				id_vacaciones 	: id_vacaciones
+			},end_obtener_comentarios_vacaciones);
+}   
+function end_obtener_comentarios_vacaciones(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			$("#vacaciones_comentarios").val($(this).find("comentarios").text());
+		}			
+	});
+}
+
+function guardar_comentarios_vacaciones(){
+		
+		var vacaciones_comentarios 	= $("#vacaciones_comentarios").val();
+		var id_vacaciones 			= $("#id_vacaciones").val();
+		
+		$.post("controller5.php",   
+				{ 	action 					: "guardar_comentarios_vacaciones", 
+					vacaciones_comentarios 	: vacaciones_comentarios, 
+					id_vacaciones 			: id_vacaciones
+				},end_guardar_comentarios_vacaciones);
+	}   
+	function end_guardar_comentarios_vacaciones(xml){	  
+		$(xml).find("response").each(function(i){		
+			if ($(this).find("result").text()=="ok"){
+				swal("Correcto","Comentarios guardados exitosamente","success");
+				$("#cerrar_modal").trigger("click");
+			}			
+		});
+	}
+	
+	 
+function eliminar_empleado(id_empleado){
+	swal({   
+		title: "¿Eliminar?",   
+		text: "Esta acción eliminará el Empleado definitivamente.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true  
+	}, function(){ 	
+		$.post("controller5.php",   
+			{ 	action 		: "eliminar_empleado", 
+				id_empleado : id_empleado
+			},end_eliminar_empleado); 
+	});
+}  
+function end_eliminar_empleado(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			llenar_tabla_empleados();
+		}else{
+			swal("Error", $(this).find("result_text").text(),"error");
+		}			
+	});
+}  
+
+ 
+
+
+function bloquear_usuario(id_usuario, nuevo_estatus){
+
+	$.post("controller5.php",   
+		{ 	action 		: "bloquear_usuario", 
+			id_usuario : id_usuario,
+			nuevo_estatus : nuevo_estatus
+		},end_bloquear_usuario); 
+
+}  
+function end_bloquear_usuario(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			llenar_tabla_empleados();
+			llenar_tabla_usuarios();
+		}else{
+			swal("Error", $(this).find("result_text").text(),"error");
+		}			
+	});
+}  
+
+
+
+/* ******************************************* */
+/* ******************************************* */
+/* ********** CEyE *************** */
+/* ******************************************* */ 
+/* ******************************************* */
+/* ******************************************* */
+
+$("#btn-iniciar_carga").click(iniciar_carga); 
+$("#btn-iniciar_bulto").click(iniciar_bulto); 
+$("#btn-agrega_producto_bulto").click(agrega_producto_bulto);
+$("#btn-agregar_bulto_carga").click(agregar_bulto_carga_tmp);
+$("#btn-guardar_bulto").click(guardar_bulto);
+$("#btn-guardar_carga_valida").click(guardar_carga_valida);  
+$("#btn-guardar_carga").click(guardar_carga);  
+$("#btn-reasignar_bulto_cirugia").click(reasignar_bulto_cirugia); 
+
+
+$("#btn-finalizar_carga_valida").click(finalizar_carga_valida);   
+$("#btn-finalizar_carga").click(finalizar_carga); 
+
+$("#btn-finalizar_soporte").click(finalizar_soporte); 
+$("#btn-finalizar_crucero").click(finalizar_crucero); 
+$("#btn-guardar_foto_crucero").click(guardar_foto_crucero); 
+$("#btn-guardar_foto_biologico").click(guardar_foto_biologico); 
+$("#btn-guardar_foto_humedad").click(guardar_foto_humedad); 
+ 
+   
+   
+  
+function guardar_foto_humedad(){     
+	var id_carga 		= $("#id_carga").val();	
+	var nombre_archivo 	= $("#csv_file2").val();		   
+	$.post("controller5.php", 
+			{ 	action 			: "guardar_foto_humedad",  
+				id_carga 		: id_carga ,
+				nombre_archivo 	: nombre_archivo 
+			}, end_guardar_foto_humedad);  
+}
+function end_guardar_foto_humedad(xml){  
+	$(xml).find("response").each(function(i){  
+		if ($(this).find("result").text()=="ok"){		
+			//alert("requiere oprepago");
+			$("#respuesta_052").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			$("#files2").val("");	  
+			$("#csv_file2").val("");	 
+			llenar_div_fotos_soporte_tmp();
+		}else{
+			$("#respuesta_052").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');	
+		}
+		setTimeout(function(){  
+			$("#respuesta_052").html("");  
+		}, 2000);
+	}); 
+}      
+function guardar_foto_biologico(){     
+	var id_carga 		= $("#id_carga").val();	
+	var nombre_archivo 	= $("#csv_file1").val();		   
+	$.post("controller5.php", 
+			{ 	action 			: "guardar_foto_biologico",  
+				id_carga 		: id_carga ,
+				nombre_archivo 	: nombre_archivo 
+			}, end_guardar_foto_biologico);  
+}
+function end_guardar_foto_biologico(xml){  
+	$(xml).find("response").each(function(i){  
+		if ($(this).find("result").text()=="ok"){		
+			//alert("requiere oprepago");
+			$("#respuesta_051").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			$("#files1").val("");	  
+			$("#csv_file1").val("");	 
+			llenar_div_fotos_soporte_tmp();
+		}else{
+			$("#respuesta_051").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');	
+		}
+		setTimeout(function(){  
+			$("#respuesta_051").html("");  
+		}, 2000);
+	});
+}       
+  
+function guardar_foto_crucero(){     
+	var id_carga 		= $("#id_carga").val();	
+	var nombre_archivo 	= $("#csv_file").val();		  
+	$.post("controller5.php", 
+			{ 	action 			: "guardar_foto_crucero",  
+				id_carga 		: id_carga ,
+				nombre_archivo 	: nombre_archivo 
+			}, end_guardar_foto_crucero);  
+} 
+function end_guardar_foto_crucero(xml){  
+	$(xml).find("response").each(function(i){  
+		if ($(this).find("result").text()=="ok"){		
+			//alert("requiere oprepago");
+			$("#respuesta_05").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			$("#files").val("");	  
+			$("#csv_file").val("");	 
+			llenar_div_fotos_crucero_tmp(); 
+		}else{
+			$("#respuesta_05").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');	
+		}
+		setTimeout(function(){  
+			$("#respuesta_05").html("");  
+		}, 2000);
+	});
+}  
+
+
+
+
+
+function reasignar_bulto_cirugia(){  
+	 
+	var id_bulto 		= $("#id_bulto").val();  	
+	var codigo_cirugia 	= $("#codigo_nueva_cirugia").val();  	
+	
+	$.post("controller5.php",   
+		{ 	action 			:"valida_reasignar_bulto_cirugia",  
+			codigo_cirugia 	: codigo_cirugia,
+			id_bulto 		: id_bulto
+		},end_valida_reasignar_bulto_cirugia);			
+}
+function end_valida_reasignar_bulto_cirugia(xml){	 
+	$(xml).find("response").each(function(i){		    
+		if ($(this).find("result").text()=="ok"){
+			
+			var id_bulto 	= $("#id_bulto").val();   	
+			var id_cirugia 	= $(this).find("id_cirugia").text();  	
+			
+			swal({    
+				title: "¿Reasignar Cirugia?",   
+				text: "Esta acción reasignará el bulto a la nueva cirugia. Desea Continuar?",   
+				/*type: "warning",    */
+				showCancelButton: true,     
+				confirmButtonColor: "#DD6B55",   
+				confirmButtonText: "Si, continuar",  
+				cancelButtonText: "Regresar",   
+				closeOnConfirm: true 
+			}, function(){ 		  
+				$.post("controller5.php",  
+					{ 	action 			: "reasignar_bulto_cirugia", 
+						id_bulto 		: id_bulto,
+						id_cirugia 		: id_cirugia
+					}, end_reasignar_bulto_cirugia);
+			}); 
+			
+			
+		}else{ 
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+		}
+		
+		setTimeout(function(){
+			$("#respuesta").html('');
+		}, 5000);	
+			
+			
+	}); 
+}  
+ 
+function end_reasignar_bulto_cirugia(xml){	 
+	$(xml).find("response").each(function(i){		    
+		if ($(this).find("result").text()=="ok"){
+			
+			window.location.reload();
+			
+			
+		}else{ 
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+		}
+		
+		setTimeout(function(){
+			$("#respuesta").html('');
+		}, 5000);	
+			
+			
+	}); 
+}  
+ 
+function valida_codigo_bulto(){
+	 
+	var bulto_codigo 	= $("#bulto_codigo").val();  	
+	
+	$.post("controller5.php",  
+		{ 	action 			:"valida_codigo_bulto", 
+			bulto_codigo 	: bulto_codigo
+		},end_valida_codigo_bulto);			
+}
+function end_valida_codigo_bulto(xml){	 
+	$(xml).find("response").each(function(i){		    
+		if ($(this).find("result").text()=="ok"){
+			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			$("#btn-entregar_bulto").removeClass("d-none");
+			$("#id_bulto").val($(this).find("id_bulto").text());
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			$("#btn-entregar_bulto").addClass("d-none");
+			$("#id_bulto").val("0");
+		}
+		
+		setTimeout(function(){
+			$("#respuesta").html('');
+		}, 5000);	
+			
+			
+	}); 
+}
+ 
+function entregar_bulto(){
+	 
+	var id_bulto 	= $("#id_bulto").val();  	
+	
+	$.post("controller5.php",  
+		{ 	action 		:"entregar_bulto", 
+			id_bulto 	: id_bulto
+		},end_entregar_bulto);			
+}
+function end_entregar_bulto(xml){	  
+	$(xml).find("response").each(function(i){		    
+		if ($(this).find("result").text()=="ok"){
+			
+			$("#btn-entregar_bulto").addClass("d-none");
+			$("#bulto_codigo").val("");
+			swal("Correcto", $(this).find("result_text").text(), "success");
+			
+		}else{
+			swal("Cuidado", $(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+ 
+
+function obtiene_info_soporte(){
+	
+	var id_carga 	= $("#id_carga").val();  	
+	
+	$.post("controller5.php",  
+		{ 	action 		:"obtiene_info_soporte", 
+			id_carga 	: id_carga
+		},end_obtiene_info_soporte);			
+}
+function end_obtiene_info_soporte(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){				
+			$("#biologico").html($(this).find("biologico").text());
+			$("#humedad").html($(this).find("humedad").text());				
+			$("#soporte_fecha").html($(this).find("soporte_fecha").text());					
+		}
+	}); 
+}
+
+
+function finalizar_soporte(){ 
+ 
+	var id_carga 	= $("#id_carga").val();  	
+	var biologico 	= $("#biologico").val(); 
+	var humedad 	= $("#humedad").val(); 
+	
+	if(biologico == 1){
+		biologico_text = "POSITIVO";
+	}else{
+		biologico_text = "NEGATIVO";
+	}
+	if(humedad == 1){
+		humedad_texto = "SECOS"; 
+	}else{
+		humedad_texto = "MOJADOS";
+	}
+	
+	swal({    
+		title: "Desea finalizar el soporte para esta carga?",   
+		text: "Usted declara que el Resultado Biologico es " + biologico_text + " y que la humedad es " + humedad_texto,   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	
+	
+		$("#loading").show();
+		 
+	$.post("controller5.php",  
+		{ 	action 		:"finalizar_soporte", 
+			id_carga 	: id_carga,
+			biologico 	: biologico,
+			humedad 	: humedad
+		},end_finalizar_soporte);					
+	}); 	
+} 
+function end_finalizar_soporte(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){				
+			setTimeout(function(){
+				$("#loading").hide();
+				window.location.href="ver_cargas_historico.php";
+			}, 2000); 
+						
+		}else{			
+			var motivo_error = $(this).find("result_text").text();			
+			setTimeout(function(){
+				$("#loading").hide();
+				swal("Error", motivo_error, "error");
+			}, 2000);	
+		}
+	}); 
+}
+ 
+function finalizar_crucero(){ 
+ 
+	var id_carga 	= $("#id_carga").val(); 
+	
+	swal({    
+		title: "Desea finalizar el crucero?",   
+		text: "Una vez finalizado NO podrá volver a tomar fotos para esta carga",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, finalizar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	
+	
+		$("#loading").show();
+		 
+	$.post("controller5.php",  
+		{ 	action 		:"finalizar_crucero", 
+			id_carga 	: id_carga
+		},end_finalizar_crucero);					
+	}); 	
+} 
+function end_finalizar_crucero(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){				
+			setTimeout(function(){
+				$("#loading").hide();
+				window.location.href="ver_cargas_activas.php";
+			}, 2000); 
+						
+		}else{			
+			var motivo_error = $(this).find("result_text").text();			
+			setTimeout(function(){
+				$("#loading").hide();
+				swal("Error", motivo_error, "error");
+			}, 2000);	
+		}
+	}); 
+}
+ 
+function finalizar_carga_valida(){	 
+
+	$("#btn-finalizar_carga_valida").addClass("d-none");	 
+	$("#btn-finalizar_carga").addClass("d-none");	 
+	$("#btn-finalizar_carga_valida").prop('disabled', true);  
+	$("#btn-finalizar_carga").prop('disabled', true);  
+	
+	$(".contador").removeClass("d-none"); 
+	
+	var seconds = 8; 
+	// Update the count down every 1 second
+	xinterval = setInterval(function() { 
+		// Display the result in the element with id="demo"
+		document.getElementById("contador").innerHTML = seconds;		
+		seconds--;
+		// If the count down is finished, write some text
+		if (seconds < 0) {  
+			clearInterval(xinterval);   
+			$("#btn-finalizar_carga").removeClass("d-none");	 
+			document.getElementById("contador").innerHTML = "";
+			document.getElementById("btn-finalizar_carga").disabled = false;
+			$(".contador").addClass("d-none");
+		}
+	}, 1000);
+} 
+
+function reimprimir_qr_carga(id_carga){ 
+ 
+	$.post("controller5.php",  
+		{ 	action 		:"reimprimir_qr_carga", 
+			id_carga 	: id_carga
+		},end_reimprimir_qr_carga);					
+	
+} 
+function end_reimprimir_qr_carga(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){	
+			 
+			window.open(
+				$(this).find("filepath").text(),
+				'_blank'
+			);	
+			
+			//	setTimeout(function(){
+			//		$("#loading").hide();
+			//		window.location.href="ver_cargas_activas.php";
+			//	}, 2000); 
+						
+		}else{
+			
+			var motivo_error = $(this).find("result_text").text();
+			
+			setTimeout(function(){
+				$("#loading").hide();
+				swal("Error", motivo_error, "error");
+			}, 2000);	
+		}
+	}); 
+}
+
+function finalizar_carga(){ 
+ 
+	var id_carga = $("#id_carga").val(); 
+	
+	swal({    
+		title: "Desea finalizar esta carga?",   
+		text: "Una vez finalizada, no se podrá modificar la información de esta carpeta. Esta acción es irreversible. Desea continuar?",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	
+	
+		$("#loading").show();
+		 
+	$.post("controller5.php",  
+		{ 	action 		:"finalizar_carga", 
+			id_carga 	: id_carga
+		},end_finalizar_carga);					
+	}); 	
+} 
+function end_finalizar_carga(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){	
+			
+			
+			//swal("Correcto", "Se ha solicitado el resurtimiento correctamente", "success");
+			//
+			//setTimeout(function(){ 
+			//	swal.close();
+			//}, 2000);	
+			
+			//llenar_tabla_carpetas();
+			 
+			 
+			window.open(
+				$(this).find("filepath").text(),
+				'_blank'
+			);	
+			
+			setTimeout(function(){
+				$("#loading").hide();
+				window.location.href="ver_cargas_activas.php";
+			}, 2000); 
+						
+		}else{
+			
+			var motivo_error = $(this).find("result_text").text();
+			
+			setTimeout(function(){
+				$("#loading").hide();
+				swal("Error", motivo_error, "error");
+			}, 2000);	
+		}
+	}); 
+}
+
+
+function imprimir_etiqueta_bulto(id_bulto){
+		
+	$.post("controller5.php",  
+		{ 	action 		:"imprimir_etiqueta_bulto",
+			id_bulto 	: id_bulto
+		}, end_imprimir_etiqueta_bulto);
+}
+function end_imprimir_etiqueta_bulto(xml){   
+	$('#loading').hide();	
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){	  
+ 			window.open(
+				$(this).find("filepath").text(),
+				'_blank'
+			);	
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+function llenar_tabla_bulto_carga(){
+	 
+	var id_carga 	= $("#id_carga").val(); 	
+	
+	$.post("controller5.php",  
+		{ 	action 		:"llenar_tabla_bulto_carga",
+			id_carga 	: id_carga
+		}, end_llenar_tabla_bulto_carga);
+}
+function end_llenar_tabla_bulto_carga(xml){  
+	$('#loading').hide();	 
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){	  
+ 			var ocultamiento_columnas = [];	  
+			var messageTop = "Reporte TEMPORAL de bultos de la carga. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_bulto_carga",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+ 
+function llenar_tabla_bulto_carga_tmp(){
+	 
+	var id_carga 	= $("#id_carga").val(); 	
+	
+	$.post("controller5.php",  
+		{ 	action 		:"llenar_tabla_bulto_carga_tmp",
+			id_carga 	: id_carga
+		}, end_llenar_tabla_bulto_carga_tmp);
+}
+function end_llenar_tabla_bulto_carga_tmp(xml){  
+	$('#loading').hide();	
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){	  
+ 			var ocultamiento_columnas = [];	 
+			var messageTop = "Reporte TEMPORAL de bultos de la carga. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_bulto_carga",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+function agregar_bulto_carga_tmp(){ 
+	
+	var id_carga 		= $("#id_carga").val();
+	var bulto_codigo 	= $("#bulto_codigo").val();
+	
+	$.post("controller5.php",      
+			{ 	action 			: "agregar_bulto_carga_tmp", 
+				id_carga 		: id_carga,
+				bulto_codigo 	: bulto_codigo
+			},end_agregar_bulto_carga_tmp);
+}     
+function end_agregar_bulto_carga_tmp(xml){	   
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			  
+			$("#bulto_codigo").val("");
+			$("#bulto_codigo").focus();
+			
+			$("#respuesta_1").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			$('#loading').hide();	
+			setTimeout(function(){
+				$("#respuesta_1").html("");  
+			}, 2000); 
+
+			llenar_tabla_bulto_carga_tmp();
+		
+		}else{
+			swal("Ciudado",$(this).find("result_text").text(),"error");
+		}	
+	});
+}
+
+function llena_select_autoclave_libre(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_autoclave_libre"
+		}, end_llena_select_autoclave_libre);    		 
+}   
+function end_llena_select_autoclave_libre(xml){	    
+	$(xml).find("response").each(function(i){	 	     
+		if ($(this).find("result").text()=="ok"){			
+			$(".select_autoclave").html($(this).find("select_autoclave").text()); 
+		}
+	}); 
+}  
+function llena_select_autoclave(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_autoclave"
+		}, end_llena_select_autoclave);    		 
+}  
+function end_llena_select_autoclave(xml){	    
+	$(xml).find("response").each(function(i){	 	     
+		if ($(this).find("result").text()=="ok"){			
+			$(".select_autoclave").html($(this).find("select_autoclave").text()); 
+		}
+	}); 
+}   
+ 
+function guardar_bulto(){   
+	
+	var id_bulto 	= $("#id_bulto").val();
+	
+	$.post("controller5.php",   
+			{ 	action 		: "valida_bulto_vacio", 
+				id_bulto 	: id_bulto
+			},end_valida_bulto_vacio);
+}   
+function end_valida_bulto_vacio(xml){ 
+		
+	var id_bulto 	= $("#id_bulto").val();
+	
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("bulto_vacio").text()=="1"){
+			swal({   
+				title: "Alerta",
+				text: "Está a punto de guardar un bulto vacio. Desea Continuar?", 
+				/*type: "warning",    */
+				showCancelButton: true,    
+				confirmButtonColor: "#DD6B55",   
+				confirmButtonText: "Si, guardar",  
+				cancelButtonText: "Regresar",   
+				closeOnConfirm: true 
+			}, function(){ 		  
+				$.post("controller5.php",   
+					{ 	action 		: "guardar_bulto", 
+						id_bulto 	: id_bulto
+					},end_guardar_bulto);	
+			});  
+		}else{
+			$.post("controller5.php",   
+				{ 	action 		: "guardar_bulto", 
+					id_bulto 	: id_bulto
+				},end_guardar_bulto);
+		}
+	});
+}   
+function end_guardar_bulto(xml){	   
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			$('#loading').show();	
+			$("#codigo_cirugia").prop( "disabled", false );
+			$("#codigo_cirugia").val("");
+			  
+			$("#inventario_inst_codigo").prop( "disabled", true );
+			$("#inventario_inst_referencia").prop( "disabled", true );
+			$("#inventario_inst_lote").prop( "disabled", true );
+			$("#charola_codigo").prop( "disabled", true );
+			
+			$("#btn-iniciar_bulto").show();
+			$("#btn-agrega_producto_bulto").hide();
+			$("#btn-guardar_bulto").hide(); 
+			$("#div_foto").hide(); 
+			$("#id_bulto").val("0");
+			
+			$("#table_productos_bulto").html("");
+			$("#table_charolas").html("");			
+			
+			    
+			
+			window.open(
+					$(this).find("filepath").text(),
+					'_blank'
+				);	
+				
+			setTimeout(function(){
+				$('#loading').hide();	
+				window.location.reload();				
+			}, 1000); 
+			
+			
+		
+		}else{
+			swal("Ciudado",$(this).find("result_text").text(),"error");
+		}	
+	});
+}
+  
+function guardar_carga_valida(){ 
+	
+	$(".contador").removeClass("d-none"); 
+	$("#btn-guardar_carga_valida").addClass("d-none");	 
+	document.getElementById("btn-guardar_carga_valida").disabled = true;
+	
+	var seconds = 8; 
+	// Update the count down every 1 second
+	xinterval = setInterval(function() { 
+		// Display the result in the element with id="demo"
+		document.getElementById("contador").innerHTML = seconds;		
+		seconds--;
+		// If the count down is finished, write some text
+		if (seconds < 0) {  
+			clearInterval(xinterval);   
+			$("#btn-guardar_carga").removeClass("d-none");	 
+			document.getElementById("contador").innerHTML = "";
+			document.getElementById("btn-guardar_carga").disabled = false;
+			$(".contador").addClass("d-none");
+		}
+	}, 1000);
+	
+}    
+
+
+function guardar_carga(){ 
+	
+	var id_carga 		= $("#id_carga").val();
+	var id_autoclave 	= $("#id_autoclave").val();
+	
+	$.post("controller5.php",    
+			{ 	action 			: "guardar_carga", 
+				id_carga 		: id_carga,
+				id_autoclave 	: id_autoclave
+			},end_guardar_carga);
+}    
+function end_guardar_carga(xml){	   
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			$('#loading').show();	
+			//	window.open(
+			//			$(this).find("filepath").text(),
+			//			'_blank'
+			//		);	
+				
+			setTimeout(function(){
+				$('#loading').hide();	
+				window.location.href="ver_cargas_activas.php";				
+			}, 1000); 
+			
+			
+		
+		}else{
+			swal("Ciudado",$(this).find("result_text").text(),"error");
+		}	
+	});
+}
+  
+
+function iniciar_bulto(){
+	
+	var codigo_cirugia 	= $("#codigo_cirugia").val();
+	
+	if(codigo_cirugia == ""){
+		swal("Ciudado","Es necesario especificar una cirugia","error");
+	}else{
+		$.post("controller5.php",   
+			{ 	action 			: "iniciar_bulto", 
+				codigo_cirugia 	: codigo_cirugia
+			},end_iniciar_bulto); 
+	}
+	
+	
+}   
+function end_iniciar_bulto(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			
+			$("#codigo_cirugia").prop( "disabled", true );
+			  
+			$("#inventario_inst_codigo").prop( "disabled", false );
+			$("#inventario_inst_referencia").prop( "disabled", false );
+			$("#inventario_inst_lote").prop( "disabled", false );
+			$("#charola_codigo").prop( "disabled", false );
+			
+			$("#btn-iniciar_bulto").hide();
+			$("#btn-agrega_producto_bulto").show();
+			$("#btn-guardar_bulto").show(); 
+			$("#div_foto").show(); 
+			$("#id_bulto").val($(this).find("id_bulto").text());
+		
+		}else{
+			swal("Ciudado",$(this).find("result_text").text(),"error");
+		}	
+	});
+}
+ 
+ 
+function iniciar_carga(){
+	
+	var id_autoclave 	= $("#id_autoclave").val();
+	
+	$.post("controller5.php",   
+			{ 	action 			: "iniciar_carga", 
+				id_autoclave 	: id_autoclave
+			},end_iniciar_carga);
+}   
+function end_iniciar_carga(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			
+			$("#id_autoclave").prop( "disabled", true );
+			  
+			$("#bulto_codigo").prop( "disabled", false );
+			
+			$("#btn-iniciar_carga").hide();
+			$("#btn-agregar_bulto_carga").show();
+			$("#btn-guardar_carga_valida").show(); 
+			//	$("#btn-guardar_carga").show(); 
+			//$("#div_foto").show(); 
+			$("#id_carga").val($(this).find("id_carga").text());
+		
+		}else{
+			swal("Ciudado",$(this).find("result_text").text(),"error");
+		}	
+	});
+}
+
+ 
+function agrega_producto_bulto(){ 
+	
+	var id_bulto 					= $("#id_bulto").val();
+	var charola_codigo 				= $("#charola_codigo").val();
+	var inventario_inst_codigo 		= $("#inventario_inst_codigo").val();
+	var inventario_inst_referencia 	= $("#inventario_inst_referencia").val();
+	var inventario_inst_lote 		= $("#inventario_inst_lote").val(); 
+	
+	$.post("controller5.php",    
+			{ 	action 						: "agrega_producto_bulto", 
+				id_bulto 					: id_bulto,
+				charola_codigo 				: charola_codigo,
+				inventario_inst_codigo 		: inventario_inst_codigo,
+				inventario_inst_referencia 	: inventario_inst_referencia,
+				inventario_inst_lote 		: inventario_inst_lote
+			},end_agrega_producto_bulto);
+}    
+function end_agrega_producto_bulto(xml){	   
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			  
+			$("#codigo_cirugia").prop( "disabled", true );
+			  
+			var tipo = $(this).find("tipo").text();
+			
+			$("#inventario_inst_codigo").val("");
+			$("#inventario_inst_referencia").val("");
+			$("#inventario_inst_lote").val("");
+			$("#charola_codigo").val("");
+			
+			if(tipo == "charola"){ 
+				$("#charola_codigo").focus();
+			}else{  
+				$("#inventario_inst_codigo").focus();
+			}
+ 
+			$("#respuesta_1").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			$('#loading').hide();	
+			setTimeout(function(){
+				$("#respuesta_1").html("");  
+			}, 2000); 
+		
+			var cantidad_bultos =  $(this).find("cantidad_bultos").text();
+			if(cantidad_bultos > 2){
+				swal("Atención !!","Se han añadido más de 2 Charolas/Activos en este bulto. Por favor, verifique que la información sea correcta antes de continuar","warning");
+			}  
+			  
+			 
+			llenar_tabla_bulto_charola_tmp();
+			llenar_tabla_producto_bulto_tmp();
+		
+		}else{
+			swal("Ciudado",$(this).find("result_text").text(),"error");
+		}	
+	});
+}
+
+function llenar_tabla_producto_bulto_tmp(){
+	 
+	var id_bulto = $("#id_bulto").val(); 	
+	
+	$.post("controller5.php", 
+		{ 	action 		:"llenar_tabla_producto_bulto_tmp",
+			id_bulto 	: id_bulto
+		}, end_llenar_tabla_producto_bulto_tmp);
+}
+function end_llenar_tabla_producto_bulto_tmp(xml){ 
+	$('#loading').hide();	
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){	 
+ 			var ocultamiento_columnas = [];	 
+			var messageTop = "Reporte TEMPORAL de productos del bulto. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_productos_bulto",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+function llenar_tabla_bulto_charola_tmp(){
+	 
+	var id_bulto = $("#id_bulto").val(); 	
+	
+	$.post("controller5.php", 
+		{ 	action 		:"llenar_tabla_bulto_charola_tmp",
+			id_bulto 	: id_bulto
+		}, end_llenar_tabla_bulto_charola_tmp);
+}
+function end_llenar_tabla_bulto_charola_tmp(xml){ 
+	$('#loading').hide();	
+	$(xml).find("response").each(function(i){		   
+		if ($(this).find("result").text()=="ok"){	 
+ 			var ocultamiento_columnas = [];	 
+			var messageTop = "Reporte TEMPORAL de charolas del bulto. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example2","table_charolas",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+  
+function llenar_tabla_cargas_activas(){
+	$.post("controller5.php", 
+		{ 	action 		:"llenar_tabla_cargas_activas"
+		}, end_llenar_tabla_cargas_activas);
+}
+function end_llenar_tabla_cargas_activas(xml){  
+	$('#loading').hide();	
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){	 
+ 			var ocultamiento_columnas = [];	 
+			var messageTop = "Reporte de Cargas Activas. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_cargas_activas",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+} 
+  
+function llenar_tabla_cargas_historico(){
+	$.post("controller5.php", 
+		{ 	action 		:"llenar_tabla_cargas_historico"
+		}, end_llenar_tabla_cargas_historico);
+}
+function end_llenar_tabla_cargas_historico(xml){  
+	$('#loading').hide();	
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){	 
+ 			var ocultamiento_columnas = [];	 
+			var messageTop = "Reporte de Cargas Activas. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_cargas_activas",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+function llenar_tabla_bultos(){
+	$.post("controller5.php", 
+		{ 	action 		:"llenar_tabla_bultos"
+		}, end_llenar_tabla_bultos);
+}
+function end_llenar_tabla_bultos(xml){  
+	$('#loading').hide();	
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){	 
+ 			var ocultamiento_columnas = [];	 
+			var messageTop = "Reporte de Bultos. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_bultos",ocultamiento_columnas,messageTop,"",1,"desc");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+function llenar_tabla_bulto_detalles(){ 
+	var id_bulto 	= $("#id_bulto").val(); 	
+	$.post("controller5.php", 
+		{ 	action 		:"llenar_tabla_bulto_detalles",
+			id_bulto : id_bulto
+		}, end_llenar_tabla_bulto_detalles);
+}
+function end_llenar_tabla_bulto_detalles(xml){  
+	$('#loading').hide();	  
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){ 
+ 
+			var codigo_bulto = $(this).find("codigo_bulto").text();
+			var codigo_cirugia = $(this).find("codigo_cirugia").text();
+			var carga_asignada = $(this).find("carga_asignada").text();
+			
+			
+			//alert(carga_asignada);
+			
+			$("#codigo_bulto").html(codigo_bulto); 
+			$("#codigo_cirugia").html(codigo_cirugia); 
+			$("#carga_asignada").html(carga_asignada);  
+			 
+ 			var ocultamiento_columnas = [];	 
+			var messageTop = "Reporte de detalles de Bultos: " + codigo_bulto + "<br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_productos_bulto",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+ 
+/* elimina una carga de un bulto en temporal */
+function eliminar_carga_bulto_tmp(id_carga_bulto){ 
+	$.post("controller5.php", 
+			{ 	action 			: "eliminar_carga_bulto_tmp", 
+				id_carga_bulto 	: id_carga_bulto
+			}, end_eliminar_carga_bulto_tmp);
+	
+}      
+function end_eliminar_carga_bulto_tmp(xml){ 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_tabla_bulto_carga_tmp();		
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}  
+/* elimina un instrumental / producto suelto de un bulto */
+function eliminar_bulto_inst_tmp(id_bulto_inst){ 
+	swal({   
+		title: "¿Eliminar?",   
+		text: "Esta acción eliminará el Instrumental / Producto de este bulto.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller5.php", 
+			{ 	action 			: "eliminar_bulto_inst_tmp", 
+				id_bulto_inst 	: id_bulto_inst
+			}, end_eliminar_bulto_inst_tmp);
+	});  	
+}      
+function end_eliminar_bulto_inst_tmp(xml){ 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_tabla_bulto_charola_tmp();
+			llenar_tabla_producto_bulto_tmp();		
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}  
+
+/* elimina una charola/activo de un bulto, incluyendo todo el contenido */
+function eliminar_bulto_charola_tmp(id_bulto_charola){ 
+	swal({   
+		title: "¿Eliminar?",   
+		text: "Esta acción eliminará la Charola / Activo de este bulto, incluyendo todo su contenido.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller5.php", 
+			{ 	action 				: "eliminar_bulto_charola_tmp", 
+				id_bulto_charola 	: id_bulto_charola
+			}, end_eliminar_bulto_charola_tmp);
+	});  	
+}     
+function end_eliminar_bulto_charola_tmp(xml){ 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_tabla_bulto_charola_tmp();
+			llenar_tabla_producto_bulto_tmp();		
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}   
+
+/* elimina una charola/activo de un bulto, incluyendo todo el contenido */
+function cancelar_carga(id_carga){ 
+	swal({   
+		title: "¿Cancelar Carga?",   
+		text: "Esta acción cacelará los bultos asignados y liberará la Autoclave. Desea continuar?",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, cancelar carga",  
+		cancelButtonText: "Regresar y revisar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller5.php", 
+			{ 	action 		: "cancelar_carga", 
+				id_carga 	: id_carga
+			}, end_cancelar_carga);
+	});  	
+}     
+function end_cancelar_carga(xml){ 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_tabla_cargas_activas();	
+		}else{		 
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}  
+
+function llenar_div_bulto_fotos(){
+	 
+	var id_bulto = $("#id_bulto").val();
+	
+	$.post("controller5.php",  
+		{ 	action :"llenar_div_bulto_fotos", 
+			id_bulto  : id_bulto
+		}, end_llenar_div_bulto_fotos);   
+	
+}    
+function end_llenar_div_bulto_fotos(xml){	     
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){	
+			  
+			$("#div_bulto_fotos").html($(this).find("bulto_fotos").text());  	
+					
+		} 
+	}); 
+}  
+function llenar_div_fotos_crucero_tmp(){
+	 
+	var id_carga = $("#id_carga").val();
+	
+	$.post("controller5.php",     
+		{ 	action :"llenar_div_fotos_crucero_tmp", 
+			id_carga  : id_carga
+		}, end_llenar_div_fotos_crucero);   
+	
+}     
+function llenar_div_fotos_crucero_ne(){
+	 
+	var id_carga = $("#id_carga").val();
+	
+	$.post("controller5.php",    
+		{ 	action :"llenar_div_fotos_crucero_ne", 
+			id_carga  : id_carga
+		}, end_llenar_div_fotos_crucero);   
+	
+}   
+function llenar_div_fotos_crucero(){
+	 
+	var id_carga = $("#id_carga").val();
+	
+	$.post("controller5.php",   
+		{ 	action :"llenar_div_fotos_crucero", 
+			id_carga  : id_carga
+		}, end_llenar_div_fotos_crucero);   
+	
+}    
+function end_llenar_div_fotos_crucero(xml){	     
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){	
+			  
+			$("#div_crucero_fotos").html($(this).find("fotos").text());  	
+					
+		} 
+	}); 
+}    
+function llenar_div_fotos_soporte_tmp(){
+	 
+	var id_carga = $("#id_carga").val();
+	
+	$.post("controller5.php",  
+		{ 	action :"llenar_div_fotos_soporte_tmp", 
+			id_carga  : id_carga
+		}, end_llenar_div_fotos_soporte);   
+	
+}      
+function llenar_div_fotos_soporte(){
+	 
+	var id_carga = $("#id_carga").val();
+	
+	$.post("controller5.php",     
+		{ 	action :"llenar_div_fotos_soporte", 
+			id_carga  : id_carga
+		}, end_llenar_div_fotos_soporte);   
+	
+}    
+function end_llenar_div_fotos_soporte(xml){	     
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){	
+			  
+			$("#div_soporte_fotos").html($(this).find("fotos").text());  	
+					
+		} 
+	}); 
+}  
+
+/* FOTOS DE LAS CIRUGIAS */
+function eliminar_bulto_foto(id_bulto_foto){      
+	swal({    
+		title: "¿Eliminar?",   
+		text: "Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",    
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller5.php",  
+			{ 	action 			: "eliminar_bulto_foto",  
+				id_bulto_foto 	: id_bulto_foto
+			}, end_eliminar_bulto_foto);
+	});
+}   
+function end_eliminar_bulto_foto(xml){    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_div_bulto_fotos();
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}    
+
+/* FOTOS DE LAS CIRUGIAS */ 
+function eliminar_crucero_foto_tmp(id_crucero){      
+	swal({    
+		title: "¿Eliminar?",   
+		text: "Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",    
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller5.php",  
+			{ 	action 		: "eliminar_crucero_foto_tmp",  
+				id_crucero 	: id_crucero
+			}, end_eliminar_crucero_foto_tmp);
+	});
+}    
+function end_eliminar_crucero_foto_tmp(xml){    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_div_fotos_crucero_tmp(); 
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}   
+/* FOTOS DE LAS CIRUGIAS */ 
+function eliminar_crucero_foto(id_crucero){      
+	swal({    
+		title: "¿Eliminar?",   
+		text: "Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",    
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller5.php",  
+			{ 	action 		: "eliminar_crucero_foto",  
+				id_crucero 	: id_crucero
+			}, end_eliminar_crucero_foto);
+	}); 
+}   
+function end_eliminar_crucero_foto(xml){    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_div_fotos_crucero(); 
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}    
+
+/* FOTOS DE LAS CIRUGIAS */ 
+function eliminar_biologico_foto(id_soporte){      
+	swal({    
+		title: "¿Eliminar?",   
+		text: "Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",    
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller5.php",  
+			{ 	action 		: "eliminar_biologico_foto",  
+				id_soporte 	: id_soporte
+			}, end_eliminar_biologico_foto);
+	});
+}   
+function end_eliminar_biologico_foto(xml){    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_div_fotos_soporte_tmp(); 
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	}); 
+}   
+/* FOTOS DE LAS CIRUGIAS */ 
+function eliminar_secos_foto(id_soporte){      
+	swal({    
+		title: "¿Eliminar?",   
+		text: "Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",    
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller5.php",  
+			{ 	action 		: "eliminar_secos_foto",  
+				id_soporte 	: id_soporte
+			}, end_eliminar_secos_foto);
+	});
+}    
+function end_eliminar_secos_foto(xml){    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_div_fotos_soporte_tmp(); 
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}    
+
+ 
+function obtiene_carga_codigo(){	
+	var id_carga = $("#id_carga").val();	
+	if(id_carga > 0){
+		$.post("controller5.php",  
+			{ 	action 		: "obtiene_carga_codigo",  
+				id_carga 	: id_carga
+			}, end_obtiene_carga_codigo);
+	}else{
+		window.location.href="ver_cargas_activas.php";
+	}
+}
+function end_obtiene_carga_codigo(xml){    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){ 
+			$("#carga_codigo").html($(this).find("carga_codigo").text());
+			$("#autoclave").html($(this).find("autoclave").text());
+			$("#serie").html($(this).find("serie").text());
+			$("#inicio").html($(this).find("inicio").text());
+		}else{		
+			window.location.href="ver_cargas_activas.php";
+		}  
+	});
+}    
+
+
+/* ************************************************* */ 
+/* ************************************************* */ 
+/* ************** CLIENTES ************** */ 
+/* ************************************************* */ 
+/* ************************************************* */ 
+
+function llenar_tabla_clientes(){	 
+	$.post("controller5.php", 
+		{ 	action 	:"llenar_tabla_clientes"
+		}, end_llenar_tabla_clientes);
+} 
+ 
+function end_llenar_tabla_clientes(xml){  
+	$(xml).find("response").each(function(i){		
+		$("#loading").hide();		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Clientes. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_clientes",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+ 
+ 
+function llena_select_cliente_estatus(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_cliente_estatus"
+		}, end_llena_select_cliente_estatus);    		 
+}  
+function end_llena_select_cliente_estatus(xml){	    
+	$(xml).find("response").each(function(i){	 	    
+		if ($(this).find("result").text()=="ok"){			
+			$(".select_cliente_estatus").html($(this).find("select_cliente_estatus").text()); 
+		}
+	}); 
+}   
+
+/* guardar formulario */
+function guardar_cliente(){ 	  
+	var nuevo_cliente_id		= $("#nuevo_cliente_id").val(); 
+	//	var nuevo_cliente_alias		= $("#nuevo_cliente_alias").val(); 
+	var nuevo_cliente_alias		= $("#nuevo_cliente_razon").val();  
+	var nuevo_cliente_razon		= $("#nuevo_cliente_razon").val(); 
+	var nuevo_cliente_rfc		= $("#nuevo_cliente_rfc").val(); 
+	//	var nuevo_cliente_csf		= $("#nuevo_cliente_csf").val(); 
+	var nuevo_cliente_csf		= $("#csv_file").val(); 
+	var nuevo_cliente_credito	= $("#nuevo_cliente_credito").val(); 
+	var nuevo_cliente_plazo		= $("#nuevo_cliente_plazo").val(); 
+	var nuevo_cliente_estatus	= $("#nuevo_cliente_estatus").val(); 
+	var continua = 1;		
+	
+	$("#nuevo_cliente_form .obligatorio").each(function (index) {
+		if($(this).val() == ""){
+			$(this).addClass("form-control-danger");
+			continua = 0; 
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});			  	
+	 $("#nuevo_cliente_form .obligatorio_select").each(function (index) {
+		if($(this).val() == "0"){
+			$(this).addClass("form-control-danger");
+			continua = 0;
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});				
+	  
+	if(continua == 1){
+		$.post("controller5.php",  
+			{ 	action :"guardar_cliente", 
+				tipo 					: tipoguardado, /*global*/  
+				nuevo_cliente_id 		: nuevo_cliente_id,
+				nuevo_cliente_alias 	: nuevo_cliente_alias,
+				nuevo_cliente_razon 	: nuevo_cliente_razon,
+				nuevo_cliente_rfc 		: nuevo_cliente_rfc,
+				nuevo_cliente_csf 		: nuevo_cliente_csf,
+				nuevo_cliente_credito 	: nuevo_cliente_credito,
+				nuevo_cliente_plazo 	: nuevo_cliente_plazo,
+				nuevo_cliente_estatus 	: nuevo_cliente_estatus
+			},end_guardar_cliente);
+	}else{
+		swal("Revisa el formulario", "Llena todos los campos marcados como OBLIGATORIO", "error");
+	} 
+} 
+function end_guardar_cliente(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			if(tipoguardado == "nuevo"){
+				$('#nuevo_cliente_form').trigger("reset");
+				$("#nuevo_cliente_id").val("0"); 
+				$(".obligatorio_select").val("0").trigger('change');
+			}else if(tipoguardado == "editar"){
+				//$("#nuevo__nombre").attr("readonly", "readonly");  // se utiliza cuando algun campo NO puede ser modificado al editar
+				$("#nuevo_cliente_id").val($(this).find("nuevo_cliente_id").text()); 
+			}else if(tipoguardado == "nuevo_salir"){
+				location.href ="ver_clientes.php"; 
+			} 
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+		}
+		setTimeout(function(){
+			$("#respuesta").html("");  
+		}, 5000);		
+	});
+}
+
+/*set*/  
+function llenar_formulario_cliente(){  
+	var id_cliente = $("#nuevo_cliente_id").val();	
+		
+	$.post("controller5.php", 
+		{ 	action 		: "llenar_formulario_cliente", 
+			id_cliente 	: id_cliente 
+		}, end_llenar_formulario_cliente);
+}    
+function end_llenar_formulario_cliente(xml){   
+	$(xml).find("response").each(function(i){		   
+		if ($(this).find("result").text()=="ok"){  
+		
+			$("#nuevo_cliente_alias").val($(this).find("alias").text());	
+			$("#nuevo_cliente_razon").val($(this).find("razon_social").text());	
+			$("#nuevo_cliente_rfc").val($(this).find("rfc").text());	
+			$("#nuevo_cliente_csf").val($(this).find("csf").text());	
+			$("#nuevo_cliente_credito").val($(this).find("linea_credito").text());	
+			$("#nuevo_cliente_plazo").val($(this).find("plazo_credito").text());	
+			$("#nuevo_cliente_estatus").val($(this).find("estatus").text());	
+
+		}
+	});
+}    
+    
+/*set*/   
+function llenar_formulario_empleado(){  
+	var id_empleado = $("#nuevo_empleado_id").val();	
+		
+	$.post("controller5.php", 
+		{ 	action 		: "llenar_formulario_empleado", 
+			id_empleado : id_empleado 
+		}, end_llenar_formulario_empleado);
+}      
+function end_llenar_formulario_empleado(xml){   
+	$(xml).find("response").each(function(i){		   
+		if ($(this).find("result").text()=="ok"){   
+					
+			$("#nuevo_empleado_empresa").val($(this).find("id_empresa").text()).trigger("change");
+			$("#nuevo_empleado_sucursal").val($(this).find("id_bodega").text()).trigger("change");
+			$("#nuevo_empleado_numero").val($(this).find("numero").text());
+			$("#nuevo_empleado_nombre").val($(this).find("nombre").text());
+			$("#nuevo_empleado_ingreso").val($(this).find("fecha_ingreso").text());
+			$("#nuevo_empleado_dias_oficiales").val($(this).find("dias_oficiales").text());
+			$("#nuevo_empleado_dias_utilizados").val($(this).find("dias_usados").text());
+			$("#nuevo_empleado_jefe").val($(this).find("jefe_inmediato").text()).trigger("change");
+			$("#nuevo_empleado_usuario").val($(this).find("id_usuario").text()).trigger("change");
+
+		}
+	});
+}    
+ 
+
+function eliminar_cliente(id_cliente){
+ 
+	swal({    
+		title: "Eliminar Cliente? Esta acción no podrá revertirse.",   
+		text: "Desea continuar?",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	  
+	$.post("controller5.php",  
+		{ 	action :"eliminar_cliente", 
+			id_cliente 	: id_cliente
+		},end_eliminar_cliente);					
+	}); 	
+} 
+function end_eliminar_cliente(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){
+			swal("Correcto",$(this).find("result_text").text(),"success");
+			llenar_tabla_clientes();
+		}else{
+			console_log("aqui");
+			swal("Error",$(this).find("result_text").text(),"error");
+		}
+	}); 
+}
+ 
+
+function llena_select_cliente(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_cliente"
+		}, end_llena_select_cliente);    		 
+}  
+function end_llena_select_cliente(xml){	    
+	$(xml).find("response").each(function(i){	 	    
+		if ($(this).find("result").text()=="ok"){ 	
+			$(".select_cliente").html($(this).find("select_cliente").text()); 
+		}
+	}); 
+}   
+  
+function llena_select_cliente_acf(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_cliente_acf"
+		}, end_llena_select_cliente_acf);    		 
+}  
+function end_llena_select_cliente_acf(xml){	    
+	$(xml).find("response").each(function(i){	 	    
+		if ($(this).find("result").text()=="ok"){ 	
+			$(".select_cliente_acf").html($(this).find("select_cliente").text()); 
+		}
+	}); 
+}   
+
+/* subir constancia de situacion fiscal*/
+function subir_pdf_csf(){ 	
+	//	var id_carpeta	= $("#id_carpeta").val(); 
+	var csv_file	= $("#csv_file").val(); 
+	var continua = 1;		 	
+	if(csv_file == "0" || csv_file == ""){
+		continua = 0;
+	}		
+	if(continua == 1){ 			 
+		$.post("controller5.php",   
+			{ 	action :"subir_pdf_csf",  
+				csv_file 	: csv_file
+			},end_subir_pdf_csf);				
+	}else{
+		swal("Revisa el formulario", "Llena todos los campos marcados como OBLIGATORIO", "error");
+	}
+}  
+function end_subir_pdf_csf(xml){	  
+	$(xml).find("response").each(function(i){
+
+		$("#btn-solicitar_resurtir_carpeta").removeClass("d-none");
+		$("#btn-aceptar_resurtir_carpeta").addClass("d-none");
+			
+		if ($(this).find("result").text()=="ok"){			
+			$("#respuesta_3").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');			 
+			$("#files").html("");
+			$("#csv_file").val("");	 
+			
+			$("#pdf_hoja_subido").html($(this).find("ruta_pdf").text());	 
+		}else{			
+			$("#respuesta_3").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');		
+		}		
+		setTimeout(function(){
+			$("#respuesta_3").html("");
+		}, 3000);				
+	});
+}
+
+/* ************************************************* */ 
+/* ************************************************* */ 
+/* ************** CATEGORIAS POR CARPETA ************** */ 
+/* ************************************************* */ 
+/* ************************************************* */ 
+
+function llenar_tabla_categoria_carpetas(){	 
+	$.post("controller5.php", 
+		{ 	action 	:"llenar_tabla_categoria_carpetas"
+		}, end_llenar_tabla_categoria_carpetas);
+} 
+  
+function end_llenar_tabla_categoria_carpetas(xml){  
+	$(xml).find("response").each(function(i){		
+		$("#loading").hide();		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Categorias Carpeta. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_cat_carpeta",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+ 
+ 
+
+/* guardar formulario */
+function guardar_categoria_carpeta(){ 	  
+	var nuevo_categoria_id		= $("#nuevo_categoria_id").val(); 
+	var nuevo_categoria_almacen	= $("#nuevo_categoria_almacen").val(); 
+	var nuevo_categoria_nombre	= $("#nuevo_categoria_nombre").val(); 
+	var continua = 1;		
+	
+	$("#nuevo_categoria_form .obligatorio").each(function (index) {
+		if($(this).val() == ""){
+			$(this).addClass("form-control-danger");
+			continua = 0; 
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});			  	
+	 $("#nuevo_categoria_form .obligatorio_select").each(function (index) {
+		if($(this).val() == "0"){
+			$(this).addClass("form-control-danger");
+			continua = 0;
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});				  
+	  
+	if(continua == 1){ 
+		$.post("controller5.php",  
+			{ 	action :"guardar_categoria_carpeta", 
+				tipo 					: tipoguardado, /*global*/  
+				nuevo_categoria_id 		: nuevo_categoria_id,
+				nuevo_categoria_almacen : nuevo_categoria_almacen,
+				nuevo_categoria_nombre 	: nuevo_categoria_nombre
+			},end_guardar_categoria_carpeta);
+	}else{
+		swal("Revisa el formulario", "Llena todos los campos marcados como OBLIGATORIO", "error");
+	} 
+} 
+function end_guardar_categoria_carpeta(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			if(tipoguardado == "nuevo"){
+				$('#nuevo_categoria_form').trigger("reset");
+				$("#nuevo_categoria_id").val("0");  
+				$(".obligatorio_select").val("0").trigger('change');
+			}else if(tipoguardado == "editar"){
+				//$("#nuevo__nombre").attr("readonly", "readonly");  // se utiliza cuando algun campo NO puede ser modificado al editar
+				$("#nuevo_categoria_id").val($(this).find("nuevo_categoria_id").text()); 
+			}else if(tipoguardado == "nuevo_salir"){
+				location.href ="ver_categoria_carpeta.php"; 
+			} 
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+		}
+		setTimeout(function(){
+			$("#respuesta").html("");  
+		}, 5000);		
+	});
+}
+
+
+ 
+
+function eliminar_cat_carpeta(id_categoria){
+ 
+	swal({    
+		title: "Eliminar Categoria? Esta acción no podrá revertirse.",   
+		text: "Desea continuar?",   
+		/*type: "warning",    */ 
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 	  
+	$.post("controller5.php",   
+		{ 	action 			:"eliminar_cat_carpeta", 
+			id_categoria 	: id_categoria
+		},end_eliminar_cat_carpeta);					
+	}); 	 
+}  
+function end_eliminar_cat_carpeta(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){
+			swal("Correcto",$(this).find("result_text").text(),"success");
+			llenar_tabla_categoria_carpetas();
+		}else{
+			//console_log("aqui");
+			swal("Error",$(this).find("result_text").text(),"error");
+		}
+	}); 
+}
+
+  
+
+function cambiar_estatus_cat_carpeta(id_categoria){
+ 	  
+	$.post("controller5.php",   
+		{ 	action 			:"cambiar_estatus_cat_carpeta", 
+			id_categoria 	: id_categoria
+		},end_cambiar_estatus_cat_carpeta);					
+	 
+}  
+function end_cambiar_estatus_cat_carpeta(xml){	 
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){
+			llenar_tabla_categoria_carpetas();
+		}
+	}); 
+}
+
+ 
+function llena_select_categoria_carpeta_por_sucursal(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_categoria_carpeta_por_sucursal"
+		}, end_llena_select_categoria_carpeta);    		 
+}  
+function llena_select_categoria_carpeta(){ 
+	$.post("controller5.php",
+		{ 	action :"llena_select_categoria_carpeta"
+		}, end_llena_select_categoria_carpeta);    		 
+}  
+function end_llena_select_categoria_carpeta(xml){	     
+	$(xml).find("response").each(function(i){	 	    
+		if ($(this).find("result").text()=="ok"){			
+			$(".select_categoria_carpeta").html($(this).find("select_categoria_carpeta").text()); 
+		}
+	}); 
+}   
+
+
+
+
+/* ********************************************************* */
+/* ********************************************************* */
+/* ******** VALIDA PERMISOS PARA PROGRAMAR CIRUGIA ********* */
+/* ********************************************************* */
+/* ********************************************************* */
+
+
+
+function valida_programar_cirugia(){ 
+	$.post("controller5.php",
+		{ 	action :"valida_programar_cirugia"
+		}, end_valida_programar_cirugia);    		 
+}  
+function end_valida_programar_cirugia(xml){	     
+	$(xml).find("response").each(function(i){	 	    
+		if ($(this).find("result").text()=="ok"){			
+			$("#loading").hide();
+		}else{
+			$("#loading").hide();
+			//swal("CUIDADO",$(this).find("result_text").text(),"error");
+			
+			swal({
+				title: "CUIDADO!",
+				text: $(this).find("result_text").text(),
+				type: "error"
+			},function() {
+				window.location = "ver_cirugias.php";
+			});
+
+
+			setTimeout(function(){
+				window.location.href="ver_cirugias.php";
+			}, 5000);		
+		} 
+	}); 
+}   
+
+function permitir_programar_vendedor(id_vendedor, nuevo_estatus){ 
+	$("#loading").show();
+	$.post("controller5.php",
+		{ 	action 			: "permitir_programar_vendedor",
+			id_vendedor 	: id_vendedor,
+			nuevo_estatus 	: nuevo_estatus
+		}, end_permitir_programar_vendedor);    		 
+}  
+function end_permitir_programar_vendedor(xml){	     
+	$(xml).find("response").each(function(i){	  	    
+		if ($(this).find("result").text()=="ok"){			
+			$("#loading").hide(); 
+			swal("CORRECTO",$(this).find("aviso").text(),"success");
+			llenar_tabla_vendedores();
+		}else{
+			$("#loading").hide();
+		}
+	}); 
+}   
+
+
+
+
+function valida_subdis_nvo_usuario(){	
+ 
+	var id_subdistribuidor = $("#nuevo_usuario_subdis").val();
+	
+	$.post("controller6.php", 
+		{ 	action 	:"valida_subdis_nvo_usuario",
+			id_subdistribuidor : id_subdistribuidor
+		}, end_valida_subdis_nvo_usuario);
+}  
+function end_valida_subdis_nvo_usuario(xml){  
+	$(xml).find("response").each(function(i){	 	
+		if ($(this).find("result").text()=="ok"){	/* NO seleccionar subdis */			
+ 			$("#nuevo_usuario_tipo").val("");
+ 			$("#nuevo_usuario_tipo").attr("disabled",true);	
+ 			$("#nuevo_usuario_almacen").val("");
+ 			$("#nuevo_usuario_almacen").attr("disabled",true);	
+ 			$("#nuevo_usuario_area").val("");
+ 			$("#nuevo_usuario_area").attr("disabled",true);
+		}else{ /* subdis 01 NO REGISTRADO */
+			$("#nuevo_usuario_tipo").val("0");
+ 			$("#nuevo_usuario_tipo").attr("disabled",false);	
+ 			$("#nuevo_usuario_almacen").val("0");  
+ 			$("#nuevo_usuario_almacen").attr("disabled",false);	
+ 			$("#nuevo_usuario_area").val("0");
+ 			$("#nuevo_usuario_area").attr("disabled",false);
+		}
+	}); 
+}
+ 
+function sugiere_usuario_nick(){	 
+  
+	var nombre = $("#nuevo_usuario_nombre").val();
+	
+	$.post("controller6.php", 
+		{ 	action 	:"sugiere_usuario_nick",
+			nombre : nombre
+		}, end_sugiere_usuario_nick);
+}   
+function end_sugiere_usuario_nick(xml){  
+	$(xml).find("response").each(function(i){	 	
+		if ($(this).find("result").text()=="ok"){	/* NO seleccionar subdis */			
+ 			$("#nuevo_usuario_usuario").val($(this).find("nick").text());
+ 			
+		}else{ /* subdis 01 NO REGISTRADO */
+			swal("CUIDADO",$(this).find("result_text").text(),"error");
+		}
+	}); 
+}
+
+

@@ -1,0 +1,2485 @@
+ 
+/* PEDIDOS */  
+//	$("#btn-leer_csv_pedido").click(leer_csv_pedido); 
+//	$("#btn-iniciar_pedido").click(iniciar_pedido);  
+//	$("#btn-guardar_pedido").click(guardar_pedido);    
+//	$("#btn-registrar_pedido").click(registrar_pedido);   
+ 
+
+/*clientes*/
+$("#btn-guardar_subdis_nvo").click(function(){
+	tipoguardado = "nuevo";
+	guardar_subdis(); 
+});
+$("#btn-guardar_subdis_edit").click(function(){
+	tipoguardado = "editar";
+	guardar_subdis();
+});
+$("#btn-guardar_subdis_nvo_salir").click(function(){
+	tipoguardado = "nuevo_salir";
+	guardar_subdis();  
+});   
+
+//	$("#btn-solicitar_vacaciones").click(solicitar_vacaciones);
+//	$("#btn-subir_pdf_csf").click(subir_pdf_csf); // csv_file
+
+/* tipos de permiso de usuario*/
+$("#btn-agrega_usuario_tipo_permiso").click(agrega_usuario_tipo_permiso); 
+
+
+/* BOTON PARA INICIAR CONTEO RAPIDO DE ALMACEN POR REFERENCIA */
+$("#btn-iniciar_conteo_referencia").click(iniciar_conteo_referencia); 
+$("#btn-contar_producto").click(contar_producto); 
+
+/* BOTON PARA EXPORTAR A EXCEL EL CATALOGO DE PRODUCTOS */
+$("#btn-filtrar_producto_excel").click(filtrar_producto_excel);
+/* BOTON PARA EXPORTAR A EXCEL EL INVENTARIO */
+$("#btn-buscar_inventario_exportar_excel").click(buscar_inventario_exportar_excel);
+$("#btn-activos_reporte_exportar_excel").click(activos_reporte_exportar_excel);
+
+$("#btn-validar_entrada_factura").click(validar_entrada_factura); 
+$("#btn-imprimir_pdf_validar_entrada_factura").click(imprimir_pdf_validar_entrada_factura); 
+$("#btn-firmar_validar_entrada_factura").click(firmar_validar_entrada_factura); 
+$("#btn-filtrar_caja").click(filtrar_caja); 
+
+$("#btn-guardar_factura_entrada").click(guardar_factura_entrada); 
+$("#btn-guardar_factura_entrada_registrar").click(guardar_factura_entrada_registrar); 
+
+/* busqueda de id_cirugia por codigo*/
+$("#btn-buscar_cirugia_codigo").click(buscar_cirugia_codigo);  
+$("#btn-buscar_id_cirugia_por_codigo").click(buscar_id_cirugia_por_codigo); 
+
+ 
+/* Registrar entrada de inventario*/
+$("#btn-registrar_entrada_factura").click(function(){
+	//	registrar_entrada_inventario();  
+	//	valida_caducidad_ef();   
+	
+	console.log("btn-registrar_entrada_factura");
+	
+	valida_cantidad_etiquetas();
+}); 
+ 
+ 
+$("#btn-agrega_subdis_vendedor").click(agrega_subdis_vendedor);
+$("#btn-surtir_cirugia_producto_suelto").click(surtir_cirugia_producto_suelto);
+
+
+ 
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ********************* IMPRESION DE ETIQUETAS  ********************* */
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ******************************************************************* */
+
+/* **** AQUI VALIDAMOS LA CANTIDAD DE PRODUCTOS QUE SE REGISTRAR EN LA ENTRADA *** */
+/* **** SI SE ELIGE IMPRIMIR ETIQUETAS, Y SE ESCRIBEN MÁS DE 5 PRODUCTOS, PREGUNTA SI DESEA CONTINUAR *** */
+function valida_cantidad_etiquetas(){ 
+	var imprimir 	= $("#imprimir_etiquetas").val();
+	var cantidad 	= $("#nuevo_entrada_cantidad").val(); 
+
+
+	console.log("CANTIDAD::: " + cantidad);
+	
+	if(imprimir == 1 && cantidad > 5){
+		swal({ 
+			title: "Alerta",
+			text: "Eligió imprimir más de " + cantidad + " etiquetas. Desea continuar???",
+			type: "warning",
+			showCancelButton: true,
+			confirmButtonClass: "btn-danger",
+			confirmButtonText: "Si, continuar",
+			cancelButtonText: "No, Regresar",
+			closeOnConfirm: true,
+			closeOnCancel: true
+		}, 
+		function(isConfirm) { 
+			if (isConfirm) {
+				
+				//	swal.close();
+				
+				valida_caducidad_ef();
+			} else {
+				return false;
+			}  
+		});
+	}else{
+		
+		//	swal.close();
+		
+		valida_caducidad_ef();
+	}
+
+	
+} 
+
+
+ 
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ************* MODULO CONTEO RAPDIO DE REFERENCIAS  **************** */
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ******************************************************************* */
+
+  
+function eliminar_conteo_referencia(id_conteo_producto){     
+	$.post("controller6.php",    
+		{ 	action 		:"eliminar_conteo_referencia",
+			id_conteo_producto 	: id_conteo_producto
+		}, end_eliminar_conteo_referencia);  
+}  
+function end_eliminar_conteo_referencia(xml){      
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){    
+		 	llenar_tabla_conteo_referencia();
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+
+function llenar_tabla_conteo_referencia(){     
+	var id_conteo 	= $("#id_conteo").val();
+	$.post("controller6.php",    
+		{ 	action 		:"llenar_tabla_conteo_referencia",
+			id_conteo 	: id_conteo
+		}, end_llenar_tabla_conteo_referencia);  
+}  
+function end_llenar_tabla_conteo_referencia(xml){      
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){    
+		 
+			$("#total_productos").html($(this).find("total_productos").text());
+			
+		 	var ocultamiento_columnas = [];	  
+			var messageTop = "Reporte de Conteo Rápido de Productos por Referencia. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_conteo",ocultamiento_columnas,messageTop,"","",""); 
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+
+function iniciar_conteo_referencia(){
+	
+	swal({    
+		title: "¿Comenzar un nuevo conteo rápido?",   
+		text: "Si tiene un conteo activo se perderá toda la informacion. ¿Continuar?",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, continuar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller6.php",
+			{ 	action 		: "iniciar_conteo_referencia"
+			}, end_iniciar_conteo_referencia);
+	});
+	
+} 
+function end_iniciar_conteo_referencia(xml){     
+	$(xml).find("response").each(function(i){   
+		if ($(this).find("result").text()=="ok"){	
+			
+			$("#id_conteo").val($(this).find("id_conteo").text());
+			$("#table_conteo").html("");
+			$("#total_productos").html(""); 
+			
+			$("#respuesta1").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');	
+		}else{
+			$("#respuesta1").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');	
+		}		
+		setTimeout(function(){  
+			$("#respuesta1").html("");   
+		}, 3000);	
+	});
+} 
+
+function contar_producto(){ 
+		 
+	var id_conteo 		= $("#id_conteo").val();
+	var conteo_codigo 	= $("#conteo_codigo").val();
+	
+	if(id_conteo == 0){
+		
+		swal("Error","Por favor inicie el conteo", "error");
+		return false;
+		
+	}else{
+		
+		if(conteo_codigo != "0" && conteo_codigo != ""){		   
+			$.post("controller6.php", 
+				{ 	action 			: "contar_producto", 
+					id_conteo 		: id_conteo,  
+					conteo_codigo 	: conteo_codigo
+				}, end_contar_producto);  
+				
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">Por favor escanie un producto</div>');
+			setTimeout(function(){  
+				$("#respuesta").html("");   
+			}, 2000);
+		}
+	}
+	 
+} 
+function end_contar_producto(xml){     
+	$(xml).find("response").each(function(i){   
+		if ($(this).find("result").text()=="ok"){	
+			
+			$("#conteo_codigo").val(""); 
+			$("#conteo_codigo").focus();
+			
+			llenar_tabla_conteo_referencia();
+			
+			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');	
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');	
+		}		
+		setTimeout(function(){  
+			$("#respuesta").html("");   
+		}, 3000);	
+	});
+} 
+ 
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ************** EXPORTAR REPORTES POR EXCEL  *********************** */
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ******************************************************************* */
+function filtrar_producto_excel(){
+	
+	var fabricante 	= $("#filtro_producto_fabricante").val();
+	var marca 		= $("#filtro_producto_marca").val();
+	var categoria 	= $("#filtro_producto_categoria").val();
+	var nombre 		= $("#filtro_producto_nombre").val();
+	var referencia 	= $("#filtro_producto_referencia").val();
+	
+	window.open("filtrar_producto_excel.php?fabricante=" + fabricante + "&marca=" + marca + "&categoria=" + categoria + "&nombre=" + nombre + "&referencia=" + referencia);		
+	
+} 
+function buscar_inventario_exportar_excel(){
+		
+	window.open("buscar_inventario_exportar_excel.php");		
+	
+}
+
+function activos_reporte_exportar_excel(){ 
+	
+	var tipo_reporte = $("#tipo_reporte").val();
+	
+	$("#btn-cancelar").trigger("click");  
+	
+	window.open("activos_reporte_exportar_excel.php?tipo_reporte=" + tipo_reporte);		
+		
+	
+	
+	
+	
+}
+
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ************* PERMISOS POR TIPO DE USUARIO  *********************** */
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ******************************************************************* */
+function agrega_usuario_tipo_permiso(){       
+	var id_usuario 		= $("#id_usuario").val();	
+	var id_almacen 		= $("#selecciona_almacen").val();	 
+	var tipo_usuario 	= $("#selecciona_tipo_usuario").val();	
+	 
+	if(tipo_usuario != "0"){		   
+		$.post("controller6.php",  
+			{ 	action 			: "agrega_usuario_tipo_permiso", 
+				id_usuario 		: id_usuario, 
+				id_almacen 		: id_almacen, 
+				tipo_usuario 	: tipo_usuario 
+			}, end_agrega_usuario_tipo_permiso);  
+			
+	}else{
+		$("#respuesta").html('<div class="alert alert-danger">Seleccione una sucursal</div>');
+		setTimeout(function(){  
+			$("#respuesta").html("");   
+		}, 2000);
+	}
+}     
+function end_agrega_usuario_tipo_permiso(xml){     
+	$(xml).find("response").each(function(i){   
+		if ($(this).find("result").text()=="ok"){	
+			$("#selecciona_tipo_usuario").val("0");	
+			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');	
+			llenar_tabla_usuario_tipo_permiso();				
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');	
+		}		
+		setTimeout(function(){  
+			$("#respuesta").html("");   
+		}, 2000);	
+	});
+} 
+
+  
+function llenar_tabla_usuario_tipo_permiso(){    
+	var id_usuario 	= $("#id_usuario").val();
+	$.post("controller6.php",  
+		{ 	action :"llenar_tabla_usuario_tipo_permiso",
+			id_usuario 		: id_usuario
+		}, end_llenar_tabla_usuario_tipo_permiso);  
+} 
+function end_llenar_tabla_usuario_tipo_permiso(xml){      
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){    
+		 
+			var nombre_usuario = $(this).find("nombre_usuario").text();					
+			$("#nombre_de_usuario").html(nombre_usuario);
+			
+			var ocultamiento_columnas = [];	  
+			var messageTop = "Reporte de Sucursales por Usuario. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_usuario",ocultamiento_columnas,messageTop,"","",""); 
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+
+/* RELACION USUARIO PERMISO POR TIPO */
+function eliminar_usuario_permiso(id_permiso){    
+	swal({    
+		title: "¿Eliminar?",   
+		text: "Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		  
+		$.post("controller6.php",
+			{ 	action 		: "eliminar_usuario_permiso",  
+				id_permiso 	: id_permiso
+			}, end_eliminar_usuario_permiso);
+	});
+}   
+function end_eliminar_usuario_permiso(xml){    
+	$(xml).find("response").each(function(i){	 	   
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_tabla_usuario_tipo_permiso();	    	  
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}  
+	});
+}  
+
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ********************* ENTRADAS POR FACTURA  *********************** */
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ******************************************************************* */
+   
+   
+ 
+ 
+function cancelar_entrada_almacen_factura(id_entrada_factura){ 
+	if(id_entrada_factura != "0"){  		
+		swal({    
+			title: "¿Eliminar TODOS este registro de ENTRADA?",   
+			text: "Esta accion no podra deshacerse",   
+			/*type: "warning",    */
+			showCancelButton: true,    
+			confirmButtonColor: "#DD6B55",   
+			confirmButtonText: "Si, eliminar",  
+			cancelButtonText: "Regresar",   
+			closeOnConfirm: true 
+		}, function(){ 		   
+			$('#loading').show(); 
+			$.post("controller6.php", 
+			{ 	action 		: "cancelar_entrada_almacen_factura",  
+				id_entrada_factura 	: id_entrada_factura   
+			}, end_cancelar_entrada_almacen_factura); 
+		}); 		
+	}	
+}   
+function end_cancelar_entrada_almacen_factura(xml){     
+	$(xml).find("response").each(function(i){  
+		if ($(this).find("result").text()=="ok"){
+			llenar_tabla_entradas_factura(); 
+			$('#loading').hide();
+		}else{
+			$('#loading').hide();
+			alert($(this).find("result_text").text());
+		}
+	});
+}   
+ 
+ /*Entradas al almacen*/ 
+function filtrar_caja(){  
+	var id_entrada_factura = $("#id_entrada_factura").val();
+	var caja = $("#selecciona_caja").val();
+	$.post("controller6.php",  
+		{ 	action :"llenar_tabla_entradas_factura_detalle" ,
+			id_entrada_factura: id_entrada_factura,
+			caja : caja 
+		}, end_llenar_tabla_entradas_factura_detalle); 
+}
+function end_llenar_tabla_entradas_factura_detalle(xml){  
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){			
+			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Entradas de Almacen. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_entradas_almacen",ocultamiento_columnas,messageTop,"","","");
+			
+			$("#hoja").html($(this).find("hoja").text())
+			
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}   
+   
+ /*Entradas al almacen*/ 
+function llenar_tabla_entradas_factura_detalle(){  
+	var id_entrada_factura = $("#id_entrada_factura").val();
+	$.post("controller6.php",  
+		{ 	action :"llenar_tabla_entradas_factura_detalle" ,
+			id_entrada_factura: id_entrada_factura
+		}, end_llenar_tabla_entradas_factura_detalle); 
+}
+function end_llenar_tabla_entradas_factura_detalle(xml){  
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){			
+			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Entradas de Almacen. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_entradas_almacen",ocultamiento_columnas,messageTop,"","","");
+			
+			$("#hoja").html($(this).find("hoja").text())
+			
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}   
+
+   
+/*Entradas al almacen*/ 
+function llenar_tabla_entradas_factura_filtro(){  
+	
+	var buscar_entrada_id 			= $("#buscar_entrada_id").val();
+	var id_fabricante 				= $("#select_fabricante").val();
+	var buscar_entrada_fecha 		= $("#buscar_entrada_fecha").val();
+	var buscar_entrada_fecha_fin 	= $("#buscar_entrada_fecha_fin").val();
+	var buscar_entrada_referencia 	= $("#buscar_entrada_referencia").val();
+	var buscar_entrada_lote 		= $("#buscar_entrada_lote").val();
+	
+	$.post("controller6.php",
+		{ 	action 						:"llenar_tabla_entradas_factura",
+			buscar_entrada_id 			: buscar_entrada_id,
+			id_fabricante 				: id_fabricante,
+			buscar_entrada_fecha 		: buscar_entrada_fecha,
+			buscar_entrada_fecha_fin 	: buscar_entrada_fecha_fin,
+			buscar_entrada_referencia 	: buscar_entrada_referencia,
+			buscar_entrada_lote 		: buscar_entrada_lote
+		}, end_llenar_tabla_entradas_factura);
+} 
+function llenar_tabla_entradas_factura(){  
+	$.post("controller6.php",
+		{ 	action :"llenar_tabla_entradas_factura" 
+		}, end_llenar_tabla_entradas_factura);
+} 
+function end_llenar_tabla_entradas_factura(xml){   
+	$(xml).find("response").each(function(i){		 
+		$('#loading').hide();
+		if ($(this).find("result").text()=="ok"){			
+			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Entradas de Almacen. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_entradas_almacen",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}   
+   
+
+//	  
+/*Entradas al almacen por ID entrada - muestra Inventario_tmp */ 
+function imprimir_pdf_validar_entrada_factura(){   
+
+	//	var id_entrada_factura = $("#id_entrada_factura").val(); 
+	var id_entrada = $("#id_entrada_almacen").val(); 
+	var caja = $("#id_caja").val(); 
+	
+	//alert("id_entrada_factura: " + id_entrada_factura);
+	
+	var continua = 1;  
+	
+	if(id_entrada_factura == 0){
+		continua = 0;
+	}     
+ 
+	if(continua == 1){  
+		$.post("controller6.php", 
+		{ 	action :"imprimir_pdf_validar_entrada_factura", 
+			id_entrada : id_entrada,  
+			caja : caja 
+		}, end_imprimir_pdf_validar_entrada_factura);
+	}
+	   
+} 
+function end_imprimir_pdf_validar_entrada_factura(xml){   
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){	    
+			window.open( $(this).find("filepath").text(), '_blank' );  
+			
+			$("#btn-iniciar_registro").addClass("d-none");    
+			$("#btn-firmar_validar_entrada_factura").removeClass("d-none"); 
+			$("#btn-validar_entrada_factura").addClass("d-none");  
+			$("#btn-imprimir_pdf_validar_entrada_factura").removeClass("d-none");
+			
+			$("#div-iniciar_registro").addClass("d-none");    
+			$("#div-firmar_validar_entrada_factura").removeClass("d-none"); 
+			$("#div-validar_entrada_factura").addClass("d-none");  
+			$("#div-imprimir_pdf_validar_entrada_factura").removeClass("d-none");			
+			
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+
+//	    
+/*Entradas al almacen por ID entrada - muestra Inventario_tmp */ 
+function firmar_validar_entrada_factura(){     
+
+	//	var id_entrada_factura = $("#id_entrada_factura").val(); 
+	var pin 		= $("#pin").val(); 
+	var id_entrada 	= $("#id_entrada_almacen").val(); 
+	var caja 		= $("#id_caja").val(); 
+	
+	//alert("id_entrada_factura: " + id_entrada_factura);
+	
+	var continua = 1;  
+	 
+	if(pin == ""){ 
+		swal("Error","Escriba su PIN para Continuar", "error");
+		continua = 0;
+	}
+	
+	if(id_entrada_factura == 0){
+		continua = 0;
+	}      
+  
+	if(continua == 1){   
+		$.post("controller6.php", 
+		{ 	action 		: "firmar_validar_entrada_factura", 
+			pin 		: pin,  
+			id_entrada 	: id_entrada,  
+			caja 		: caja 
+		}, end_firmar_validar_entrada_factura); 
+	}
+	   
+}
+function end_firmar_validar_entrada_factura(xml){   
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){	     
+			
+			$("#btn-iniciar_registro").addClass("d-none");    
+			$("#btn-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#btn-validar_entrada_factura").removeClass("d-none");  
+			$("#btn-imprimir_pdf_validar_entrada_factura").addClass("d-none");
+			
+			$("#div-iniciar_registro").addClass("d-none");       
+			$("#div-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#div-validar_entrada_factura").removeClass("d-none");  
+			$("#div-imprimir_pdf_validar_entrada_factura").addClass("d-none");			
+			
+			/* si el PIN es correcto, ejecuta el nuevo PDF */
+			//	imprimir_pdf_validar_entrada_factura();
+			
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+
+//	  
+/*Entradas al almacen por ID entrada - muestra Inventario_tmp */ 
+function validar_entrada_factura(){   
+
+	var id_entrada_factura = $("#id_entrada_factura").val(); 
+	var caja = $("#id_caja").val(); 
+	
+	//alert("id_entrada_factura: " + id_entrada_factura);
+	
+	var continua = 1;
+	
+	if(id_entrada_factura == 0){
+		continua = 0;
+	}    
+ 
+	if(continua == 1){  
+		$.post("controller6.php", 
+		{ 	action :"validar_entrada_factura", 
+			id_entrada_factura : id_entrada_factura, 
+			caja : caja 
+		}, end_validar_entrada_factura);
+	}
+	
+}
+function end_validar_entrada_factura(xml){   
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){	    
+			$("#tabla_entradas").html($(this).find("tabla_entradas").text()); 
+			
+			
+			setTimeout(function(){
+				$("#btn-modal_entrada").trigger("click");
+			}, 500);	
+			 
+			
+			//	alert("clico");
+			
+			
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+
+
+/* Entradas inventario tmp */
+function eliminar_inventario_tmp_factura(id_inventario){
+	 
+	$.post("controller6.php",
+			{ 	action 			: "eliminar_inventario_tmp_factura", 
+				id_inventario 	: id_inventario
+			}, end_eliminar_inventario_tmp_factura);
+	
+} 
+function end_eliminar_inventario_tmp_factura(xml){ 
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){ 		  
+		
+			/* esconde botones*/
+			$("#btn-iniciar_registro").addClass("d-none");    
+			$("#btn-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#btn-validar_entrada_factura").addClass("d-none");  
+			$("#btn-imprimir_pdf_validar_entrada_factura").removeClass("d-none");
+			
+			$("#div-iniciar_registro").addClass("d-none");     
+			$("#div-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#div-validar_entrada_factura").addClass("d-none");   
+			$("#div-imprimir_pdf_validar_entrada_factura").removeClass("d-none");		
+				
+				
+			llenar_tabla_entrada_almacen_inventariotmp_factura();			
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		} 
+	}); 
+} 
+
+/* Entradas inventario tmp */
+function modificar_inventario_tmp_factura(id_inventario){
+	
+	
+	var nuevo_lote 			= $(".nuevo_lote_" + id_inventario).val(); 
+	var nuevo_fecha_cad 	= $(".nuevo_fecha_cad_" + id_inventario).val(); 
+	var nuevo_cantidad 		= $(".nuevo_cantidad_" + id_inventario).val(); 
+	var nuevo_precio		= $(".nuevo_precio_" + id_inventario).val(); 
+ 
+	$.post("controller6.php",
+			{ 	action 			: "modificar_inventario_tmp_factura", 
+				id_inventario 	: id_inventario,
+				nuevo_lote 		: nuevo_lote,
+				nuevo_fecha_cad : nuevo_fecha_cad,
+				nuevo_cantidad  : nuevo_cantidad ,
+				nuevo_precio : nuevo_precio 
+			}, end_modificar_inventario_tmp_factura);
+	
+}  
+function end_modificar_inventario_tmp_factura(xml){ 
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			
+			/* esconde botones*/ 
+			$("#btn-iniciar_registro").addClass("d-none");    
+			$("#btn-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#btn-validar_entrada_factura").addClass("d-none");  
+			$("#btn-imprimir_pdf_validar_entrada_factura").removeClass("d-none");
+			
+			$("#div-iniciar_registro").addClass("d-none");     
+			$("#div-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#div-validar_entrada_factura").addClass("d-none");   
+			$("#div-imprimir_pdf_validar_entrada_factura").removeClass("d-none");	
+
+			//llenar_tabla_entrada_almacen();		 
+			llenar_tabla_entrada_almacen_inventariotmp_factura();	
+			
+
+				
+		}else{		
+			var mensaje = $(this).find("result_text").text();
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		} 
+	});
+} 
+ 
+/*Entradas al almacen por ID entrada - muestra Inventario_tmp */ 
+function llenar_tabla_entrada_almacen_inventariotmp_factura(){   
+	var id_entrada = $("#id_entrada_almacen").val(); 
+	
+	//alert("IDENTRADA::: " + id_entrada);
+	 
+	if(id_entrada == 0){
+		return false;
+	} 
+	   
+	$.post("controller6.php",
+		{ 	action :"llenar_tabla_entrada_almacen_inventariotmp_factura", 
+			id_entrada : id_entrada 
+		}, end_llenar_tabla_entrada_almacen_inventariotmp_factura);
+}
+function end_llenar_tabla_entrada_almacen_inventariotmp_factura(xml){   
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){		
+    
+			$("#cant_articulos").html($(this).find("cant_articulos").text()); 
+			$("#subtotal_articulos").html($(this).find("subtotal_articulos").text());
+			$("#iva_articulos").html($(this).find("iva_articulos").text());
+			$("#monto_articulos").html($(this).find("monto_articulos").text());
+			
+			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte TEMPORAL de Entradas al almacen temporal. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_entrada_almacen",ocultamiento_columnas,messageTop,"","",""); 
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}    
+
+
+function buscar_producto_inventario_factura(){
+	
+	var id_producto 	= $("#id_producto").val(); 
+	var codigo_2 		= $("#nuevo_entrada_codigo_2").val(); 
+	var cantidad 		= $("#nuevo_entrada_cantidad").val();
+	var sugerir 		= $("#nuevo_entrada_sugerir").val();
+	var caducidad 		= $("#nuevo_entrada_caducidad_automatica").val();
+	
+	var nuevo_entrada_proveedor 		= $("#nuevo_entrada_proveedor").val();
+	
+	var continua 		= 1; 
+	var doscaracteres 	= ""; 
+	
+	if(codigo_2 == ""){ 
+		continua = 0;
+		//swal("Cuidado", "Por favor ingresa un codigo", "error");
+		return false;
+	}	
+	if(cantidad == "0" || cantidad == ""){ 
+		continua = 0;
+		//swal("Cuidado", "Por favor ingresa una cantidad", "error");
+		return false;
+	}
+	
+	
+	if(codigo_2 != "" && codigo_2 != undefined){ 
+		doscaracteres = codigo_2.substr(0, 2);
+	}
+	
+	doscaracteres = "NA";
+	
+	if(continua == 1){  
+		if(doscaracteres == "01"){  
+			/* de manera general el codigo 1 inicia con "01" y muchas veces el usuario por error escanea el codigo 1 */
+			/* entonces si detectamos que el codigo 2 inicia en 01 vamos a avisar al usuario que revise */ 		
+			swal({    
+				title: "ATENCION",   
+				text: "El código 2 inicia con 01  ¿Es correcto? ",   
+				type: "warning",
+				showCancelButton: true,    
+				confirmButtonColor: "#DD6B55",    
+				confirmButtonText: "Si, es correcto",  
+				cancelButtonText: "Modificar",   
+				closeOnConfirm: true 
+			}, function(){ 		
+
+				swal.close();
+				
+				
+				$.post("controller.php", 
+					{ 	action : "buscar_producto_inventario",
+						id_producto: id_producto, 
+						codigo_2: codigo_2, 
+						cantidad: cantidad,  
+						sugerir: sugerir,    
+						caducidad: caducidad,  
+						nuevo_entrada_proveedor: nuevo_entrada_proveedor	  
+					}, end_buscar_producto_inventario);  
+			});
+		}else{
+			$.post("controller.php", 
+				{ 	action : "buscar_producto_inventario",
+					id_producto: id_producto, 
+					codigo_2: codigo_2, 
+					cantidad: cantidad,  
+					sugerir: sugerir,    
+					caducidad: caducidad,
+					nuevo_entrada_proveedor: nuevo_entrada_proveedor							
+				}, end_buscar_producto_inventario);  
+		}
+	} 
+	
+	/*
+	if(continua == 1){ 
+		$.post("controller.php", 
+			{ 	action : "buscar_producto_inventario",
+				id_producto: id_producto, 
+				codigo_2: codigo_2, 
+				cantidad: cantidad,  
+				sugerir: sugerir,    
+				caducidad: caducidad    
+			}, end_buscar_producto_inventario);  		 
+	}*/
+ 
+}  
+function end_buscar_producto_inventario(xml){ 
+	$(xml).find("response").each(function(i){
+		if ($(this).find("result").text()=="ok"){
+			 
+			/*altas de almacen*/  
+			/*$("#nuevo_entrada_nueva_cantidad").val($(this).find("lote").text()); */
+			$("#id_producto").val($(this).find("id_producto").text()); 
+			 			
+			$("#nuevo_entrada_lote").val($(this).find("lote").text()); 
+			$("#nuevo_entrada_caducidad").val($(this).find("fecha_cad").text());
+			$("#nuevo_entrada_area").val($(this).find("area").text());  
+			$("#nuevo_entrada_subarea").val($(this).find("subarea").text());
+			$("#nuevo_entrada_nivel").val($(this).find("nivel").text());
+			$("#nuevo_entrada_nueva_cantidad").val($(this).find("nueva_cantidad").text());
+			$("#nuevo_entrada_precio").val($(this).find("precio").text());  
+			
+			var id_inventario = $(this).find("id_inventario").text();
+			var id_inventario_tmp = $(this).find("id_inventario_tmp").text(); 
+			
+			//alert(id_inventario);
+			//alert(id_inventario_tmp);
+			
+			if(id_inventario_tmp == "NA" || id_inventario_tmp == "0")  
+				$("#nuevo_entrada_id_inventario").val($(this).find("id_inventario").text()); 
+			if(id_inventario == "NA" || id_inventario == "0")
+				$("#nuevo_entrada_id_inventario").val($(this).find("id_inventario_tmp").text());
+						
+			if($(this).find("guarda_automatico").text() == "1"){				
+				//registrar_entrada_inventario(); 
+				
+				var nuevo_entrada_automatico = $("#nuevo_entrada_automatico").val();
+				if(nuevo_entrada_automatico == "1"){
+					valida_caducidad_ef(); 
+				}
+				
+			}
+			 
+		}else{ 
+			//$("#nuevo_entrada_lote").val(""); 
+			//$("#nuevo_entrada_caducidad").val("");
+			
+			//$("#nuevo_entrada_area").val("");
+			//$("#nuevo_entrada_nivel").val("");
+			//$("#nuevo_entrada_subarea").val("");
+			//$("#nuevo_entrada_id_inventario").val("0");
+			//$("#nuevo_entrada_lote").val($(this).find("lote").text()); 
+			//$("#nuevo_entrada_caducidad").val($(this).find("fecha_cad").text());
+			//$("#nuevo_entrada_nueva_cantidad").val("0"); 
+			
+			$("#nuevo_entrada_lote").val($(this).find("lote").text()); 
+			$("#nuevo_entrada_caducidad").val($(this).find("fecha_cad").text());
+			$("#nuevo_entrada_area").val($(this).find("area").text());  
+			$("#nuevo_entrada_subarea").val($(this).find("subarea").text());
+			$("#nuevo_entrada_nivel").val($(this).find("nivel").text());
+			$("#nuevo_entrada_nueva_cantidad").val($(this).find("nueva_cantidad").text());
+			$("#nuevo_entrada_precio").val($(this).find("precio").text());  
+			
+			$("#respuesta").html("");  
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			 
+			var audio = document.getElementById("audio");
+			audio.play();
+			
+			 
+			document.getElementById('btn-registrar_entrada').focus();
+			
+			
+			$("#id_producto").val("0");
+			document.getElementById('buscar_producto_codigo').focus();
+			 
+			$("#buscar_producto_codigo").val("0");
+			$("#nuevo_entrada_referencia").val("0");
+			$("#nuevo_entrada_nombre").val("0");
+			
+			swal("Ocurrio un error","Ultimo producto escaneado - codigo 2: " + $(this).find("codigo_2").text(),"error");
+			//saltar(event, "btn-registrar_entrada");
+			
+			
+				
+			/*
+			setTimeout(function(){  
+				$("#respuesta").html("");  
+			}, 5000);	
+			*/
+			
+			//swal("No hay inventario",$(this).find("result_text").text(),"warning");
+		}
+	});
+}
+
+
+function valida_caducidad_ef(){ 
+	var caducidad 		= $("#nuevo_entrada_caducidad").val();
+	var id_auditoria 	= $("#id_auditoria").val();
+
+	//alert(id_auditoria);
+	//return false;
+	
+	var fechaInicio = new Date().getTime();
+	var fechaFin    = new Date(caducidad).getTime();
+
+	var diff = fechaFin - fechaInicio;
+	var dias_transcurridos = (diff/(1000*60*60*24) );
+	
+	if(dias_transcurridos < 365){
+		swal({ 
+			title: "Alerta",
+			text: "La fecha de caducidad es menor a 1 año. Desea Continuar?",
+			type: "warning",
+			showCancelButton: true,
+			confirmButtonClass: "btn-danger",
+			confirmButtonText: "Si, continuar",
+			cancelButtonText: "No, Regresar",
+			closeOnConfirm: true,
+			closeOnCancel: true
+		}, 
+		function(isConfirm) { 
+			if (isConfirm) {
+				if(id_auditoria === undefined){
+					registrar_entrada_inventario_factura();
+				}else{
+					registrar_auditoria_manual();
+				}				
+			} else {
+				return false;
+			} 
+		});
+	}else{
+		if(id_auditoria === undefined){
+			registrar_entrada_inventario_factura();
+		}else{
+			registrar_auditoria_manual();
+		}				
+	}
+
+	
+} 
+
+function registrar_entrada_inventario_factura(){ 
+	
+	//alert("entra");
+	
+	var id_inventario 	= $("#nuevo_entrada_id_inventario").val();
+	var nueva_cantidad 	= $("#nuevo_entrada_nueva_cantidad").val();	
+	var lote 			= $("#nuevo_entrada_lote").val();
+	var caducidad 		= $("#nuevo_entrada_caducidad").val();
+	var precio 			= $("#nuevo_entrada_precio").val();
+	var area 			= $("#nuevo_entrada_area").val();
+	var subarea 		= $("#nuevo_entrada_subarea").val();
+	var nivel 			= $("#nuevo_entrada_nivel").val();
+	var codigo_2 		= $("#nuevo_entrada_codigo_2").val();		
+	var cantidad 		= $("#nuevo_entrada_cantidad").val();		
+	
+	var factura 		= $("#nuevo_entrada_factura").val();		
+	var caja 			= $("#nuevo_entrada_caja").val();		
+	
+	var id_producto 	= $("#id_producto").val();
+	
+	var codigo_1 		= $("#buscar_producto_codigo").val();
+	 
+	var iniciar 		= $("#iniciar_registro").val();	 
+	var id_entrada 		= $("#id_entrada_almacen").val(); 
+		
+	if(codigo_2 == "" || cantidad == "" || cantidad == "0" || lote == "" || caducidad == "" || area == "0" || subarea == "0"){
+		swal("Ocurrio un error"," Por favor verifique los campos obligatorio","error");
+		return false;
+	}
+	if(precio == "" || precio == "0"){
+		alert("precio necesario");
+		return false;
+	}
+		
+		
+	//alert(id_producto);
+	 
+	if(iniciar == 0){
+  
+		swal("Seleccione Fabricante y Caja para iniciar.");
+		
+		//			swal({ 
+		//				title: "No ha iniciado registro",
+		//				text: "Desea iniciar un nuevo registro de Entrada de Almacen?",
+		//				type: "warning",
+		//				showCancelButton: true,
+		//				confirmButtonClass: "btn-danger",
+		//				confirmButtonText: "Si, iniciarlo",
+		//				cancelButtonText: "No, continuar sin iniciar",
+		//				closeOnConfirm: false,
+		//				closeOnCancel: true
+		//			}, 
+		//			function(isConfirm) {
+		//				if (isConfirm) {
+		//					$("#iniciar_registro").val("1");
+		//						
+		//						//	$("#btn-iniciar_registro").removeClass("btn-primary");
+		//						//	$("#btn-iniciar_registro").addClass("btn-danger");
+		//						//	$("#btn-iniciar_registro").html("Guardar Registro de Entrada");
+		//						
+		//						//	$("#btn-imprimir_pdf").removeClass("d-none");
+		//						
+		//						/*asigna un valor de ID a  id_entrada_almacen */
+		//						if(factura > 0){
+		//							$.post("controller6.php", 
+		//								{ 	action 	: "iniciar_registro_entrada_por_factura" ,
+		//									iniciar	: iniciar,
+		//									factura	: factura,
+		//									caja 	: caja
+		//								}, end_iniciar_registro_entrada_por_factura); 
+		//						}else{
+		//							swal.close();
+		//							alert("seleccione fabrincante para iniciar el registro");
+		//						}
+		//						
+		//				} else {
+		//					$('#loading').show(); 
+		//					$("#buscar_producto_codigo").prop( "disabled", true );
+		//					$("#nuevo_entrada_codigo_2").prop( "disabled", true ); 
+		//					
+		//					
+		//					/* esconde botones*/
+		//					$("#btn-iniciar_registro").addClass("d-none");    
+		//					$("#btn-firmar_validar_entrada_factura").addClass("d-none"); 
+		//					$("#btn-validar_entrada_factura").addClass("d-none");  
+		//					$("#btn-imprimir_pdf_validar_entrada_factura").removeClass("d-none");
+		//					
+		//					$("#div-iniciar_registro").addClass("d-none");      
+		//					$("#div-firmar_validar_entrada_factura").addClass("d-none"); 
+		//					$("#div-validar_entrada_factura").addClass("d-none");   
+		//					$("#div-imprimir_pdf_validar_entrada_factura").removeClass("d-none");		
+		//					 
+		//						$.post("controller6.php", 
+		//						{ 	action 			: "registrar_entrada_inventario_factura",
+		//							id_inventario	: id_inventario, 
+		//							nueva_cantidad	: nueva_cantidad,
+		//							lote			: lote,
+		//							caducidad		: caducidad,
+		//							precio			: precio,
+		//							area			: area,
+		//							subarea			: subarea,  
+		//							nivel			: nivel,
+		//							codigo_2		: codigo_2, 
+		//							cantidad		: cantidad,  
+		//							factura			: factura, 
+		//							id_producto		: id_producto,
+		//							iniciar			: iniciar,  
+		//							id_entrada		: id_entrada, 
+		//							caja			: caja, 
+		//							codigo_1		: codigo_1
+		//						}, end_registrar_entrada_inventario_factura);  		
+		//				} 
+		//			});
+
+	}else{
+		$('#loading').show();  
+		
+		$("#buscar_producto_codigo").prop( "disabled", true );
+				$("#nuevo_entrada_codigo_2").prop( "disabled", true );
+				
+		  
+		 
+		$.post("controller6.php", 
+			{ 	action 			: "registrar_entrada_inventario_factura",
+				id_inventario	: id_inventario, 
+				nueva_cantidad	: nueva_cantidad,
+				lote			: lote, 
+				caducidad		: caducidad,
+				precio			: precio, 
+				area			: area,
+				subarea			: subarea, 
+				nivel			: nivel,
+				codigo_2		: codigo_2, 
+				cantidad		: cantidad, 
+				factura			: factura, 
+				id_producto		: id_producto,
+				iniciar			: iniciar,  
+				id_entrada		: id_entrada,
+				caja			: caja,
+				codigo_1		: codigo_1 
+			}, end_registrar_entrada_inventario_factura);  		 
+	}
+	
+	
+	//var continua = 1;  
+	 
+	/*if(continua == 1){ 
+		  
+	} */
+}
+function end_registrar_entrada_inventario_factura(xml){  
+	$(xml).find("response").each(function(i){
+		if ($(this).find("result").text()=="ok"){	
+
+			
+			$( "#buscar_producto_codigo" ).prop( "disabled", false );
+			$( "#nuevo_entrada_codigo_2" ).prop( "disabled", false );
+			
+			$('#id_producto').val("0");  
+			
+			
+			//$('#nuevo_entrada_form').trigger("reset"); 
+			$('#nuevo_entrada_cantidad').val("1"); 
+			$('#nuevo_entrada_codigo_2').val(""); 
+			$('#nuevo_entrada_lote').val(""); 
+			$('#nuevo_entrada_caducidad').val(""); 
+			$('#buscar_producto_codigo').val(""); 
+			$('#nuevo_entrada_referencia').val(""); 
+			$('#nuevo_entrada_nombre').val("");  
+			$('#nuevo_entrada_precio').val("0");  
+			
+			 
+			    
+			/* esconde botones*/
+			$("#btn-iniciar_registro").addClass("d-none");    
+			$("#btn-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#btn-validar_entrada_factura").addClass("d-none");  
+			$("#btn-imprimir_pdf_validar_entrada_factura").removeClass("d-none");
+			
+			$("#div-iniciar_registro").addClass("d-none");      
+			$("#div-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#div-validar_entrada_factura").addClass("d-none");   
+			$("#div-imprimir_pdf_validar_entrada_factura").removeClass("d-none");	
+		
+		  
+			$('#loading').hide();	 
+			 
+ 
+			$("#id_entrada_almacen").val($(this).find("id_entrada").text());
+			//llenar_tabla_entrada_almacen();
+			$('#buscar_producto_codigo').focus();	
+			llenar_tabla_entrada_almacen_inventariotmp_factura();   
+			 
+			//	$("#nuevo_entrada_proveedor").val($(this).find("proveedor").text());
+			 
+			/* aqui se manda imprimir etiquetas */  
+			var imprimir = $("#imprimir_etiquetas").val();
+			
+			console.log(imprimir);
+			
+			if (imprimir == 1){
+				
+				console.log("SI SE IMPRIME :::: " + imprimir);
+				
+				
+				imprimir_ticket_regsan_por_producto($(this).find("id_producto").text(), $(this).find("cantidad").text());
+			}else{
+				
+				console.log("NO SE IMPRIME :::: " + imprimir);
+				
+			}
+			
+		}else{
+			
+			
+			$( "#buscar_producto_codigo" ).prop( "disabled", false );
+			$( "#nuevo_entrada_codigo_2" ).prop( "disabled", false );
+		
+			$('#loading').hide();
+			//alert("1");
+			
+			
+			$("#id_producto").val("0");
+			document.getElementById('buscar_producto_codigo').focus();
+			 
+			$("#buscar_producto_codigo").val("0");
+			$("#nuevo_entrada_referencia").val("0");
+			$("#nuevo_entrada_nombre").val("0");
+			
+			//$('#nuevo_entrada_form').trigger("reset"); 
+			$('#nuevo_entrada_cantidad').val("1"); 
+			$('#nuevo_entrada_codigo_2').val(""); 
+			$('#nuevo_entrada_lote').val(""); 
+			$('#nuevo_entrada_caducidad').val(""); 
+			$('#buscar_producto_codigo').val(""); 
+			$('#nuevo_entrada_referencia').val(""); 
+			$('#nuevo_entrada_nombre').val("");  
+			$('#nuevo_entrada_precio').val("0");  
+			
+			swal("Ocurrio un error",$(this).find("result_text").text() + " ::: Ultimo producto escaneado codigo 2: " + $(this).find("codigo_2").text(),"error");
+			//swal("Ocurrio un error",$(this).find("result_text").text(),"error");
+		}
+	});
+}
+
+
+function iniciar_registro_entrada_por_factura(){       	
+	var iniciar 	= $("#iniciar_registro").val();	
+	var factura 	= $("#nuevo_entrada_factura").val();
+	var caja	 	= $("#nuevo_entrada_caja").val();
+	var continua = 1;	
+	
+	if(factura == "0" || caja == "0"){ 
+		swal("por favor seleccione Factura y Caja");
+		continua = 0; 
+	}		 
+	 
+	if(continua == 1){		
+		if(iniciar == 0){  /* va a iniciar el registro */		
+					  
+			$("#iniciar_registro").val("1");			
+			
+			//	$("#btn-iniciar_registro").removeClass("btn-primary");
+			//	$("#btn-iniciar_registro").addClass("btn-danger");
+			//	$("#btn-iniciar_registro").html("Guardar Registro de Entrada"); 			
+						 
+			$("#btn-iniciar_registro").addClass("d-none"); 
+			$("#btn-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#btn-validar_entrada_factura").addClass("d-none");  
+			$("#btn-imprimir_pdf_validar_entrada_factura").removeClass("d-none");
+			
+			$("#div-iniciar_registro").addClass("d-none"); 
+			$("#div-firmar_validar_entrada_factura").addClass("d-none");  
+			$("#div-validar_entrada_factura").addClass("d-none");  
+			$("#div-imprimir_pdf_validar_entrada_factura").removeClass("d-none");
+			
+			//$("#btn-validar_entrada_factura").removeClass("d-none"); 
+			
+			$("#nuevo_entrada_factura").prop('disabled', true);			
+			$("#nuevo_entrada_caja").prop('disabled', true);		 	
+			
+			/*asigna un valor de ID a  id_entrada_almacen */ 
+			$.post("controller6.php",  
+				{ 	action 		: "iniciar_registro_entrada_por_factura",   
+					factura 	: factura,  
+					caja 		: caja  
+				}, end_iniciar_registro_entrada_por_factura); 	 	 		
+		}else if(iniciar == 1){  /* va a cerrar el registro */				
+			var id_entrada = $("#id_entrada_almacen").val();
+			var id_entrada_factura = $("#id_entrada_factura").val(); 
+			
+			$('#loading').show(); 
+			  
+			$.post("controller6.php",   
+				{ 	action : "guardar_registro_entrada_factura",  
+					id_entrada_factura : id_entrada_factura,
+					id_entrada : id_entrada
+				}, end_guardar_registro_entrada_factura); 				
+		}	 		 
+	}	 
+}  
+function end_iniciar_registro_entrada_por_factura(xml){ 
+	swal.close();
+	$(xml).find("response").each(function(i){    
+		if ($(this).find("result").text()=="ok"){	 		  
+			$("#id_caja").val($(this).find("id_caja").text());
+			$("#id_entrada_almacen").val($(this).find("id_entrada").text());
+			$("#id_entrada_factura").val($(this).find("id_entrada_factura").text());
+			
+			$("#nuevo_entrada_proveedor").val($(this).find("id_fabricante").text());
+			
+			$('#loading').show(); 
+			setTimeout(function(){    
+				$('#loading').hide(); 				
+				llenar_tabla_entrada_almacen_inventariotmp_factura(); 
+			}, 2000);	
+			
+		}
+	}); 
+}
+function end_guardar_registro_entrada_factura(xml){   
+	//swal.close() 
+	$(xml).find("response").each(function(i){  
+		if ($(this).find("result").text()=="ok"){			 
+			/* abrir pdf*/ 		 
+			$("#iniciar_registro").val("0"); 
+			$("#id_entrada_almacen").val("0"); 			
+					
+			//	$("#btn-iniciar_registro").removeClass("btn-danger");
+			//	$("#btn-iniciar_registro").addClass("btn-primary");
+			//	$("#btn-iniciar_registro").html("Iniciar Registro de Entrada");				
+			//alert($("#id_entrada_almacen").val()); 
+			
+			
+			$("#btn-iniciar_registro").removeClass("d-none");
+			$("#btn-firmar_validar_entrada_factura").addClass("d-none"); 
+			$("#btn-validar_entrada_factura").addClass("d-none");  
+			$("#btn-imprimir_pdf_validar_entrada_factura").addClass("d-none");
+			
+			$("#div-iniciar_registro").removeClass("d-none");
+			$("#div-firmar_validar_entrada_factura").addClass("d-none");  
+			$("#div-validar_entrada_factura").addClass("d-none");  
+			$("#div-imprimir_pdf_validar_entrada_factura").addClass("d-none");
+			
+			
+			
+			
+			$("#table_entrada_almacen").html("");			
+			/* reset form*/
+			$('#nuevo_entrada_form').trigger("reset");  
+			 	
+			$("#nuevo_entrada_factura").prop('enabled', true);		
+			$("#nuevo_entrada_caja").prop('enabled', true);		
+					
+			$("#nuevo_entrada_factura").prop('disabled', false);			
+			$("#nuevo_entrada_caja").prop('disabled', false);		
+			
+			$("#cant_articulos").html('0');		 	
+			$("#monto_articulos").html('0');	
+			
+			$("#subtotal_articulos").html('0');	
+			$("#iva_articulos").html('0');	
+
+
+				/* creo que trigger reset no está funcionado al 100*/
+				
+			$("#id_producto").val("0");   
+			
+			setTimeout(function(){    
+				$('#loading').hide(); 
+				
+				window.location.href = "nuevo_entrada_factura.php";
+				
+				
+			}, 2000);		
+			
+			
+		}
+	});
+}
+
+ 
+
+function llena_select_entrada_factura_activas(){   
+	 
+	var id_entrada_factura = $("#id_entrada_factura").val();
+	
+	$.post("controller6.php",
+		{ 	action 	:"llena_select_entrada_factura_activas",
+			id_entrada_factura : id_entrada_factura
+		}, end_llena_select_entrada_factura);  		   
+}   
+function llena_select_entrada_factura(){   
+	 
+	var id_entrada_factura = $("#id_entrada_factura").val();
+	
+	$.post("controller6.php",
+		{ 	action 	:"llena_select_entrada_factura",
+			id_entrada_factura : id_entrada_factura
+		}, end_llena_select_entrada_factura);  		   
+}   
+function end_llena_select_entrada_factura(xml){	      
+	$(xml).find("response").each(function(i){	 
+		if ($(this).find("result").text()=="ok"){ 
+		
+			$(".select_entrada_factura").html($(this).find("select_entrada_factura").text()); 			
+		}
+	}); 
+} 
+    
+function llena_select_entrada_factura_cajas(id_entrada_factura){   
+	 
+	$.post("controller6.php",
+		{ 	action 	:"llena_select_entrada_factura_cajas",
+			id_entrada_factura : id_entrada_factura
+		}, end_llena_select_entrada_factura_cajas);  		   
+}    
+function end_llena_select_entrada_factura_cajas(xml){	      
+	$(xml).find("response").each(function(i){	  
+		if ($(this).find("result").text()=="ok"){    
+			//	$("#nuevo_entrada_proveedor").val($(this).find("id_fabricante").text()); 
+			$(".select_entrada_factura_cajas").html($(this).find("select_entrada_factura_cajas").text()); 			
+		}
+	}); 
+}
+  
+function llena_select_cajas_entrada_factura(){   
+	 
+	var id_entrada_factura = $("#id_entrada_factura").val();
+	
+	$.post("controller6.php",
+		{ 	action 	:"llena_select_cajas_entrada_factura",
+			id_entrada_factura : id_entrada_factura
+		}, end_llena_select_cajas_entrada_factura);  		   
+}     
+function end_llena_select_cajas_entrada_factura(xml){	      
+	$(xml).find("response").each(function(i){	  
+		if ($(this).find("result").text()=="ok"){    
+			//	$("#nuevo_entrada_proveedor").val($(this).find("id_fabricante").text()); 
+			$(".select_entrada_factura_cajas").html($(this).find("select_entrada_factura_cajas").text()); 			
+		}
+	}); 
+}
+
+
+function guardar_factura_entrada(){		
+		
+	var fabricante 	= $("#nuevo_entrada_proveedor").val();
+	var factura 	= $("#nuevo_entrada_factura").val();
+	var cajas 		= $("#nuevo_entrada_cajas").val();
+	var continua 	= 1;
+	
+	$("#nuevo_entrada_fa_form .obligatorio").each(function (index) {
+		if($(this).val() == ""){
+			$(this).addClass("form-control-danger");
+			continua = 0;
+			mensaje_error = "Verifique los campos obligatorios";
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});			 
+	$("#nuevo_entrada_fa_form .obligatorio_select").each(function (index) {
+		if($(this).val() == "0"){
+			$(this).addClass("form-control-danger");
+			continua = 0;
+			mensaje_error = "Verifique los campos obligatorios";
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});			 		 
+	 
+	if(cajas < 1){ 
+		
+		continua = 0;
+		mensaje_error = "La Cantidad de CAJAS recibidas debe ser mayor a CERO. Verifique.";
+		
+	}	  
+	
+	//alert("vamos");
+	
+	if(continua == 1){	
+		 
+		$("#loading").show();  
+			
+		$.post("controller6.php", 
+			{ 	action 		:"guardar_factura_entrada",
+				fabricante 	: fabricante,
+				factura 	: factura,
+				cajas 		: cajas
+			}, end_guardar_factura_entrada); 
+				
+		
+	}else{
+		$("#respuesta").html('<div class="alert alert-danger">' + mensaje_error + '</div>');
+	}
+	
+} 
+function end_guardar_factura_entrada(xml){  
+	$(xml).find("response").each(function(i){			
+		$("#loading").hide();  		
+		if ($(this).find("result").text()=="ok"){
+			
+			$("#nuevo_entrada_fa_form").trigger("reset"); 
+			
+ 			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			setTimeout(function(){
+				$("#respuesta").html("");  
+			}, 3000);			
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			setTimeout(function(){
+				$("#respuesta").html("");  
+			}, 5000);		
+		}
+	}); 
+}
+
+
+function guardar_factura_entrada_registrar(){		
+		
+	var fabricante 	= $("#nuevo_entrada_proveedor").val();
+	var factura 	= $("#nuevo_entrada_factura").val();
+	var cajas 		= $("#nuevo_entrada_cajas").val();
+	var continua 	= 1;
+	
+	$("#nuevo_entrada_fa_form .obligatorio").each(function (index) {
+		if($(this).val() == ""){
+			$(this).addClass("form-control-danger");
+			continua = 0;
+			mensaje_error = "Verifique los campos obligatorios";
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});			
+	$("#nuevo_entrada_fa_form .obligatorio_select").each(function (index) {
+		if($(this).val() == "0"){
+			$(this).addClass("form-control-danger");
+			continua = 0;
+			mensaje_error = "Verifique los campos obligatorios";
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});			 		 
+	if(cajas < 1){
+		
+		continua = 0;
+		mensaje_error = "La Cantidad de CAJAS recibidas debe ser mayor a CERO. Verifique.";
+		
+	}	 
+	
+	//alert("vamos");
+	
+	if(continua == 1){	 
+		  
+		$("#loading").show();  
+	
+		$.post("controller6.php", 
+			{ 	action 	:"guardar_factura_entrada",
+				fabricante 	: fabricante,
+				factura 	: factura,
+				cajas 		: cajas
+			}, end_guardar_factura_entrada_registrar); 
+		
+	}else{
+		$("#respuesta").html('<div class="alert alert-danger">' + mensaje_error + '</div>');
+	}
+	
+} 
+function end_guardar_factura_entrada_registrar(xml){  
+	$(xml).find("response").each(function(i){			
+		$("#loading").hide();  		  
+		if ($(this).find("result").text()=="ok"){				
+ 			window.location.href="nuevo_entrada_factura.php?id_entrada_factura=" + $(this).find("id_entrada_factura").text();
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			setTimeout(function(){
+				$("#respuesta").html("");  
+			}, 5000);		
+		}
+	}); 
+}
+  
+
+
+
+
+
+
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ************************* SUBDISTRIBUIDORES *********************** */
+/* ******************************************************************* */
+/* ******************************************************************* */
+/* ******************************************************************* */
+
+
+function valida_subdistribuidor_cx(){	
+
+	var id_subdistribuidor = $("#nuevo_cirugia_subdistribuidor").val();
+	
+	$.post("controller6.php", 
+		{ 	action 	:"valida_subdistribuidor_cx",
+			id_subdistribuidor : id_subdistribuidor
+		}, end_valida_subdistribuidor_cx);
+}  
+  
+function end_valida_subdistribuidor_cx(xml){  
+	$(xml).find("response").each(function(i){	 	
+		if ($(this).find("result").text()=="ok"){	/* existe el subdis */			
+ 			$("#nuevo_cirugia_subdistribuidor_txt").val("");
+ 			$("#nuevo_cirugia_subdistribuidor_txt").attr("readonly",true);
+		}else{ /* subdis 01 NO REGISTRADO */
+			$("#nuevo_cirugia_subdistribuidor_txt").val("");
+ 			$("#nuevo_cirugia_subdistribuidor_txt").attr("readonly",false);
+		}
+	}); 
+}
+  
+function llenar_tabla_subdistribuidores(){		
+	$.post("controller6.php", 
+		{ 	action 	:"llenar_tabla_subdistribuidores"
+		}, end_llenar_tabla_subdistribuidores);
+} 
+ 
+function end_llenar_tabla_subdistribuidores(xml){  
+	$(xml).find("response").each(function(i){	
+		
+		$("#loading").hide();  
+		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte TEMPORAL de Subdsitribuidores. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_subdis",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+  
+
+/* almacenes */
+function guardar_subdis(){ 	 
+	var nuevo_subdis_id	 		= $("#nuevo_subdis_id").val();  
+	var nuevo_subdis_nombre 	= $("#nuevo_subdis_nombre").val();
+	var nuevo_subdis_codigo 	= $("#nuevo_subdis_codigo").val(); 
+	var nuevo_subdis_socio 		= $("#nuevo_subdis_socio").val();
+	//var nuevo_subdis_almacen 	= $("#nuevo_subdis_almacen").val();
+	var continua = 1;		
+	
+	$("#nuevo_subdis_form .obligatorio").each(function (index) {
+		if($(this).val() == ""){
+			$(this).addClass("form-control-danger");
+			continua = 0;
+		}else{ 
+			$(this).removeClass("form-control-danger");
+		}		
+	});		
+	  
+	if(continua == 1){    
+		$.post("controller6.php",  
+			{ 	action :"guardar_subdis", 
+				tipo 					: tipoguardado, /*global*/  
+				nuevo_subdis_id 		: nuevo_subdis_id,  
+				nuevo_subdis_nombre 	: nuevo_subdis_nombre,
+				nuevo_subdis_codigo 	: nuevo_subdis_codigo,
+				nuevo_subdis_socio 		: nuevo_subdis_socio
+			},end_guardar_subdis);
+	}else{
+		swal("Revisa el formulario", "Llena todos los campos marcados como OBLIGATORIO", "error");
+	}
+} 
+function end_guardar_subdis(xml){	  
+	$(xml).find("response").each(function(i){		
+		if ($(this).find("result").text()=="ok"){
+			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');
+			if(tipoguardado == "nuevo"){
+				$("#nuevo_subdis_nombre").removeAttr("readonly"); 
+				$('#nuevo_subdis_form').trigger("reset"); 
+				$("#nuevo_subdis_id").val("0"); 
+				$(".obligatorio_select").val("0").trigger('change');
+			}else if(tipoguardado == "editar"){
+				//$("#nuevo__nombre").attr("readonly", "readonly");  // se utiliza cuando algun campo NO puede ser modificado al editar
+				$("#nuevo_subdis_id").val($(this).find("nuevo_subdis_id").text()); 
+			}else if(tipoguardado == "nuevo_salir"){
+				location.href ="ver_subdistribuidores.php"; 
+			}
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+		}
+		setTimeout(function(){
+			$("#respuesta").html("");  
+		}, 5000);		
+	});
+}
+ 
+
+function llenar_formulario_subdistribuidor(){  
+	var id_subdistribuidor = $("#nuevo_subdis_id").val();	
+		  
+	$.post("controller6.php", 
+		{ 	action 				: "llenar_formulario_subdistribuidor", 
+			id_subdistribuidor 	: id_subdistribuidor 
+		}, end_llenar_formulario_subdistribuidor);
+}    
+function end_llenar_formulario_subdistribuidor(xml){   
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){  
+			$("#nuevo_subdis_nombre").val($(this).find("subdistribuidor").text()); 		 	
+			$("#nuevo_subdis_codigo").val($(this).find("codigo").text()); 		 	
+			$("#nuevo_subdis_socio").val($(this).find("es_socio").text()); 		 	
+			$("#nuevo_subdis_almacen").val($(this).find("id_almacen").text()); 		 	
+		}
+	});
+}    
+
+function eliminar_subdistribuidor(id_subdistribuidor){	
+	swal({   
+		title: "¿Eliminar Subdistribuidor?",   
+		text: "Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){   
+		swal.close();	
+		$.post("controller6.php",   
+			{ 	action 		:"eliminar_subdistribuidor", 
+				id_subdistribuidor 	: id_subdistribuidor						
+			},end_eliminar_subdistribuidor); 
+	});  		
+} 
+function end_eliminar_subdistribuidor(xml){ 
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){
+			swal("Correcto",$(this).find("result_text").text(),"success");
+			llenar_tabla_subdistribuidores(); 
+		}else{
+			swal("Error",$(this).find("result_text").text(),"error");
+		}
+	});
+} 
+
+  
+function llena_select_subdistribuidor_cx(){
+	$.post("controller6.php",
+		{ 	action 	:"llena_select_subdistribuidor_cx"
+		}, end_llena_select_subdistribuidor_cx);  		  
+}    
+function end_llena_select_subdistribuidor_cx(xml){	     
+	$(xml).find("response").each(function(i){	 
+		if ($(this).find("result").text()=="ok"){  
+			$(".select_subdistribuidor").html($(this).find("select_subdistribuidor").text()); 			
+		}
+	}); 
+} 
+ 
+
+/*medicos por vendedor*/ 
+function llenar_tabla_subdis_vendedor(){  
+ 
+	var id_vendedor = $("#id_vendedor").val();
+	
+	$.post("controller6.php",
+		{ 	action :"llenar_tabla_subdis_vendedor",
+			id_vendedor: id_vendedor
+		}, end_llenar_tabla_subdis_vendedor);
+}  
+function end_llenar_tabla_subdis_vendedor(xml){  
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){
+			
+			$("#nombre_vendedor").html($(this).find("nombre_vendedor").text()); 
+			
+			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte de Subdistribuidor por vendedor. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_subdis",ocultamiento_columnas,messageTop,"","",""); 
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}  
+
+
+
+
+function llenar_tabla_cirugias_subdis(){	
+
+	var fecha 	= $("#filtro_cirugia_fecha").val();  
+	var numero 	= $("#filtro_cirugia_numero").val();  
+	var codigo 	= $("#filtro_cirugia_codigo").val();  
+	
+	
+	$.post("controller6.php", 
+		{ 	action 	: "llenar_tabla_cirugias_subdis",
+			fecha 	: fecha,
+			numero 	: numero,
+			codigo 	: codigo
+		}, end_llenar_tabla_cirugias_subdis);
+} 
+ 
+function end_llenar_tabla_cirugias_subdis(xml){  
+	$(xml).find("response").each(function(i){	
+		
+		$("#loading").hide();  
+		
+		if ($(this).find("result").text()=="ok"){				
+ 			var ocultamiento_columnas = [];	
+			var messageTop = "Reporte TEMPORAL de cirugias de Subdsitribuidores. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_cirugias",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+
+
+function aceptar_cirugia_subdis(id_cirugia){
+	
+	swal({   
+		title: "¿Aceptar y Programar Cirugia?",   
+		text: "Al aceptar la cirugia esta quedará programada en su sucursal. Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "green",   
+		confirmButtonText: "Si, Aceptar y Programar Cirugia",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){   
+		swal.close();	
+		$.post("controller6.php", 
+		{ 	action 	: "aceptar_cirugia_subdis",
+			id_cirugia 	: id_cirugia,
+		}, end_aceptar_cirugia_subdis);
+	});  		
+}
+function end_aceptar_cirugia_subdis(xml){  
+	$(xml).find("response").each(function(i){	
+		
+		$("#loading").hide();  
+		
+		if ($(this).find("result").text()=="ok"){				
+ 			llenar_tabla_cirugias_subdis();
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+
+function rechazar_cirugia_subdis(id_cirugia){
+	
+	swal({   
+		title: "¿Rechazar Cirugia?",   
+		text: "Al rechazar la cirugia esta quedará en estatus cancelada. Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "red",   
+		confirmButtonText: "Si, Rechazar Cirugia",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){   
+		swal.close();	
+		$.post("controller6.php", 
+		{ 	action 	: "rechazar_cirugia_subdis",
+			id_cirugia 	: id_cirugia,
+		}, end_rechazar_cirugia_subdis);
+	});  		
+}
+function end_rechazar_cirugia_subdis(xml){  
+	$(xml).find("response").each(function(i){	
+		
+		$("#loading").hide();   
+		
+		if ($(this).find("result").text()=="ok"){				
+ 			llenar_tabla_cirugias_subdis();
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+ 
+function aceptar_solicitud_venta_subdis(id_solicitud){
+	
+	swal({   
+		title: "¿Aceptar Solicitud y Realizar Venta?",   
+		text: "Al aceptar la solicitud esta quedará programada en su sucursal. Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "green",   
+		confirmButtonText: "Si, Aceptar y Realizar Venta",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){   
+		swal.close();	
+		$.post("controller6.php", 
+		{ 	action 	: "aceptar_solicitud_venta_subdis",
+			id_solicitud 	: id_solicitud,
+		}, end_aceptar_solicitud_venta_subdis);
+	});  		
+	
+	
+	
+}
+function end_aceptar_solicitud_venta_subdis(xml){  
+	$(xml).find("response").each(function(i){	
+		
+		$("#loading").hide();  
+		 
+		if ($(this).find("result").text()=="ok"){				
+ 			//llenar_tabla_cirugias_subdis();
+			var id_solicitud = $(this).find("id_solicitud").text();
+			window.location.href="nuevo_venta_directa.php?id_solicitud=" + id_solicitud;
+			
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}
+ 
+
+function llenar_tabla_solicitudes_venta_subdis(){    
+
+	$.post("controller6.php",  
+		{ 	action :"llenar_tabla_solicitudes_venta_subdis"
+		}, end_llenar_tabla_solicitudes_venta_subdis);   
+}  
+function end_llenar_tabla_solicitudes_venta_subdis(xml){     
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){   		
+			$("#cant_articulos").html($(this).find("cant_articulos").text());	
+			var nombre_bodega = $(this).find("nombre_bodega").text(); 
+			var ocultamiento_columnas = [];	   
+			var messageTop = "Reporte de Solicitudes de Venta por bodega: . " + nombre_bodega + " <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_solicitudes_venta",ocultamiento_columnas,messageTop,"","",""); 
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+
+
+
+/*ventas directas*/ 
+function llenar_tabla_ventas_directas_subdis(){   
+
+	var fecha_inicio 	= $("#buscar_venta_inicio").val();
+	var fecha_fin 		= $("#buscar_venta_fin").val();
+	var folio 			= $("#buscar_venta_folio").val();
+	var referencia 		= $("#buscar_venta_referencia").val();
+	var lote 			= $("#buscar_venta_lote").val();
+	
+	$.post("controller6.php",  
+		{ 	action 			: "llenar_tabla_ventas_directas_subdis",
+			fecha_inicio 	: fecha_inicio,
+			fecha_fin 		: fecha_fin,
+			folio 			: folio,
+			referencia 		: referencia,
+			lote 			: lote
+		}, end_llenar_tabla_ventas_directas_subdis);
+}
+function end_llenar_tabla_ventas_directas_subdis(xml){  
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){			
+			var ocultamiento_columnas = [];	 
+			var messageTop = "Reporte de Ventas Directas. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_ventas_directas",ocultamiento_columnas,messageTop,"","","");
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	}); 
+}   
+
+
+ 
+/* relacion medico vendedor*/
+function eliminar_subdis_vendedor(id_vendedor_subdis){
+	swal({   
+		title: "¿Eliminar relación Subdistribuidor - Vendedor ?",   
+		text: "Esta acción es definitiva y no podrá revertirse.",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, eliminar",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){               
+		$.post("controller6.php",
+			{ 	action 				: "eliminar_subdis_vendedor",
+				id_vendedor_subdis 	: id_vendedor_subdis 
+			}, end_eliminar_subdis_vendedor);
+	});  	
+}
+function end_eliminar_subdis_vendedor(xml){ 
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){ 
+			//$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			llenar_tabla_subdis_vendedor();		
+		}else{		  
+			var mensaje = $(this).find("result_text").text(); 
+			setTimeout(function(){
+				swal("Error", "" + mensaje + "", "error");
+				$('[data-toggle="tooltip"]').tooltip("dispose"); 
+			}, 500);	
+		}
+	});
+} 
+
+
+/* FUNCIONALIDAD AGREGAR MEDICOS VENDEDORES */
+function agrega_subdis_vendedor(){ 
+	
+	var id_vendedor 		= $("#id_vendedor").val();	
+	var id_subdistribuidor 	= $("#nuevo_subdis_vendedor").val();
+	 
+	var continua = 1;  
+
+	if(id_vendedor == 0 || id_vendedor == ""){
+		continua = 0;
+		return false;
+	} 
+	if(id_subdistribuidor == 0 || id_subdistribuidor == ""){
+		continua = 0;
+		return false;
+	}
+	
+	if(continua == 1){  
+		$('#loading').show();  
+		$.post("controller6.php", 
+			{ 	action 		: "agrega_subdis_vendedor",
+				id_vendedor	: id_vendedor, 
+				id_subdistribuidor	: id_subdistribuidor
+			}, end_agrega_subdis_vendedor);   		  
+	}
+ 
+}
+function end_agrega_subdis_vendedor(xml){ 
+	$(xml).find("response").each(function(i){ 
+		if ($(this).find("result").text()=="ok"){	 
+				
+			llenar_tabla_subdis_vendedor(); 
+			$('#loading').hide();			 
+		}else{
+			$('#loading').hide();
+			swal("Ocurrio un error",$(this).find("result_text").text(),"error");
+		}
+			
+	});
+}
+
+
+/* **************************************************** */
+/* **************************************************** */
+/* **** DETALLES DE SURTIDO DE CIRUGIAS ******** */
+/* **************************************************** */
+/* **************************************************** */
+ 
+function surtir_cirugia_producto_suelto(){     
+	var id_cirugia = $("#surtir_cirugia_id").val();		 
+	$.post("controller.php", 
+			{ 	action : "surtir_cirugia",  
+				id_cirugia : id_cirugia  
+			}, end_surtir_cirugia_producto_suelto); 
+} 
+function end_surtir_cirugia_producto_suelto(xml){  
+	$(xml).find("response").each(function(i){  
+		if ($(this).find("result").text()=="ok"){
+			$("#respuesta_04").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');				
+		}else{
+			$("#respuesta_04").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');	
+		}	
+		setTimeout(function(){  
+			$("#respuesta_04").html("");  
+			/*regresa al listado de cirugias*/
+			window.location.href  = "surtir_cirugia_producto_suelto.php"; 
+		}, 2000);	
+	});
+}  
+/*ventas directas*/  
+function buscar_id_cirugia_por_codigo(){   
+
+	var codigo_cirugia 	= $("#codigo_cirugia").val();
+	   
+	$.post("controller6.php",    
+		{ 	action 			: "buscar_id_cirugia_por_codigo",
+			codigo_cirugia 	: codigo_cirugia
+		}, end_buscar_id_cirugia_por_codigo);
+}
+function end_buscar_id_cirugia_por_codigo(xml){   
+	$(xml).find("response").each(function(i){		   
+		if ($(this).find("result").text()=="ok"){			
+			$(".id_cirugia").val($(this).find("id_cirugia").text());
+			$("#surtir_cirugia_fecha_programacion").val($(this).find("fecha_programacion").text());
+			$("#surtir_cirugia_fecha_cirugia").val($(this).find("fecha_cirugia").text());
+			
+			$("#div_surtir_material_suelto").show(); 
+			$("#btn-buscar_id_cirugia_por_codigo").hide(); 
+			
+			$("#codigo_cirugia").attr("readonly",true);
+			
+			  
+			llenar_tabla_producto_cirugia();
+			
+		}else{
+			$(".id_cirugia").val("0");
+			$("#surtir_cirugia_fecha_programacion").val("");
+			$("#surtir_cirugia_fecha_cirugia").val("");  
+			$("#div_surtir_material_suelto").hide();
+			$("#codigo_cirugia").attr("readonly",false);
+			$("#btn-buscar_id_cirugia_por_codigo").show();
+			
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			setTimeout(function(){  
+				$("#respuesta").html("");   
+			}, 2000);
+		}
+	}); 
+}   
+
+/*ventas directas*/ 
+function buscar_cirugia_codigo(){   
+
+	var codigo_cirugia 	= $("#codigo_cirugia").val();
+	
+	$.post("controller6.php",  
+		{ 	action 			: "buscar_cirugia_codigo",
+			codigo_cirugia 	: codigo_cirugia
+		}, end_buscar_cirugia_codigo);
+}
+function end_buscar_cirugia_codigo(xml){   
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){			
+			$("#id_cirugia").val($(this).find("id_cirugia").text());
+			
+			$("#loading").show();
+			setTimeout(function(){ 
+				$("#loading").hide();
+				llenar_tabla_surtir_cirugia();
+			}, 2000);
+			
+		}else{
+			$("#table_surtido").html('');
+			$("#div_fotos").html('');
+			$("#hoja").html('');
+			
+			
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');
+			setTimeout(function(){  
+				$("#respuesta").html("");   
+			}, 2000);
+		}
+	}); 
+}   
+
+
+/* ********************************* */
+/* ******ACTIVOS************ */
+/* ********************************* */
+function llena_select_activos(){   	 
+	$.post("controller5.php",
+		{ 	action 	:"llena_select_activos"
+		}, end_llena_select_activos);  		   
+}    
+function end_llena_select_activos(xml){	      
+	$(xml).find("response").each(function(i){	  
+		if ($(this).find("result").text()=="ok"){ 
+			 
+			$(".select_activo").html($(this).find("select_activo").text()); 	
+			
+		}
+	}); 
+}
+
+
+$("#btn-cambiar_pin").click(cambiar_pin);
+$("#btn-duplicar_permisos_tipo_usuario").click(duplicar_permisos_tipo_usuario);
+ 
+function duplicar_permisos_tipo_usuario(){   	 
+
+	var id_tipo_usuario 	= $("#id_tipo_usuario").val();
+	var sucursal_origen 	= $("#sucursal_origen").val();
+	var sucursal_destino 	= $("#sucursal_destino").val();
+	 
+	swal({    
+		title: "¿Duplicar permisos para este tipo de Usuario?",   
+		text: "Esta acción duplicará TODOS los permisos de Menús y Submenus. Está acción NO puede revertirse. ¿Desea Continuar?",   
+		/*type: "warning",    */
+		showCancelButton: true,    
+		confirmButtonColor: "#DD6B55",   
+		confirmButtonText: "Si, Duplicar Permisos",  
+		cancelButtonText: "Regresar",   
+		closeOnConfirm: true 
+	}, function(){ 		   
+		$.post("controller6.php", 
+			{ 	action 				: "duplicar_permisos_tipo_usuario",
+				id_tipo_usuario 	: id_tipo_usuario,
+				sucursal_origen 	: sucursal_origen,
+				sucursal_destino 	: sucursal_destino
+			}, end_duplicar_permisos_tipo_usuario);
+	});
+}     
+function end_duplicar_permisos_tipo_usuario(xml){	      
+	$(xml).find("response").each(function(i){	  
+		if ($(this).find("result").text()=="ok"){  
+			$("#respuesta").html('<div class="alert alert-success">' + $(this).find("result_text").text() + '</div>');	
+		}else{
+			$("#respuesta").html('<div class="alert alert-danger">' + $(this).find("result_text").text() + '</div>');	
+		}
+		setTimeout(function(){  
+			$("#respuesta").html("");   
+		}, 3000);	
+	}); 
+}
+  
+ 
+
+/* ********************************* */
+/* ****** NUEVO MODELO VD ************ */
+/* ********************************* */
+    
+$("#btn-buscar_llegadas_vd").click(buscar_llegadas_vd); 
+ 
+function buscar_llegadas_vd(){    
+
+	var fecha_inicio 	= $("#fecha_inicio").val();
+	var fecha_fin 		= $("#fecha_fin").val();
+	var cirugia_codigo 	= $("#cirugia_codigo").val();
+	var comentarios 	= $("#comentarios").val();
+	var estatus 		= $("#estatus").val();
+	
+	$.post("controller6.php",     
+		{ 	action 			: "llenar_tabla_llegadas_vd",
+			fecha_inicio 	: fecha_inicio,
+			fecha_fin 		: fecha_fin,
+			cirugia_codigo 	: cirugia_codigo,
+			comentarios 	: comentarios,
+			estatus 		: estatus
+		}, end_llenar_tabla_llegadas_vd);  
+}   
+
+function llenar_tabla_llegadas_vd(){    
+	$.post("controller6.php",    
+		{ 	action :"llenar_tabla_llegadas_vd"
+		}, end_llenar_tabla_llegadas_vd);  
+}      
+function end_llenar_tabla_llegadas_vd(xml){       
+	$(xml).find("response").each(function(i){		  
+		if ($(this).find("result").text()=="ok"){       
+			var ocultamiento_columnas = [];	      
+			var messageTop = "Reporte de llegadas y recepcion de material. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_llegadas",ocultamiento_columnas,messageTop,"","",""); 
+			
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+ 
+ 
+ 
+function llenar_datos_llegada_vd(){      
+ 
+	var id_cirugia 	= $("#id_cirugia").val();
+		 
+	if(id_cirugia > 0){
+		$.post("controller6.php",  
+			{ 	action 		: "llenar_datos_llegada_vd", 
+				id_cirugia 	: id_cirugia
+			}, end_llenar_datos_llegada_vd); 
+	}  
+}        
+function end_llenar_datos_llegada_vd(xml){	 
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){ 	
+ 		 
+			$("#clave_cirugia").val($(this).find("clave_cirugia").text());			
+			
+			//$("#id_llegada").val($(this).find("id_llegada").text());
+			//	$("#id_cirugia").val($(this).find("id_cirugia").text());
+			//	$("#id_jornada").val($(this).find("id_jornada").text());
+			//	 
+			//	$("#clave_cirugia").val($(this).find("clave_cirugia").text());
+			//	$("#clave_jornada").val($(this).find("clave_jornada").text());
+			//	
+			//	$("#llegada_comentarios").val($(this).find("llegada_comentarios").text());
+			//	
+			//	$("#clave_cirugia").prop( "disabled", true ); 
+			//	$("#clave_jornada").prop( "disabled", true );
+			//	$("#llegada_comentarios").prop( "disabled", true );
+			//	
+			//	 
+			//	$("#btn-iniciar_llegada").hide();
+			//	$("#btn-guardar_llegada").show();
+			 
+			
+		}	
+	});
+}  
+  
+function llenar_tabla_para_remisionar_vd(){     
+	var id_solicitud 	= $("#id_solicitud").val();
+	$.post("controller6.php",    
+		{ 	action 		:"llenar_tabla_para_remisionar_vd",
+			id_solicitud 	: id_solicitud 
+		}, end_llenar_tabla_para_remisionar_vd);  
+}  
+function end_llenar_tabla_para_remisionar_vd(xml){      
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){    
+		  	var ocultamiento_columnas = [];	    
+			var messageTop = "Reporte de Productos para Remisionar. <br/> " + "FECHA: " + return_fecha_hoy(); 
+			rellena_tablas(xml,"example","table_para_remisionar",ocultamiento_columnas,messageTop,"","",""); 
+		}else{
+			swal("Error",$(this).find("result_text").text(), "error");
+		}
+	});  
+}  
+
+  
+$("#btn-aceptar_consumo_remision_vd").click(guardar_consumo_remision_vd);
+$("#btn-guardar_consumo_remision_vd").click(validar_consumo_remision_vd);
+ 
+ 
+    
+function validar_consumo_remision_vd(){	
+
+	var remision_folio 	= $("#remision_folio").val();
+		 
+	var continua = 1;
+	
+	if(remision_folio == ""){
+		continua = 0;
+		swal("Error","Escriba Folio", "error");
+		
+	}
+	
+	if(continua == 1){
+		
+		// $("#disparamodal").click(); 
+		document.getElementById("btn-aceptar_consumo_remision_vd").disabled = true;
+	
+		$("#btn-guardar_consumo_remision_vd").addClass("d-none");	 
+		$("#btn-aceptar_consumo_remision_vd").removeClass("d-none");	 
+		
+		$(".contador").removeClass("d-none");
+		
+		var seconds = 8; 
+		// Update the count down every 1 second
+		xinterval = setInterval(function() { 
+			// Display the result in the element with id="demo"
+			document.getElementById("contador").innerHTML = seconds;
+			 
+			seconds--;
+			// If the count down is finished, write some text
+			if (seconds < 0) {   
+				clearInterval(xinterval);  
+				$("#btn-aceptar_consumo_remision_vd").removeClass("d-none");	 
+				document.getElementById("contador").innerHTML = "";
+				document.getElementById("btn-aceptar_consumo_remision_vd").disabled = false;
+				$(".contador").addClass("d-none");
+			}
+		}, 1000);
+		
+	}
+ 
+} 
+
+
+function guardar_consumo_remision_vd(){       
+
+	var remision_folio 	= $("#remision_folio").val();
+	var id_solicitud 	= $("#id_solicitud").val();
+	var id_cirugia 	= $("#id_cirugia").val();
+		 
+	var continua = 1;
+	
+	if(remision_folio == ""){
+		continua = 0;
+		swal("Error","Escriba Folio", "error");
+		
+	}
+	
+	if(continua == 1){
+		
+		swal({  
+			title: "Reportar Consumos y Finalizar Cirugia?",
+			text: "Si genera la remisión ya no podrá regresar. Desea Continuar?",
+			type: "warning",
+			showCancelButton: true,
+			confirmButtonClass: "btn-danger",
+			confirmButtonText: "Si, continuar",
+			cancelButtonText: "No, Regresar",
+			closeOnConfirm: true,
+			closeOnCancel: true  
+		},  
+		function(isConfirm) {  
+			if (isConfirm) { 			 
+				$('#loading').show();		 	
+				$.post("controller6.php",    
+					{ 	action 			: "guardar_consumo_remision_vd", 
+						remision_folio 	: remision_folio, 
+						id_cirugia 		: id_cirugia, 
+						id_solicitud 	: id_solicitud 
+					}, end_guardar_consumo_remision_vd); 
+			} else {
+				return false;
+			}  
+		});  
+		
+	} 
+	
+}         
+function end_guardar_consumo_remision_vd(xml){	 
+	$(xml).find("response").each(function(i){		 
+		if ($(this).find("result").text()=="ok"){ 				   
+			var id_cirugia = $(this).find("id_cirugia").text();
+			var id_remision = $(this).find("id_remision").text();			
+			window.location.href= "generar_remision.php?id_cirugia=" + id_cirugia + "&id_remision=" + id_remision;
+		}else{
+			$('#loading').hide();		 
+			swal("Error", $(this).find("result_text").text(), "error");
+		}
+	});
+}
+
+/* ********************************* */
+/* ******PIN************ */
+/* ********************************* */
+ 
+function cambiar_pin(){   	 
+
+	var pin_actual 		= $("#pin_actual").val();
+	var pin_nuevo 		= $("#pin_nuevo").val();
+	var pin_confirma 	= $("#pin_confirma").val();	
+	var continua = 1;
+			
+	if(pin_nuevo != pin_confirma){		
+		swal("Cuidado","Los campos PIN NUEVO y CONFIRME PIN NUEVO son diferentes. Por favor verifique.","error");
+		continua = 0;		
+	}	
+	 
+	if(continua == 1){
+		$.post("controller6.php",
+			{ 	action 	:"cambiar_pin",
+				pin_actual : pin_actual,
+				pin_nuevo : pin_nuevo
+			}, end_cambiar_pin);  		  
+	}	  
+}    
+function end_cambiar_pin(xml){	      
+	$(xml).find("response").each(function(i){	  
+		if ($(this).find("result").text()=="ok"){ 
+			swal("Correcto","Su PIN de 4 digitos fue actualizado correctamente.","success");
+		}else{
+			swal("Cuidado",$(this).find("result_text").text(),"error");
+		}
+		
+		$("#pin_actual").val("");
+		$("#pin_nuevo").val(""); 
+		$("#pin_confirma").val("");
+		
+	}); 
+}
+
+
+ 
+function obtiene_tipo_usuario_nombre(){   	 
+	var id_tipo_usuario = $("#id_tipo_usuario").val();	
+	$.post("controller6.php",
+		{ 	action 	:"obtiene_tipo_usuario_nombre",
+			id_tipo_usuario : id_tipo_usuario
+		}, end_obtiene_tipo_usuario_nombre);
+}    
+function end_obtiene_tipo_usuario_nombre(xml){	      
+	$(xml).find("response").each(function(i){	   
+		if ($(this).find("result").text()=="ok"){ 
+			$("#tipo_usuario").html($(this).find("tipo_usuario").text());
+		}	
+	}); 
+}
+
+
+
