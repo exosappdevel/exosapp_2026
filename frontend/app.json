@@ -65,7 +65,8 @@
         {
           "faceIDPermission": "Quick and secure login"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
