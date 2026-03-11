@@ -11,6 +11,7 @@ import {
   ScrollView,
   Switch,
 } from 'react-native';
+import { Image } from 'react-native'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -22,6 +23,7 @@ import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
 
 export default function LoginScreen() {
+  const ImageCustom = Image as any;
   const router = useRouter();
   const { appConfig, setUser, theme, t, setIsLoggedIn } = useApp();
   
@@ -154,7 +156,7 @@ export default function LoginScreen() {
           id_almacen: response.id_almacen || '',
           almacen_nombre: response.almacen_nombre || '',
           almacen_codigo: response.almacen_codigo || '',
-          alias_usuario: response.alias_usuario || '',
+          alias_usuario: response.alias_usuario.toUpperCase() || '',
           tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light'
         };
         
@@ -208,11 +210,16 @@ export default function LoginScreen() {
               size={80} 
               color={theme.accent} 
             />
-            <Text style={[styles.appName, { color: theme.text }]}>ExosApp</Text>
+            <Text style={[styles.appName]}>{t("app.name")}</Text>
+            {/*<ImageCustom
+                source={require("../assets/images/exosapp_logo.png")}
+                style={styles.logo}
+                resizeMode="contain"
+              />*/}
           </View>
 
           <View style={[styles.formContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.title, { color: theme.text }]}>{t('login.title')}</Text>
+            {/*<Text style={[styles.title, { color: theme.text }]}>{t('login.title')}</Text>*/}
             
             <View style={[styles.inputContainer, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
               <MaterialCommunityIcons name="account" size={24} color={theme.textSub} />
@@ -261,6 +268,7 @@ export default function LoginScreen() {
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor={enableFaceId ? '#fff' : '#f4f3f4'}
                 />
+                
               </View>
             )}
 
@@ -287,7 +295,18 @@ export default function LoginScreen() {
                 </Text>
               </TouchableOpacity>
             )}
+            
           </View>
+          <Text style={styles.versionText} >
+              Versión de la App: 2026.0310.21
+            </Text>
+
+          <ImageCustom
+            source={require("../assets/images/logo_Elidev.png")}
+            style={styles.logo_elidev}
+            resizeMode="contain"
+          />
+
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -314,6 +333,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
+    backgroundColor:"#003857" 
   },
   logoContainer: {
     alignItems: 'center',
@@ -323,6 +343,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginTop: 10,
+    color:"white"
   },
   formContainer: {
     borderRadius: 20,
@@ -348,6 +369,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     fontSize: 16,
+    borderWidth: 0,
+    outlineStyle: 'solid',
+    outlineWidth: 0,
   },
   faceIdContainer: {
     flexDirection: 'row',
@@ -388,5 +412,31 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  logo: {
+    width: "100%",       // Ocupa todo el ancho disponible del padre
+    maxWidth: 400,      // Pero no se pasa del máximo que tiene el form
+    height: 120,        // Ajusta la altura a tu gusto
+    marginBottom: 30,
+    borderRadius: 8,
+    //backgroundColor: "#ececec", // Fondo blanco para el logo
+    alignSelf: "center", // Se asegura de estar centrado si el padre es más ancho
+  },
+  logo_elidev: {
+    width: "50%",       // Ocupa todo el ancho disponible del padre
+    maxWidth: 200,      // Pero no se pasa del máximo que tiene el form
+    height: 60,        // Ajusta la altura a tu gusto
+    marginBottom: 0,
+    marginTop: 20,
+    //marginLeft:200,
+    borderRadius: 8,
+    //backgroundColor: "#ececec", // Fondo blanco para el logo
+    alignSelf: "center", // Se asegura de estar centrado si el padre es más ancho
+  },
+  versionText: {
+    color: "gray",
+    textAlign: "center",
+    marginTop: 30,
+    fontSize: 12,
   },
 });

@@ -6,6 +6,8 @@ import {
   StyleSheet,
   FlatList,
   Modal,
+  Alert,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -29,7 +31,7 @@ export default function HomeScreen() {
     titulo: '',
     mensaje: '',
     icon: 'information-outline',
-    colorIcon: '#3182ce'
+    colorIcon: theme.accent
   });
 
   const handleMenuPress = (item: typeof menuItems[0]) => {
@@ -41,15 +43,40 @@ export default function HomeScreen() {
         titulo: t('home.comingSoon'),
         mensaje: t('home.featureNotAvailable'),
         icon: 'clock-outline',
-        colorIcon: '#ecc94b'
+        colorIcon: theme.accent
       });
     }
   };
 
   const handleLogout = async () => {
     setShowUserMenu(false);
-    await logout();
-    router.replace('/login');
+
+    if (Platform.OS === 'web') {
+      // En Web usamos el confirm nativo del navegador
+      const confirmar = window.confirm(t("userMenu.confirm_logout"));
+      if (confirmar) {
+        await logout();
+        router.replace('/login');
+      }
+    } else {
+      // En Móvil usamos el Alert elegante de RN
+      Alert.alert(
+        t("userMenu.logout"),
+        t("userMenu.confirm_logout"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          {
+            text: t("common.yes"), style: "destructive", onPress: async () => {
+              await logout();
+              router.replace('/login');
+            }
+          }
+        ]
+      );
+    }
+
+
+
   };
 
   const renderMenuItem = ({ item }: { item: typeof menuItems[0] }) => (
@@ -70,11 +97,14 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
         <View style={styles.headerLeft}>
-          <MaterialCommunityIcons name="account-circle" size={40} color={theme.accent} />
-          <Text style={[styles.userName, { color: theme.text }]}>{user.alias_usuario || 'Usuario'}</Text>
+
         </View>
         <TouchableOpacity onPress={() => setShowUserMenu(true)}>
-          <MaterialCommunityIcons name="menu" size={28} color={theme.text} />
+          <View style={styles.headerLeft}>
+            <MaterialCommunityIcons name="account-circle" size={40} color={theme.accent} />
+            <Text style={[styles.userName, { color: theme.text }]}>{user.alias_usuario || 'Usuario'}</Text>
+            <MaterialCommunityIcons name="menu" size={28} color={theme.text} />
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -90,10 +120,17 @@ export default function HomeScreen() {
 
       {/* Footer */}
       <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-        <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
-        <Text style={[styles.footerText, { color: theme.text }]}>
-          {user.almacen_nombre || user.almacen_codigo || 'Sin almacén'}
-        </Text>
+        <TouchableOpacity
+          style={styles.userMenuItem}
+          onPress={() => {
+            router.push('/profile');
+          }}
+        >
+          <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
+          <Text style={[styles.footerText, { color: theme.text }]}>
+            {user.almacen_nombre || user.almacen_codigo || 'Sin almacén'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* User Menu Modal */}
@@ -103,13 +140,13 @@ export default function HomeScreen() {
         animationType="fade"
         onRequestClose={() => setShowUserMenu(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.menuOverlay}
           activeOpacity={1}
           onPress={() => setShowUserMenu(false)}
         >
           <View style={[styles.userMenuContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.userMenuItem}
               onPress={() => {
                 setShowUserMenu(false);
@@ -119,10 +156,10 @@ export default function HomeScreen() {
               <MaterialCommunityIcons name="account-cog" size={24} color={theme.accent} />
               <Text style={[styles.userMenuText, { color: theme.text }]}>{t('userMenu.profile')}</Text>
             </TouchableOpacity>
-            
+
             <View style={[styles.menuDivider, { backgroundColor: theme.border }]} />
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.userMenuItem}
               onPress={handleLogout}
             >
@@ -157,14 +194,18 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderBottomWidth: 1,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   userName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginRight: 10,
   },
   menuGrid: {
     padding: 15,

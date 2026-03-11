@@ -28,7 +28,7 @@ export default function AlmacenScreen() {
     titulo: '',
     mensaje: '',
     icon: 'information-outline',
-    colorIcon: '#3182ce'
+    colorIcon: theme.accent
   });
 
   const handleMenuPress = (item: typeof menuItems[0]) => {
@@ -40,7 +40,7 @@ export default function AlmacenScreen() {
         titulo: t('home.comingSoon'),
         mensaje: t('home.featureNotAvailable'),
         icon: 'clock-outline',
-        colorIcon: '#ecc94b'
+        colorIcon: theme.accent
       });
     }
   };

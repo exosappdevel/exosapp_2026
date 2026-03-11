@@ -122,6 +122,25 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Almacen Selection */}
+        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.warehouse')}</Text>
+          {loading ? (
+            <ActivityIndicator color={theme.accent} />
+          ) : (
+            <TouchableOpacity 
+              style={[styles.almacenSelector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+              onPress={() => setShowAlmacenPicker(true)}
+            >
+              <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
+              <Text style={[styles.almacenText, { color: theme.text }]} numberOfLines={1}>
+                {selectedAlmacen?.nombre || user.almacen_nombre || 'Seleccionar almacén'}
+              </Text>
+              <MaterialCommunityIcons name="chevron-down" size={24} color={theme.textSub} />
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Theme Selection */}
         <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.theme')}</Text>
@@ -181,24 +200,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Almacen Selection */}
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.warehouse')}</Text>
-          {loading ? (
-            <ActivityIndicator color={theme.accent} />
-          ) : (
-            <TouchableOpacity 
-              style={[styles.almacenSelector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-              onPress={() => setShowAlmacenPicker(true)}
-            >
-              <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
-              <Text style={[styles.almacenText, { color: theme.text }]} numberOfLines={1}>
-                {selectedAlmacen?.nombre || user.almacen_nombre || 'Seleccionar almacén'}
-              </Text>
-              <MaterialCommunityIcons name="chevron-down" size={24} color={theme.textSub} />
-            </TouchableOpacity>
-          )}
-        </View>
+        
 
         {/* Save Button */}
         <TouchableOpacity 
@@ -212,21 +214,7 @@ export default function ProfileScreen() {
             <Text style={styles.saveButtonText}>{t('profile.save')}</Text>
           )}
         </TouchableOpacity>
-
-        {/* Download Code Button */}
-        <TouchableOpacity 
-          style={[styles.codeButton, { backgroundColor: '#4a5568', borderColor: theme.border }]}
-          onPress={() => {
-            if (Platform.OS === 'web') {
-              window.open(CODE_ZIP_URL, '_blank');
-            } else {
-              Linking.openURL(CODE_ZIP_URL);
-            }
-          }}
-        >
-          <MaterialCommunityIcons name="code-tags" size={24} color="#fff" />
-          <Text style={styles.codeButtonText}>CODE</Text>
-        </TouchableOpacity>
+      
       </ScrollView>
 
       {/* Almacen Picker Modal */}

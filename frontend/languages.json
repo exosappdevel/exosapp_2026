@@ -1,10 +1,13 @@
 {
   "es": {
+    "app":{
+      "name":"ExosApp 2026"
+    },
     "login": {
       "title": "Iniciar Sesión",
       "username": "Usuario",
       "password": "Contraseña",
-      "submit": "ENTRAR",
+      "submit": "Iniciar sessión",
       "useFaceId": "Usar Face ID",
       "enableFaceId": "Habilitar Face ID",
       "rememberCredentials": "Recordar credenciales",
@@ -63,16 +66,24 @@
     },
     "userMenu": {
       "profile": "Perfil",
-      "logout": "Cerrar Sesión"
+      "logout": "Cerrar Sesión",
+      "confirm_logout":"¿Realmente deseas cerrar Sesión?"
     },
     "common": {
       "understood": "ENTENDIDO",
       "loading": "Cargando...",
       "error": "Error",
-      "success": "Éxito"
+      "success": "Éxito",
+      "cancel":"Cancelar",
+      "ok":"OK",
+      "yes":"Si",
+      "no":"No"
     }
   },
   "en": {
+    "app":{
+      "name":"ExosApp 2026"
+    },
     "login": {
       "title": "Login",
       "username": "Username",
@@ -136,13 +147,18 @@
     },
     "userMenu": {
       "profile": "Profile",
-      "logout": "Logout"
+      "logout": "Logout",
+      "confirm_logout":"Do you want to close session?"
     },
     "common": {
       "understood": "OK",
       "loading": "Loading...",
       "error": "Error",
-      "success": "Success"
-    }
+      "success": "Success",
+      "cancel":"Cancelar",
+      "ok":"OK",
+      "yes":"Si",
+      "no":"No"
+   }
   }
 }
