@@ -37,7 +37,11 @@ export default function HomeScreen() {
   const handleMenuPress = (item: typeof menuItems[0]) => {
     if (item.id === "1") {
       router.push('/almacen');
-    } else {
+    } 
+    else if (item.id === "2") {
+      router.push('/programacirugia');
+    } 
+    else {
       setModal({
         visible: true,
         titulo: t('home.comingSoon'),
