@@ -108,7 +108,7 @@ export default function ProfileScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('profile.title')}</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.perfil')}</Text>
         <View style={{ width: 28 }} />
       </View>
 
@@ -211,7 +211,7 @@ export default function ProfileScreen() {
           {saving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveButtonText}>{t('profile.save')}</Text>
+            <Text style={styles.saveButtonText}>{t('common.save')}</Text>
           )}
         </TouchableOpacity>
       

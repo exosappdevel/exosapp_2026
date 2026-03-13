@@ -16,10 +16,10 @@ import { useApp } from '../context/AppContext';
 import CustomModal from '../components/CustomModal';
 
 const menuItems = [
-  { id: "1", title: "Almacén", titleKey: "home.almacen", icon: "warehouse", color: "#3182ce" },
-  { id: "2", title: "Logística", titleKey: "home.logistica", icon: "truck-delivery", color: "#0b4e27" },
-  { id: "3", title: "Inventario", titleKey: "home.inventario", icon: "clipboard-list", color: "#ecc94b" },
-  { id: "2", title: "Configuración", titleKey: "home.configuracion", icon: "cog", color: "#a0aec0" },
+  { id: "1", titleKey: "screens.almacen", icon: "warehouse", color: "#3182ce" },
+  { id: "2", titleKey: "screens.logistica", icon: "truck-delivery", color: "#0b4e27" },
+  { id: "3", titleKey: "screens.inventario", icon: "clipboard-list", color: "#ecc94b" },
+  { id: "4", titleKey: "screens.configuracion", icon: "cog", color: "#a0aec0" },
 ];
 
 export default function HomeScreen() {
@@ -39,13 +39,13 @@ export default function HomeScreen() {
       router.push('/almacen');
     } 
     else if (item.id === "2") {
-      router.push('/programacirugia');
+      router.push('/logistica');
     } 
     else {
       setModal({
         visible: true,
-        titulo: t('home.comingSoon'),
-        mensaje: t('home.featureNotAvailable'),
+        titulo: t('common.comingSoon'),
+        mensaje: t('common.featureNotAvailable'),
         icon: 'clock-outline',
         colorIcon: theme.accent
       });
@@ -158,7 +158,7 @@ export default function HomeScreen() {
               }}
             >
               <MaterialCommunityIcons name="account-cog" size={24} color={theme.accent} />
-              <Text style={[styles.userMenuText, { color: theme.text }]}>{t('userMenu.profile')}</Text>
+              <Text style={[styles.userMenuText, { color: theme.text }]}>{t('screens.perfil')}</Text>
             </TouchableOpacity>
 
             <View style={[styles.menuDivider, { backgroundColor: theme.border }]} />

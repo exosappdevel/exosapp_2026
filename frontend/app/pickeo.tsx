@@ -110,8 +110,8 @@ export default function PickeoScreen() {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(listaFinal));
     } catch (e) {
       console.error("Error inicializando lista:", e);
-      const errorMsg = t('pickeo.loadError');
-      Platform.OS === "web" ? alert(errorMsg) : Alert.alert(t('pickeo.error'), errorMsg);
+      const errorMsg = t('common.loadError');
+      Platform.OS === "web" ? alert(errorMsg) : Alert.alert(t('common.error'), errorMsg);
     } finally {
       setLoading(false);
     }
@@ -149,20 +149,20 @@ export default function PickeoScreen() {
         const esExito = res?.result === "ok";
 
         if (Platform.OS === "web") {
-          alert(esExito ? `${t('pickeo.success')}: ${mensaje}` : `${t('pickeo.notice')}: ${mensaje}`);
+          alert(esExito ? `${t('common.success')}: ${mensaje}` : `${t('common.notice')}: ${mensaje}`);
           if (esExito) {
             await AsyncStorage.removeItem(STORAGE_KEY);
             inicializarDatos(false);
           }
         } else {
-          Alert.alert(esExito ? t('pickeo.success') : t('pickeo.notice'), mensaje, [
+          Alert.alert(esExito ? t('common.success') : t('common.notice'), mensaje, [
             { text: "OK", onPress: () => esExito && inicializarDatos(false) },
           ]);
         }
       } catch (e) {
         setIsSubmitting(false);
-        const errorMsg = t('pickeo.connectionError');
-        Platform.OS === "web" ? alert(errorMsg) : Alert.alert(t('pickeo.error'), errorMsg);
+        const errorMsg = t('common.connectionError');
+        Platform.OS === "web" ? alert(errorMsg) : Alert.alert(t('common.error'), errorMsg);
       }
     };
 
@@ -311,7 +311,7 @@ export default function PickeoScreen() {
             <View style={styles.modalActions}>
               <TouchableOpacity onPress={() => setModalCant({ ...modalCant, visible: false })}>
                 <Text style={{ color: theme.textSub, marginRight: 25 }}>
-                  {t('pickeo.cancel')}
+                  {t('common.cancel')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -322,7 +322,7 @@ export default function PickeoScreen() {
                 onPress={() => aplicarPick(modalCant.item, modalCant.cantidad, modalCant.esResta)}
               >
                 <Text style={{ color: "white", fontWeight: "bold" }}>
-                  {t('pickeo.accept')}
+                  {t('common.accept')}
                 </Text>
               </TouchableOpacity>
             </View>

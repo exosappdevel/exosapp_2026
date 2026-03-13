@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   View,
   Text,
@@ -77,7 +78,29 @@ export default function ProgramaCirugiaScreen() {
   // Picker modals
   const [showEstadoPicker, setShowEstadoPicker] = useState(false);
   const [showHoraPicker, setShowHoraPicker] = useState(false);
-  
+
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+      setShowDatePicker(false);
+    
+    if (event.type === 'set' && selectedDate) {
+      setDate(selectedDate);
+      // Formateamos la fecha para mostrarla al usuario en formato local
+      const formattedDate = selectedDate.toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      setFecha(formattedDate);
+    }
+  };
+
+  const showPicker = () => {
+    setShowDatePicker(true);
+  };
+
   const [modal, setModal] = useState({
     visible: false,
     titulo: '',
@@ -199,13 +222,33 @@ export default function ProgramaCirugiaScreen() {
             <Text style={[styles.label, { color: theme.text }]}>
               Fecha <Text style={styles.required}>*</Text>
             </Text>
-            <TextInput
+            {/*<TextInput
               style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
               placeholder="DD/MM/YYYY"
               placeholderTextColor={theme.textSub}
               value={fecha}
               onChangeText={setFecha}
-            />
+            />*/}
+            <TouchableOpacity
+              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+              onPress={showPicker}
+            >
+              <Text style={[styles.selectorText, { color: fecha ? theme.text : theme.textSub }]}>
+                {fecha || 'DD/MM/YYYY'}
+              </Text>
+              <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+            </TouchableOpacity>
+            {/* Lógica del Picker según Plataforma */}
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onDateChange}
+                minimumDate={new Date()} // Evita programar cirugías en el pasado
+              />
+            )}
+
           </View>
 
           {/* Hora */}
@@ -343,13 +386,7 @@ export default function ProgramaCirugiaScreen() {
         </View>
       </ScrollView>
 
-      {/* Footer */}
-      <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-        <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
-        <Text style={[styles.footerText, { color: theme.text }]}>
-          {user.almacen_nombre || user.almacen_codigo || 'Sin almacén'}
-        </Text>
-      </View>
+      
 
       {/* Picker Modals */}
       {renderPickerModal(

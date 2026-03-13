@@ -78,10 +78,8 @@ export default function TerminalesScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('terminales.title')}</Text>
-        <TouchableOpacity onPress={loadTerminales}>
-          <MaterialCommunityIcons name="refresh" size={24} color={theme.accent} />
-        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.terminales')}</Text>
+        <MaterialCommunityIcons name="desktop-tower-monitor"  size={24} color={theme.accent} />
       </View>
 
       {/* Content */}

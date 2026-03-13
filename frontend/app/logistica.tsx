@@ -13,13 +13,13 @@ import { useApp } from '../context/AppContext';
 import CustomModal from '../components/CustomModal';
 
 const menuItems = [
-  { id: "1", titleKey: "screens.pickeo", icon: "hospital", color: "#3182ce" },
-  { id: "2", titleKey: "screens.inventario", icon: "format-list-checks", color: "#ecc94b" },
-  { id: "3", titleKey: "screens.entradas", icon: "home-import-outline", color: "#48bb78" },
-  { id: "4", titleKey: "screens.salidas", icon: "home-export-outline", color: "#e53e3e" },
+  { id: "1", titleKey: "screens.cirugias", icon: "doctor", color: "#3182ce" },
+  { id: "2", titleKey: "screens.activos", icon: "scissors-cutting", color: "#ecc94b" },
+  { id: "3", titleKey: "screens.carpetas", icon: "folder-account", color: "#48bb78" },
+  { id: "4", titleKey: "screens.socios", icon: "account-multiple", color: "#e53e3e" },
 ];
 
-export default function AlmacenScreen() {
+export default function LogisticaScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
   
@@ -33,7 +33,7 @@ export default function AlmacenScreen() {
 
   const handleMenuPress = (item: typeof menuItems[0]) => {
     if (item.id === "1") {
-      router.push('/terminales');
+      router.push('/cirugias');
     } else {
       setModal({
         visible: true,
@@ -65,9 +65,9 @@ export default function AlmacenScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.almacen')}</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.logistica')}</Text>
         
-        <MaterialCommunityIcons name="warehouse"  size={24} color={theme.accent} />
+        <MaterialCommunityIcons name="truck-delivery"  size={24} color={theme.accent} />
       </View>
 
       {/* Menu Grid */}

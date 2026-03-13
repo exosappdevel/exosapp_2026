@@ -3,8 +3,32 @@
     "app":{
       "name":"ExosApp 2026"
     },
-    "login": {
-      "title": "Iniciar Sesión",
+    "screens":{
+      "home":"Inicio",
+      "almacen":"Almacén",
+      "logistica":"Logística",
+      "inventario":"Inventario",
+      "pickeo":"Pickeo",
+      "entradas":"Entradas",
+      "salidas":"Salidas",
+      "recepcion":"Recepción",
+      "asignacion":"Asignación",
+      "carpetas":"Carpetas",
+      "facturacion":"Facturación",
+      "cobranza":"Cobranza",
+      "administración":"Administración",
+      "ventas":"Ventas",
+      "configuracion":"Configuración",
+      "perfil":"Perfil",
+      "terminales":"Pickeo",
+      "cirugias":"Cirugías",
+      "socios":"Socios",
+      "activos":"Activos",
+      "cirugias_programar" : "Programar",
+      "cirugias_buscar":"Buscar",
+      "cirugias_calendario" : "calendario"
+    },
+    "login": {      
       "username": "Usuario",
       "password": "Contraseña",
       "submit": "Iniciar sessión",
@@ -13,23 +37,14 @@
       "rememberCredentials": "Recordar credenciales",
       "faceidSuccess": "Autenticación biométrica exitosa",
       "faceidError": "Error en autenticación biométrica",
-      "faceidNotAvailable": "Face ID no disponible"
+      "faceidNotAvailable": "Face ID no disponible"   
     },
-    "home": {
-      "almacen": "Almacén",
-      "logistica": "Logística",
-      "inventario": "Inventario",
-      "configuracion": "Configuración",
-      "comingSoon": "Próximamente",
-      "featureNotAvailable": "Esta función estará disponible pronto"
-    },
+    
     "profile": {
-      "title": "Perfil",
       "user": "Usuario",
       "theme": "Tema",
       "warehouse": "Almacén",
-      "language": "Idioma",
-      "save": "GUARDAR",
+      "language": "Idioma",    
       "themes": {
         "light": "Claro",
         "dark": "Oscuro",
@@ -37,35 +52,18 @@
         "pink": "Rosa"
       }
     },
-    "almacen": {
-      "title": "Almacén",
-      "pickeo": "Pickeo",
-      "inventario": "Inventario",
-      "entradas": "Entradas",
-      "salidas": "Salidas"
-    },
-    "terminales": {
-      "title": "Terminales",
+    "terminales": {     
       "loading": "Cargando terminales...",
       "noTerminals": "No hay terminales disponibles"
     },
-    "pickeo": {
-      "title": "Pickeo",
+    "pickeo": {      
       "hideComplete": "Oculta completos",
       "showAll": "Ver todos",
       "checkout": "Hacer Corte",
       "checkoutConfirm": "¿Realizar Check Out de la terminal?",
-      "adjustQuantity": "Ajustar Cantidad",
-      "cancel": "CANCELAR",
-      "accept": "ACEPTAR",
-      "success": "Éxito",
-      "notice": "Aviso",
-      "error": "Error",
-      "connectionError": "No se pudo conectar con el servidor.",
-      "loadError": "No se pudieron obtener los productos del servidor."
+      "adjustQuantity": "Ajustar Cantidad"    
     },
     "userMenu": {
-      "profile": "Perfil",
       "logout": "Cerrar Sesión",
       "confirm_logout":"¿Realmente deseas cerrar Sesión?"
     },
@@ -75,17 +73,49 @@
       "error": "Error",
       "success": "Éxito",
       "cancel":"Cancelar",
+      "accept":"Aceptar",
       "ok":"OK",
       "yes":"Si",
-      "no":"No"
+      "no":"No",
+      "comingSoon":"Próximamente",
+      "save":"GUARDAR",
+      "featureNotAvailable": "Esta función estará disponible pronto",
+      "connectionError": "No se pudo conectar con el servidor.",
+      "loadError": "No se pudieron obtener los productos del servidor.",
+      "notice":"Aviso",
+      "submit":"Enviar"
+
     }
   },
   "en": {
     "app":{
       "name":"ExosApp 2026"
     },
+    "screens":{
+      "home":"Home",
+      "almacen":"Warehose",
+      "logistica":"Logistic",
+      "inventario":"Inventory",
+      "pickeo":"Picking",
+      "entradas":"Incomes",
+      "salidas":"Outcomes",
+      "recepcion":"Reception",
+      "asignacion":"Assignments",
+      "carpetas":"Folders",
+      "facturacion":"Invoices",
+      "cobranza":"Collection",
+      "administración":"Administration",
+      "ventas":"Sales",
+      "configuracion":"Configuration",
+      "perfil":"Profile",
+      "terminales":"Terminals",
+      "cirugias":"Surgeries",
+      "socios":"Partners",
+      "cirugias_programar" : "Schedule",
+      "cirugias_buscar":"Search",
+      "cirugias_calendario" : "Calendary"
+    },
     "login": {
-      "title": "Login",
       "username": "Username",
       "password": "Password",
       "submit": "LOGIN",
@@ -95,22 +125,12 @@
       "faceidSuccess": "Biometric authentication successful",
       "faceidError": "Biometric authentication error",
       "faceidNotAvailable": "Face ID not available"
-    },
-    "home": {
-      "almacen": "Warehouse",
-      "logistica": "Logistic",
-      "inventario": "Inventory",
-      "configuracion": "Settings",
-      "comingSoon": "Coming Soon",
-      "featureNotAvailable": "This feature will be available soon"
-    },
-    "profile": {
-      "title": "Profile",
+    },    
+    "profile": {      
       "user": "User",
       "theme": "Theme",
       "warehouse": "Warehouse",
       "language": "Language",
-      "save": "SAVE",
       "themes": {
         "light": "Light",
         "dark": "Dark",
@@ -118,35 +138,18 @@
         "pink": "Pink"
       }
     },
-    "almacen": {
-      "title": "Warehouse",
-      "pickeo": "Picking",
-      "inventario": "Inventory",
-      "entradas": "Incoming",
-      "salidas": "Outgoing"
-    },
     "terminales": {
-      "title": "Terminals",
       "loading": "Loading terminals...",
       "noTerminals": "No terminals available"
     },
     "pickeo": {
-      "title": "Picking",
       "hideComplete": "Hide complete",
       "showAll": "Show all",
       "checkout": "Checkout",
       "checkoutConfirm": "Checkout from terminal?",
-      "adjustQuantity": "Adjust Quantity",
-      "cancel": "CANCEL",
-      "accept": "ACCEPT",
-      "success": "Success",
-      "notice": "Notice",
-      "error": "Error",
-      "connectionError": "Could not connect to server.",
-      "loadError": "Could not get products from server."
+      "adjustQuantity": "Adjust Quantity"
     },
     "userMenu": {
-      "profile": "Profile",
       "logout": "Logout",
       "confirm_logout":"Do you want to close session?"
     },
@@ -156,9 +159,18 @@
       "error": "Error",
       "success": "Success",
       "cancel":"Cancelar",
+      "accept":"OK",
       "ok":"OK",
       "yes":"Si",
-      "no":"No"
-   }
+      "no":"No",
+      "comingSoon":"Coming soon",
+      "save":"SAVE",
+      "featureNotAvailable": "Feature not available",
+      "connectionError": "Connection error.",
+      "loadError": "Loaded error.",
+      "notice":"Notice",
+      "submit":"Submit",
+      "activos":"Actives"
+}
   }
 }

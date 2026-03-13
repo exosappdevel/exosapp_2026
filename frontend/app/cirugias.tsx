@@ -8,18 +8,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import CustomModal from '../components/CustomModal';
 
 const menuItems = [
-  { id: "1", titleKey: "screens.pickeo", icon: "hospital", color: "#3182ce" },
-  { id: "2", titleKey: "screens.inventario", icon: "format-list-checks", color: "#ecc94b" },
-  { id: "3", titleKey: "screens.entradas", icon: "home-import-outline", color: "#48bb78" },
-  { id: "4", titleKey: "screens.salidas", icon: "home-export-outline", color: "#e53e3e" },
+  { id: "1", titleKey: "screens.cirugias_programar", icon: "schedule", color: "#3182ce" },
+  { id: "2", titleKey: "screens.cirugias_buscar", icon: "file-seach", color: "#ecc94b" },
+  { id: "3", titleKey: "screens.cirugias_calendario", icon: "calendar", color: "#48bb78" },
+  //{ id: "4", titleKey: "screens.cirugias_", icon: "account-multiple", color: "#e53e3e" },
 ];
 
-export default function AlmacenScreen() {
+export default function LogisticaScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
   
@@ -33,7 +34,7 @@ export default function AlmacenScreen() {
 
   const handleMenuPress = (item: typeof menuItems[0]) => {
     if (item.id === "1") {
-      router.push('/terminales');
+      router.push('/cirugias_programar');
     } else {
       setModal({
         visible: true,
@@ -52,7 +53,7 @@ export default function AlmacenScreen() {
       activeOpacity={0.7}
     >
       <View style={[styles.iconContainer, { backgroundColor: item.color + '20' }]}>
-        <MaterialCommunityIcons name={item.icon as any} size={40} color={item.color} />
+        <AntDesign name={item.icon as any} size={40} color={item.color} />
       </View>
       <Text style={[styles.menuTitle, { color: theme.text }]}>{t(item.titleKey)}</Text>
     </TouchableOpacity>
@@ -65,9 +66,9 @@ export default function AlmacenScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.almacen')}</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.cirugias')}</Text>
         
-        <MaterialCommunityIcons name="warehouse"  size={24} color={theme.accent} />
+        <MaterialCommunityIcons name="doctor"  size={24} color={theme.accent} />
       </View>
 
       {/* Menu Grid */}

@@ -218,9 +218,7 @@ export default function LoginScreen() {
               />*/}
           </View>
 
-          <View style={[styles.formContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {/*<Text style={[styles.title, { color: theme.text }]}>{t('login.title')}</Text>*/}
-            
+          <View style={[styles.formContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>                      
             <View style={[styles.inputContainer, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
               <MaterialCommunityIcons name="account" size={24} color={theme.textSub} />
               <TextInput
