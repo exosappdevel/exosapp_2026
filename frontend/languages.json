@@ -85,6 +85,15 @@
       "notice":"Aviso",
       "submit":"Enviar"
 
+    },
+    "cirugias":{
+      "new_title":" Nueva Programación",
+      "info_general":"Información general",
+      "info_paciente":"Información del paciente",
+      "materiales":"Materiales",
+      "paciente_nombre_title":"Nombre",
+      "paciente_nombre":"Nombre del paciente"
+
     }
   },
   "en": {

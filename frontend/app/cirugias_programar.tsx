@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   View,
   Text,
@@ -11,12 +10,34 @@ import {
   Platform,
   Modal,
   FlatList,
+  LayoutAnimation,
+  UIManager
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import CustomModal from '../components/CustomModal';
+
+// Habilitar animaciones en Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
+  <View style={[styles.accordionContainer, { borderColor: theme.border }]}>
+    <TouchableOpacity style={styles.accordionHeader} onPress={onPress} activeOpacity={0.7}>
+      <Text style={[styles.accordionTitle, { color: theme.text }]}>{title}</Text>
+      <MaterialCommunityIcons
+        name={isOpen ? 'chevron-up' : 'chevron-down'}
+        size={24}
+        color={theme.textSub}
+      />
+    </TouchableOpacity>
+    {isOpen && <View style={styles.accordionContent}>{children}</View>}
+  </View>
+);
 
 // Sample data based on the HTML form
 const estadosData = [
@@ -60,10 +81,10 @@ interface PickerOption {
 export default function ProgramaCirugiaScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
-  
+
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
+
   // Form fields
   const [fecha, setFecha] = useState('');
   const [hora, setHora] = useState('');
@@ -74,7 +95,7 @@ export default function ProgramaCirugiaScreen() {
   const [paciente, setPaciente] = useState('');
   const [procedimiento, setProcedimiento] = useState('');
   const [notas, setNotas] = useState('');
-  
+
   // Picker modals
   const [showEstadoPicker, setShowEstadoPicker] = useState(false);
   const [showHoraPicker, setShowHoraPicker] = useState(false);
@@ -83,8 +104,8 @@ export default function ProgramaCirugiaScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-      setShowDatePicker(false);
-    
+    setShowDatePicker(false);
+
     if (event.type === 'set' && selectedDate) {
       setDate(selectedDate);
       // Formateamos la fecha para mostrarla al usuario en formato local
@@ -135,7 +156,7 @@ export default function ProgramaCirugiaScreen() {
     }
 
     setSubmitting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setSubmitting(false);
@@ -146,7 +167,7 @@ export default function ProgramaCirugiaScreen() {
         icon: 'check-circle-outline',
         colorIcon: '#48bb78'
       });
-      
+
       // Reset form
       setFecha('');
       setHora('');
@@ -197,6 +218,23 @@ export default function ProgramaCirugiaScreen() {
       </View>
     </Modal>
   );
+  const [expandedSection, setExpandedSection] = useState('programacion');
+  // Estados para Checkboxes (basados en programa_cirugia.html)
+  const [checks, setChecks] = useState({
+    ayuno: false,
+    consentimiento: false,
+    laboratorios: false,
+    electro: false,
+    valoracion: false
+  });
+  const toggleSection = (section: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedSection(expandedSection === section ? '' : section);
+  };
+
+  const toggleCheck = (key: keyof typeof checks) => {
+    setChecks(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
@@ -214,159 +252,189 @@ export default function ProgramaCirugiaScreen() {
         <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.formHeader}>
             <MaterialCommunityIcons name="calendar-plus" size={24} color={theme.accent} />
-            <Text style={[styles.formTitle, { color: theme.text }]}>Nueva Programación</Text>
+            <Text style={[styles.formTitle, { color: theme.text }]}>{t('cirugias.new_title')}</Text>
           </View>
 
-          {/* Fecha */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              Fecha <Text style={styles.required}>*</Text>
-            </Text>
-            {/*<TextInput
-              style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-              placeholder="DD/MM/YYYY"
-              placeholderTextColor={theme.textSub}
-              value={fecha}
-              onChangeText={setFecha}
-            />*/}
-            <TouchableOpacity
-              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-              onPress={showPicker}
-            >
-              <Text style={[styles.selectorText, { color: fecha ? theme.text : theme.textSub }]}>
-                {fecha || 'DD/MM/YYYY'}
+          {/* SECCIÓN 1: PROGRAMACIÓN */}
+          <AccordionSection
+            title="Programación"
+            isOpen={expandedSection === 'programacion'}
+            onPress={() => toggleSection('programacion')}
+            theme={theme}
+          >
+
+            {/* Fecha */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Fecha <Text style={styles.required}>*</Text>
               </Text>
-              <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-            </TouchableOpacity>
-            {/* Lógica del Picker según Plataforma */}
-            {showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={onDateChange}
-                minimumDate={new Date()} // Evita programar cirugías en el pasado
+
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={showPicker}
+              >
+                <Text style={[styles.selectorText, { color: fecha ? theme.text : theme.textSub }]}>
+                  {fecha || 'DD/MM/YYYY'}
+                </Text>
+                <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+              </TouchableOpacity>
+              {/* Lógica del Picker según Plataforma */}
+              {showDatePicker && (
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onDateChange}
+                  minimumDate={new Date()} // Evita programar cirugías en el pasado
+                />
+              )}
+
+            </View>
+
+            {/* Hora */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Hora <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowHoraPicker(true)}
+              >
+                <Text style={[styles.selectorText, { color: hora ? theme.text : theme.textSub }]}>
+                  {hora || 'Seleccione hora...'}
+                </Text>
+                <MaterialCommunityIcons name="clock-outline" size={20} color={theme.textSub} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Estado */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Estado <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowEstadoPicker(true)}
+              >
+                <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                  {estado?.nombre || 'Seleccione estado...'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Ciudad */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Ciudad <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                placeholder="Ej. Guadalajara"
+                placeholderTextColor={theme.textSub}
+                value={ciudad}
+                onChangeText={setCiudad}
               />
-            )}
+            </View>
 
-          </View>
-
-          {/* Hora */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              Hora <Text style={styles.required}>*</Text>
-            </Text>
-            <TouchableOpacity
-              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-              onPress={() => setShowHoraPicker(true)}
-            >
-              <Text style={[styles.selectorText, { color: hora ? theme.text : theme.textSub }]}>
-                {hora || 'Seleccione hora...'}
+            {/* Hospital */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Hospital <Text style={styles.required}>*</Text>
               </Text>
-              <MaterialCommunityIcons name="clock-outline" size={20} color={theme.textSub} />
-            </TouchableOpacity>
-          </View>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                placeholder="Nombre del hospital"
+                placeholderTextColor={theme.textSub}
+                value={hospital}
+                onChangeText={setHospital}
+              />
+            </View>
 
-          {/* Estado */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              Estado <Text style={styles.required}>*</Text>
-            </Text>
-            <TouchableOpacity
-              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-              onPress={() => setShowEstadoPicker(true)}
-            >
-              <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
-                {estado?.nombre || 'Seleccione estado...'}
+            {/* Médico */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Médico <Text style={styles.required}>*</Text>
               </Text>
-              <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-            </TouchableOpacity>
-          </View>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                placeholder="Nombre del médico"
+                placeholderTextColor={theme.textSub}
+                value={medico}
+                onChangeText={setMedico}
+              />
+            </View>
+          </AccordionSection>
 
-          {/* Ciudad */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              Ciudad <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-              placeholder="Ej. Guadalajara"
-              placeholderTextColor={theme.textSub}
-              value={ciudad}
-              onChangeText={setCiudad}
-            />
-          </View>
+          {/* SECCIÓN 2: PACIENTE */}
+          <AccordionSection
+            title={t('cirugias.info_paciente')}
+            isOpen={expandedSection === 'paciente'}
+            onPress={() => toggleSection('paciente')}
+            theme={theme}
+          >
 
-          {/* Hospital */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              Hospital <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-              placeholder="Nombre del hospital"
-              placeholderTextColor={theme.textSub}
-              value={hospital}
-              onChangeText={setHospital}
-            />
-          </View>
+            {/* Paciente */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t('cirugias.paciente_nombre_title')} <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                placeholder={t('cirugias.paciente_nombre')}
+                placeholderTextColor={theme.textSub}
+                value={paciente}
+                onChangeText={setPaciente}
+              />
+            </View>
 
-          {/* Médico */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              Médico <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-              placeholder="Nombre del médico"
-              placeholderTextColor={theme.textSub}
-              value={medico}
-              onChangeText={setMedico}
-            />
-          </View>
+            {/* Procedimiento */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Procedimiento <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                placeholder="Tipo de procedimiento"
+                placeholderTextColor={theme.textSub}
+                value={procedimiento}
+                onChangeText={setProcedimiento}
+              />
+            </View>
 
-          {/* Paciente */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              Paciente <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-              placeholder="Nombre del paciente"
-              placeholderTextColor={theme.textSub}
-              value={paciente}
-              onChangeText={setPaciente}
-            />
-          </View>
+            {/* Notas */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>Notas</Text>
+              <TextInput
+                style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                placeholder="Observaciones adicionales..."
+                placeholderTextColor={theme.textSub}
+                value={notas}
+                onChangeText={setNotas}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
+          </AccordionSection>
 
-          {/* Procedimiento */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>
-              Procedimiento <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-              placeholder="Tipo de procedimiento"
-              placeholderTextColor={theme.textSub}
-              value={procedimiento}
-              onChangeText={setProcedimiento}
-            />
-          </View>
+          {/* SECCIÓN 3: materiales */}
+          <AccordionSection
+            title={t('cirugias.materiales')}
+            isOpen={expandedSection === 'materiales'}
+            onPress={() => toggleSection('materiales')}
+            theme={theme}
+          >
 
-          {/* Notas */}
-          <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.text }]}>Notas</Text>
-            <TextInput
-              style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-              placeholder="Observaciones adicionales..."
-              placeholderTextColor={theme.textSub}
-              value={notas}
-              onChangeText={setNotas}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
+            <AccordionSection
+              title="Sub-sección interna"
+              isOpen={expandedSection === 'subseccion'}
+              onPress={() => toggleSection('subseccion')}
+              theme={theme}
+            >
+              <Text>Aquí va información más específica.</Text>
+            </AccordionSection>
+          </AccordionSection>
 
           {/* Submit Button */}
           <TouchableOpacity
@@ -386,7 +454,7 @@ export default function ProgramaCirugiaScreen() {
         </View>
       </ScrollView>
 
-      
+
 
       {/* Picker Modals */}
       {renderPickerModal(
@@ -549,4 +617,14 @@ const styles = StyleSheet.create({
   pickerItemText: {
     fontSize: 14,
   },
+  accordionContainer: { borderWidth: 1, borderRadius: 8, marginBottom: 12, overflow: 'hidden' },
+  accordionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    padding: 15, backgroundColor: '#f5f5f5', alignItems: 'center'
+  },
+  accordionTitle: { fontSize: 16, fontWeight: 'bold' },
+  accordionContent: { padding: 15 },
+  inputGroup: { marginBottom: 15 },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  checkLabel: { marginLeft: 10, fontSize: 15 }
 });
