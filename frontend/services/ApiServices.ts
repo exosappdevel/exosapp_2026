@@ -115,6 +115,35 @@ class ApiService {
       datos_pickeo: JSON.stringify(lista_productos)
     });
   }
+
+  static async get_set_categorias(){
+    return await this.request("get_set_categorias", {});      
+  }
+  static async get_set_subcategorias(id_categoria:string){
+    return await this.request("get_set_subcategorias", { id_categoria });      
+  }
+  static async get_equipos_poder_categoria(){
+    return await this.request("get_equipos_poder_categoria", {});      
+  }
+  static async get_instrumental_categoria(){
+    return await this.request("get_instrumental_categoria", {});      
+  }
+  static async get_consumible_categoria(){
+    return await this.request("get_consumible_categoria", {});      
+  }
+  static async get_estados(){
+    return await this.request("get_estados", {});      
+  }
+  static async get_vendedores(id_usuario: string, first_row: string){
+    return await this.request("get_vendedores", {id_usuario,first_row});      
+  }
+  static async get_tecnicos(id_usuario: string){
+    return await this.request("get_vendedores", {id_usuario});      
+  }
+  static async get_hospitales(id_almacen: string){
+    return await this.request("get_hospitales", {id_almacen});      
+  }
+              
 }
 
 export default ApiService;
