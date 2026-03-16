@@ -33,8 +33,7 @@ class ApiService {
       return { result: "error", result_text: "Error de conexión" };
     }
   }
-
-  static parseXmlToJson(xmlString: string): any {
+  static parseXmlToJson_org(xmlString: string): any {
     try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString.trim(), "text/xml");
@@ -59,7 +58,7 @@ class ApiService {
           }
           value = value.trim();
 
-          if (node.nodeName.startsWith('item_') || node.nodeName.startsWith('prod_')) {
+          if (node.nodeName.startsWith('item_') || node.nodeName.startsWith('prod_') || node.nodeName.startsWith('subitem_')) {
             isList = true;
             const item: Record<string, string> = {};
             for (let k = 0; k < node.childNodes.length; k++) {
@@ -92,6 +91,54 @@ class ApiService {
     }
   }
 
+  static parseXmlToJson(xmlString: string): any {
+  try {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString.trim(), "text/xml");
+    
+    // Función interna para procesar nodos
+    const parseNode = (node: Node): any => {
+      // Si el nodo solo tiene texto (no tiene etiquetas hijos)
+      if (node.childNodes.length === 1 && (node.firstChild?.nodeType === 3 || node.firstChild?.nodeType === 4)) {
+        return node.firstChild.nodeValue?.trim() || "";
+      }
+
+      const children = node.childNodes;
+      let itemsArray: any[] = [];
+      let propertiesObj: any = {};
+      let isList = false;
+      if (children.length === 0) {
+          return []; // O puedes devolver [] si sabes que siempre debería ser lista
+      }
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i] as any;
+        if (child.nodeType === 1) { // Nodo tipo Elemento
+          const name = child.nodeName;
+          const value = parseNode(child);
+
+          // Si detectamos prefijos de lista, marcamos como lista y guardamos en array
+          if (name.startsWith('item_') || name.startsWith('subitem_') || name.startsWith('prod_')) {
+            isList = true;
+            itemsArray.push(value);
+          } else {
+            propertiesObj[name] = value;
+          }
+        }
+      }
+
+      // Si se identificó como lista (como en get_terminales_list), devolvemos el Array
+      // Si no, devolvemos el objeto con propiedades (para los niveles internos)
+      return isList ? itemsArray : propertiesObj;
+    };
+
+    // Empezamos desde el primer elemento (saltando el <response>)
+    return parseNode(xmlDoc.documentElement);
+  } catch (e) {
+    console.error("Error parseando XML:", e);
+    return { result: "error", result_text: "Error de lectura XML" };
+  }
+}
+
   static async inicia_sesion(usuario: string, password: string) {
     return await this.request("inicia_sesion", { login_usuario: usuario, login_password: password });
   }
@@ -116,34 +163,37 @@ class ApiService {
     });
   }
 
-  static async get_set_categorias(){
-    return await this.request("get_set_categorias", {});      
+  static async get_set_categorias() {
+    return await this.request("get_set_categorias", {});
   }
-  static async get_set_subcategorias(id_categoria:string){
-    return await this.request("get_set_subcategorias", { id_categoria });      
+  static async get_set_subcategorias(id_categoria: string) {
+    return await this.request("get_set_subcategorias", { id_categoria });
   }
-  static async get_equipos_poder_categoria(){
-    return await this.request("get_equipos_poder_categoria", {});      
+  static async get_set_categorias_subcategorias() {
+    return await this.request("get_set_categorias_subcategorias", {});
   }
-  static async get_instrumental_categoria(){
-    return await this.request("get_instrumental_categoria", {});      
+  static async get_equipos_poder_categoria() {
+    return await this.request("get_equipos_poder_categoria", {});
   }
-  static async get_consumible_categoria(){
-    return await this.request("get_consumible_categoria", {});      
+  static async get_instrumental_categoria() {
+    return await this.request("get_instrumental_categoria", {});
   }
-  static async get_estados(){
-    return await this.request("get_estados", {});      
+  static async get_consumible_categoria() {
+    return await this.request("get_consumible_categoria", {});
   }
-  static async get_vendedores(id_usuario: string, first_row: string){
-    return await this.request("get_vendedores", {id_usuario,first_row});      
+  static async get_estados() {
+    return await this.request("get_estados", {});
   }
-  static async get_tecnicos(id_usuario: string){
-    return await this.request("get_vendedores", {id_usuario});      
+  static async get_vendedores(id_usuario: string, first_row: string) {
+    return await this.request("get_vendedores", { id_usuario, first_row });
   }
-  static async get_hospitales(id_almacen: string){
-    return await this.request("get_hospitales", {id_almacen});      
+  static async get_tecnicos(id_usuario: string) {
+    return await this.request("get_vendedores", { id_usuario });
   }
-              
+  static async get_hospitales(id_almacen: string) {
+    return await this.request("get_hospitales", { id_almacen });
+  }
+
 }
 
 export default ApiService;

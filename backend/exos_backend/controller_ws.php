@@ -67,6 +67,10 @@ class WebServiceController {
             'descripcion' => 'Obtiene listado de set_subcategorias',
             'parameters'  => ['id_categoria']
         ],
+        'get_set_categorias_subcategorias' => [
+            'descripcion' => 'Obtiene listado de set_categorias y sub_categorias',
+            'parameters'  => []
+        ],
         'get_equipos_poder_categoria'=> [
             'descripcion' => 'Obtiene listado de equipos_poder_categoria',
             'parameters'  => []
@@ -391,7 +395,7 @@ class WebServiceController {
     
         if (!$id_usuario) 
             return $this->DatosIncorrectos();
-        $limit = !Requesting("limit") ? 10 : Requesting("limit");
+        $limit = !Requesting("limit") ? 1000 : Requesting("limit");
 
         // Query original para obtener productos como terminales
         $query = "SELECT a.id_almacen, a.nombre, a.codigo 
@@ -532,8 +536,8 @@ class WebServiceController {
            return;
         }  
         // ELSE USE NEXT MOCKUP
-
-        $query = "SELECT id_set_categoria, nombre FROM set_categoria WHERE mostrar = 1 ORDER BY nombre";
+        
+        $query = "SELECT id_set_categoria, nombre FROM set_categoria WHERE mostrar = 1 and id_set_categoria>1 ORDER BY nombre";
         $qresult = DatasetSQL($query);
         $data = [];
 
@@ -570,6 +574,37 @@ class WebServiceController {
                 'id_categoria' => $id_categoria ,
                 'id_set_subcategoria' => $row['id_set_subcategoria'],
                 'nombre'        => $row['nombre'],
+            ];
+        }
+        return $data ?: ['result' => 'empty'];
+    }
+    public function get_set_categorias_subcategorias(){
+        // if IMPLEMENTED
+        if ($this->implemented && $this->result != null){
+           $this->sendResponse($this->result); 
+           return;
+        }  
+        // ELSE USE NEXT MOCKUP        
+
+        $query = "SELECT id_set_categoria, nombre FROM set_categoria WHERE mostrar = 1 and id_set_categoria>1 ORDER BY nombre";
+        $qresult = DatasetSQL($query);
+        $data = [];
+
+        while ($row = mysqli_fetch_array($qresult)) {
+            // Se usa el prefijo 'prod_' para asegurar etiquetas XML válidas
+            $query = "SELECT id_set_subcategoria, nombre FROM set_subcategoria WHERE id_set_categoria = ".$row['id_set_categoria']." ORDER BY nombre";
+            $subitems_rows = DatasetSQL($query);
+            $subitems = [];
+            while ($sub_row = mysqli_fetch_array($subitems_rows)) {
+                $subitems['subitem_' . $sub_row['id_set_subcategoria']] = [
+                                'id_set_subcategoria' => $sub_row['id_set_subcategoria'],
+                                'nombre'        => $sub_row['nombre'],
+                            ];
+            }
+            $data['item_' . $row['id_set_categoria']] = [
+                'id_set_categoria' => $row['id_set_categoria'],
+                'nombre'        => $row['nombre'],
+                'subcategorias' => $subitems
             ];
         }
         return $data ?: ['result' => 'empty'];

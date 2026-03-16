@@ -205,17 +205,17 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.logoContainer}>
-            <MaterialCommunityIcons 
+            {/*<MaterialCommunityIcons 
               name="cube-scan" 
               size={80} 
               color={theme.accent} 
-            />
-            <Text style={[styles.appName]}>{t("app.name")}</Text>
-            {/*<ImageCustom
-                source={require("../assets/images/exosapp_logo.png")}
+            />*/}
+            <ImageCustom
+                source={require("../assets/images/logo_login.png")}
                 style={styles.logo}
                 resizeMode="contain"
-              />*/}
+              />
+            <Text style={[styles.appName]}>{t("app.name")}</Text>
           </View>
 
           <View style={[styles.formContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>                      

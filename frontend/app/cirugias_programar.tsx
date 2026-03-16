@@ -19,11 +19,13 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import CustomModal from '../components/CustomModal';
+import ApiService from '@/services/ApiServices';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
 
 const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
   <View style={[styles.accordionContainer, { borderColor: theme.border }]}>
@@ -39,33 +41,8 @@ const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
   </View>
 );
 
-// Sample data based on the HTML form
-const estadosData = [
-  { id: '0', nombre: 'Seleccione...' },
-  { id: '6', nombre: 'AGUASCALIENTES' },
-  { id: '20', nombre: 'BAJA CALIFORNIA' },
-  { id: '16', nombre: 'CDMX' },
-  { id: '17', nombre: 'CHIHUAHUA' },
-  { id: '5', nombre: 'COLIMA' },
-  { id: '7', nombre: 'DURANGO' },
-  { id: '8', nombre: 'GUANAJUATO' },
-  { id: '1', nombre: 'JALISCO' },
-  { id: '4', nombre: 'MEXICO' },
-  { id: '2', nombre: 'MICHOACAN' },
-  { id: '11', nombre: 'NAYARIT' },
-  { id: '10', nombre: 'NUEVO LEON' },
-  { id: '19', nombre: 'OAXACA' },
-  { id: '12', nombre: 'PUEBLA' },
-  { id: '3', nombre: 'QUERETARO' },
-  { id: '21', nombre: 'QUINTANA ROO' },
-  { id: '22', nombre: 'SAN LUIS POTOSI' },
-  { id: '13', nombre: 'SINALOA' },
-  { id: '18', nombre: 'SONORA' },
-  { id: '14', nombre: 'VERACRUZ' },
-  { id: '9', nombre: 'YUCATAN' },
-  { id: '15', nombre: 'ZACATECAS' },
-];
 
+// Sample data based on the HTML form
 const horasData = [
   '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
   '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
@@ -78,6 +55,46 @@ interface PickerOption {
   nombre: string;
 }
 
+interface iEstado {
+  id_estado: string;
+  nombre: string;
+}
+
+interface iSubCategoria {
+  id_set_subcategoria: string;
+  nombre: string;
+}
+
+interface iCategoria {
+  id_set_categoria: string;
+  nombre: string;
+  subcategorias: iSubCategoria[];
+}
+
+
+
+interface iHospital {
+  id_hospital: string;
+  nombre: string;
+}
+interface iMedico {
+  id_medico: string;
+  nombre: string;
+}
+
+interface iTecnico {
+  id_tecnico: string;
+  nombre: string;
+}
+interface iVendedor {
+  id_vendedor: string;
+  nombre: string;
+}
+interface iPaciente {
+  nombre: string;
+  materno: string;
+  paterno: string;
+}
 export default function ProgramaCirugiaScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
@@ -88,20 +105,89 @@ export default function ProgramaCirugiaScreen() {
   // Form fields
   const [fecha, setFecha] = useState('');
   const [hora, setHora] = useState('');
-  const [estado, setEstado] = useState<PickerOption | null>(null);
+  const [estado, setEstado] = useState<iEstado | null>(null);
   const [ciudad, setCiudad] = useState('');
-  const [hospital, setHospital] = useState('');
-  const [medico, setMedico] = useState('');
-  const [paciente, setPaciente] = useState('');
+  const [hospital, setHospital] = useState<iHospital | null>(null);
+  const [medico, setMedico] = useState<iMedico | null>(null);
+  const [vendedor, setVendedor] = useState<iVendedor | null>(null);
+  const [tecnico1, setTecnico1] = useState<iTecnico | null>(null);
+  const [tecnico2, setTecnico2] = useState<iTecnico | null>(null);
+
+  const [paciente, setPaciente] = useState<iPaciente | null>({ nombre: '', paterno: '', materno: '' });
   const [procedimiento, setProcedimiento] = useState('');
   const [notas, setNotas] = useState('');
+
+  // listas
+  const [estados, setEstados] = useState([]);
+  const [hospitales, setHospitales] = useState([]);
+  const [vendedores, setVendedores] = useState([]);
+  const [tecnicos, setTecnicos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  // Estado para los materiales seleccionados
+  const [selectedSubcats, setSelectedSubcats] = useState<Record<string, boolean>>({});
+
+  // Función para alternar la selección
+  const toggleSubcategoria = (id: string) => {
+    setSelectedSubcats(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
 
   // Picker modals
   const [showEstadoPicker, setShowEstadoPicker] = useState(false);
   const [showHoraPicker, setShowHoraPicker] = useState(false);
+  const [showHospitalPicker, setShowHospitalPicker] = useState(false);
+  const [showMedicoPicker, setShowMedicoPicker] = useState(false);
+  const [showVendedorPicker, setShowVendedorPicker] = useState(false);
+  const [showTecnico1Picker, setShowTecnico1Picker] = useState(false);
+  const [showTecnico2Picker, setShowTecnico2Picker] = useState(false);
+
 
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const [expandedCats, setExpandedCats] = useState({}); // Para manejar acordeones anidados
+  const validaData = async (response: any) => {
+    try {
+      if (Array.isArray(response)) {
+        return response;
+      }
+      else return []
+    } catch (e) {
+      console.log('Error loading service:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      const estados = await ApiService.get_estados();
+      const hospitales = await ApiService.get_hospitales(user.id_almacen);
+      const vendedores = await ApiService.get_vendedores(user.id_usuario, "Vendedor");
+      const tecnicos = await ApiService.get_tecnicos(user.id_usuario);
+      const categorias = await ApiService.get_set_categorias_subcategorias();
+
+      //const cats = await ApiService.get_set_categorias();
+
+      // Cargar subcategorías para cada categoría
+      /*const subcatsMap = {};
+      for (const cat of cats) {
+        subcatsMap[cat.id_categoria] = await ApiService.get_set_subcategorias(cat.id_categoria);
+      }*/
+      //alert(JSON.stringify(categorias));
+      setEstados(estados);
+      setHospitales(hospitales);
+      setVendedores(vendedores);
+      setTecnicos(tecnicos);
+      setCategorias(categorias);
+    };
+    loadData();
+    //alert(select_data.estados);
+  }, []);
+
 
   const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(false);
@@ -133,15 +219,17 @@ export default function ProgramaCirugiaScreen() {
   const validateForm = () => {
     if (!fecha) return 'Ingrese la fecha de la cirugía';
     if (!hora) return 'Seleccione la hora';
-    if (!estado || estado.id === '0') return 'Seleccione el estado';
+    if (!estado || estado.id_estado === '0') return 'Seleccione el estado';
     if (!ciudad.trim()) return 'Ingrese la ciudad';
-    if (!hospital.trim()) return 'Ingrese el hospital';
-    if (!medico.trim()) return 'Ingrese el médico';
-    if (!paciente.trim()) return 'Ingrese el paciente';
+    if (!hospital || hospital.id_hospital === '0') return 'Ingrese el hospital';
+    if (!medico || medico.id_medico === '0') return 'Ingrese el médico';
     if (!procedimiento.trim()) return 'Ingrese el procedimiento';
     return null;
   };
-
+  const finalizarSeleccion = () => {
+    const materialesSeleccionados = Object.keys(selectedSubcats).filter(id => selectedSubcats[id]);
+    console.log("IDs a enviar al servidor:", materialesSeleccionados);
+  };
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
@@ -173,9 +261,9 @@ export default function ProgramaCirugiaScreen() {
       setHora('');
       setEstado(null);
       setCiudad('');
-      setHospital('');
-      setMedico('');
-      setPaciente('');
+      setHospital(null);
+      setMedico(null);
+      setPaciente({ nombre: '', paterno: '', materno: '' });
       setProcedimiento('');
       setNotas('');
     }, 1500);
@@ -184,7 +272,8 @@ export default function ProgramaCirugiaScreen() {
   const renderPickerModal = (
     visible: boolean,
     onClose: () => void,
-    data: PickerOption[] | string[],
+    data: string[] | PickerOption[] | iEstado[],
+    key_name: string = "id",
     onSelect: (item: any) => void,
     title: string
   ) => (
@@ -192,14 +281,20 @@ export default function ProgramaCirugiaScreen() {
       <View style={styles.pickerOverlay}>
         <View style={[styles.pickerContainer, { backgroundColor: theme.card }]}>
           <View style={[styles.pickerHeader, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.pickerTitle, { color: theme.text }]}>{title}</Text>
+            <Text style={[styles.pickerTitle, { color: theme.text }]}>
+              {title}
+            </Text>
             <TouchableOpacity onPress={onClose}>
               <MaterialCommunityIcons name="close" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
+
           <FlatList
-            data={data}
-            keyExtractor={(item, index) => typeof item === 'string' ? index.toString() : item.id}
+            data={data as any[]}
+            keyExtractor={(item, index) => typeof
+              item === 'string' ?
+              index.toString() : key_name //item.id
+            }
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={[styles.pickerItem, { borderBottomColor: theme.border }]}
@@ -218,7 +313,16 @@ export default function ProgramaCirugiaScreen() {
       </View>
     </Modal>
   );
-  const [expandedSection, setExpandedSection] = useState('programacion');
+
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (sectionId: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId] // Invierte el valor actual del ID
+    }));
+  };
   // Estados para Checkboxes (basados en programa_cirugia.html)
   const [checks, setChecks] = useState({
     ayuno: false,
@@ -227,10 +331,7 @@ export default function ProgramaCirugiaScreen() {
     electro: false,
     valoracion: false
   });
-  const toggleSection = (section: string) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedSection(expandedSection === section ? '' : section);
-  };
+
 
   const toggleCheck = (key: keyof typeof checks) => {
     setChecks(prev => ({ ...prev, [key]: !prev[key] }));
@@ -257,9 +358,9 @@ export default function ProgramaCirugiaScreen() {
 
           {/* SECCIÓN 1: PROGRAMACIÓN */}
           <AccordionSection
-            title="Programación"
-            isOpen={expandedSection === 'programacion'}
-            onPress={() => toggleSection('programacion')}
+            title="Lugar y Fecha"
+            isOpen={!!expandedSections['lugar']}
+            onPress={() => toggleSection('lugar')}
             theme={theme}
           >
 
@@ -336,19 +437,74 @@ export default function ProgramaCirugiaScreen() {
                 onChangeText={setCiudad}
               />
             </View>
+          </AccordionSection>
+          <AccordionSection
+            title="Participantes"
+            isOpen={!!expandedSections['programacion']}
+            onPress={() => toggleSection('programacion')}
+            theme={theme}
+          >
+
+            {/* Agente */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Agente <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowVendedorPicker(true)}
+              >
+                <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                  {vendedor?.nombre || 'Seleccione vendedor...'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+              </TouchableOpacity>
+            </View>
+            {/* Tecnico1 */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Técnico <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowTecnico1Picker(true)}
+              >
+                <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                  {tecnico1?.nombre || 'Seleccione técnico...'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+              </TouchableOpacity>
+            </View>
+            {/* Tecnico2 */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Técnico 2 <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowTecnico2Picker(true)}
+              >
+                <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                  {tecnico2?.nombre || 'Seleccione técnico...'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+              </TouchableOpacity>
+            </View>
 
             {/* Hospital */}
             <View style={styles.fieldContainer}>
               <Text style={[styles.label, { color: theme.text }]}>
                 Hospital <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-                placeholder="Nombre del hospital"
-                placeholderTextColor={theme.textSub}
-                value={hospital}
-                onChangeText={setHospital}
-              />
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowHospitalPicker(true)}
+              >
+                <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                  {hospital?.nombre || 'Seleccione hospital...'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+              </TouchableOpacity>
             </View>
 
             {/* Médico */}
@@ -356,20 +512,22 @@ export default function ProgramaCirugiaScreen() {
               <Text style={[styles.label, { color: theme.text }]}>
                 Médico <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-                placeholder="Nombre del médico"
-                placeholderTextColor={theme.textSub}
-                value={medico}
-                onChangeText={setMedico}
-              />
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowMedicoPicker(true)}
+              >
+                <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                  {medico?.nombre || 'Seleccione medico...'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+              </TouchableOpacity>
             </View>
           </AccordionSection>
 
           {/* SECCIÓN 2: PACIENTE */}
           <AccordionSection
             title={t('cirugias.info_paciente')}
-            isOpen={expandedSection === 'paciente'}
+            isOpen={!!expandedSections['paciente']}
             onPress={() => toggleSection('paciente')}
             theme={theme}
           >
@@ -377,28 +535,53 @@ export default function ProgramaCirugiaScreen() {
             {/* Paciente */}
             <View style={styles.fieldContainer}>
               <Text style={[styles.label, { color: theme.text }]}>
-                {t('cirugias.paciente_nombre_title')} <Text style={styles.required}>*</Text>
+                {t('cirugias.paciente_nombre_title')}
               </Text>
               <TextInput
                 style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
                 placeholder={t('cirugias.paciente_nombre')}
                 placeholderTextColor={theme.textSub}
-                value={paciente}
-                onChangeText={setPaciente}
+                value={paciente?.nombre}
+                onChangeText={(text) => {
+                  setPaciente(prev => {
+                    const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
+                    return { ...dataBase, nombre: text };
+                  });
+                }}
               />
             </View>
-
-            {/* Procedimiento */}
             <View style={styles.fieldContainer}>
               <Text style={[styles.label, { color: theme.text }]}>
-                Procedimiento <Text style={styles.required}>*</Text>
+                {t('cirugias.paciente_materno_title')}
               </Text>
               <TextInput
                 style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-                placeholder="Tipo de procedimiento"
+                placeholder={t('cirugias.materno_nombre')}
                 placeholderTextColor={theme.textSub}
-                value={procedimiento}
-                onChangeText={setProcedimiento}
+                value={paciente?.materno}
+                onChangeText={(text) => {
+                  setPaciente(prev => {
+                    const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
+                    return { ...dataBase, materno: text };
+                  });
+                }}
+              />
+            </View>
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t('cirugias.paciente_paterno_title')}
+              </Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                placeholder={t('cirugias.paciente_paterno')}
+                placeholderTextColor={theme.textSub}
+                value={paciente?.paterno}
+                onChangeText={(text) => {
+                  setPaciente(prev => {
+                    const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
+                    return { ...dataBase, paterno: text };
+                  });
+                }}
               />
             </View>
 
@@ -419,22 +602,62 @@ export default function ProgramaCirugiaScreen() {
           </AccordionSection>
 
           {/* SECCIÓN 3: materiales */}
+
           <AccordionSection
             title={t('cirugias.materiales')}
-            isOpen={expandedSection === 'materiales'}
+            isOpen={!!expandedSections['materiales']}
             onPress={() => toggleSection('materiales')}
             theme={theme}
           >
+            <text>{/*JSON.stringify(categorias)*/}</text>
 
-            <AccordionSection
-              title="Sub-sección interna"
-              isOpen={expandedSection === 'subseccion'}
-              onPress={() => toggleSection('subseccion')}
-              theme={theme}
-            >
-              <Text>Aquí va información más específica.</Text>
-            </AccordionSection>
+            { Array.isArray(categorias) &&
+               categorias.map((item: iCategoria) => {
+              // Calculamos cuántos seleccionados hay para ESTA categoría
+              const seleccionadosEnEstaCat = Array.isArray(item.subcategorias)
+                ? item.subcategorias.filter(sub => !!selectedSubcats[sub.id_set_subcategoria]).length
+                : 0;
+
+              return (
+                <AccordionSection
+                  key={item.id_set_categoria}
+                  // Si hay seleccionados, mostramos el número junto al nombre
+                  title={seleccionadosEnEstaCat > 0
+                    ? `${item.nombre} (${seleccionadosEnEstaCat})`
+                    : item.nombre
+                  }
+                  isOpen={!!expandedSections["cat_" + item.id_set_categoria]}
+                  onPress={() => toggleSection("cat_" + item.id_set_categoria)}
+                  theme={theme}
+                >
+                  {Array.isArray(item.subcategorias) &&
+                    item.subcategorias.map((sub: iSubCategoria) => {
+                      const isSelected = !!selectedSubcats[sub.id_set_subcategoria];
+
+                      return (
+                        <TouchableOpacity
+                          key={sub.id_set_subcategoria}
+                          style={styles.checkboxContainer}
+                          onPress={() => toggleSubcategoria(sub.id_set_subcategoria)}
+                          activeOpacity={0.6}
+                        >
+                          <MaterialCommunityIcons
+                            name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                            size={24}
+                            color={isSelected ? theme.primary : theme.textSub}
+                          />
+                          <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                            {sub.nombre}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                </AccordionSection>
+              );
+            })}
+
           </AccordionSection>
+
 
           {/* Submit Button */}
           <TouchableOpacity
@@ -458,20 +681,62 @@ export default function ProgramaCirugiaScreen() {
 
       {/* Picker Modals */}
       {renderPickerModal(
-        showEstadoPicker,
-        () => setShowEstadoPicker(false),
-        estadosData,
-        (item: PickerOption) => setEstado(item),
-        'Seleccionar Estado'
-      )}
-
-      {renderPickerModal(
         showHoraPicker,
         () => setShowHoraPicker(false),
         horasData,
+        "",
         (item: string) => setHora(item),
         'Seleccionar Hora'
       )}
+
+      {
+        renderPickerModal(
+          showEstadoPicker,
+          () => setShowEstadoPicker(false),
+          estados,
+          "id_estado",
+          (item: iEstado) => setEstado(item),
+          'Seleccionar Estado'
+        )}
+      {
+        renderPickerModal(
+          showVendedorPicker,
+          () => setShowVendedorPicker(false),
+          vendedores,
+          "id_vendedor",
+          (item: iVendedor) => setVendedor(item),
+          'Seleccionar Vendedor'
+        )}
+      {
+        renderPickerModal(
+          showTecnico1Picker,
+          () => setShowTecnico1Picker(false),
+          tecnicos,
+          "id_tecnico",
+          (item: iTecnico) => setTecnico1(item),
+          'Seleccionar Técnico'
+        )}
+      {
+        renderPickerModal(
+          showTecnico2Picker,
+          () => setShowTecnico2Picker(false),
+          tecnicos,
+          "id_tecnico",
+          (item: iTecnico) => setTecnico2(item),
+          'Seleccionar Técnico'
+        )}
+
+      {
+        renderPickerModal(
+          showHospitalPicker,
+          () => setShowHospitalPicker(false),
+          hospitales,
+          "id_hospital",
+          (item: iHospital) => setHospital(item),
+          'Seleccionar hospital'
+        )}
+
+
 
       <CustomModal
         visible={modal.visible}
@@ -626,5 +891,18 @@ const styles = StyleSheet.create({
   accordionContent: { padding: 15 },
   inputGroup: { marginBottom: 15 },
   checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  checkLabel: { marginLeft: 10, fontSize: 15 }
+  checkLabel: { marginLeft: 10, fontSize: 15 },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12, // Espacio suficiente para el touch
+    paddingHorizontal: 15,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  checkboxLabel: {
+    marginLeft: 12,
+    fontSize: 15,
+    flex: 1,
+  },
 });
