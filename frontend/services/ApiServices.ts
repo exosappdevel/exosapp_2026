@@ -193,6 +193,9 @@ class ApiService {
   static async get_hospitales(id_almacen: string) {
     return await this.request("get_hospitales", { id_almacen });
   }
+  static async get_subdistribuidor() {
+    return await this.request("get_subdistribuidor", { });
+  }
 
 }
 

@@ -11,7 +11,8 @@ import {
   Modal,
   FlatList,
   LayoutAnimation,
-  UIManager
+  UIManager,
+  Image, Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,7 +28,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 
-const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
+const AccordionSection_org = ({ title, children, isOpen, onPress, theme }: any) => (
   <View style={[styles.accordionContainer, { borderColor: theme.border }]}>
     <TouchableOpacity style={styles.accordionHeader} onPress={onPress} activeOpacity={0.7}>
       <Text style={[styles.accordionTitle, { color: theme.text }]}>{title}</Text>
@@ -38,6 +39,30 @@ const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
       />
     </TouchableOpacity>
     {isOpen && <View style={styles.accordionContent}>{children}</View>}
+  </View>
+);
+const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
+  <View style={[styles.accordionContainer, { borderColor: theme.border }]}>
+    {/* Este es el único lugar donde vive el onPress de apertura */}
+    <TouchableOpacity
+      style={styles.accordionHeader}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Text style={[styles.accordionTitle, { color: theme.text }]}>{title}</Text>
+      <MaterialCommunityIcons
+        name={isOpen ? 'chevron-up' : 'chevron-down'}
+        size={24}
+        color={theme.textSub}
+      />
+    </TouchableOpacity>
+
+    {/* Aquí el contenido se renderiza de forma independiente */}
+    {isOpen && (
+      <View style={styles.accordionContent}>
+        {children}
+      </View>
+    )}
   </View>
 );
 
@@ -95,10 +120,31 @@ interface iPaciente {
   materno: string;
   paterno: string;
 }
+interface iEquipoPoder {
+  id_ep_categoria: string;
+  nombre: string;
+}
+interface iInstrumental {
+  id_instru_categoria: string;
+  nombre: string;
+}
+interface iConsumible {
+  id_consu_categoria: string;
+  nombre: string;
+}
+interface iSubdistribuidor {
+  id_distribuidor: string;
+  distribuidor: string;
+}
+
+
+
+
 export default function ProgramaCirugiaScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
 
+  const [appReady, setAppReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -112,17 +158,22 @@ export default function ProgramaCirugiaScreen() {
   const [vendedor, setVendedor] = useState<iVendedor | null>(null);
   const [tecnico1, setTecnico1] = useState<iTecnico | null>(null);
   const [tecnico2, setTecnico2] = useState<iTecnico | null>(null);
+  const [subdistribuidor, setSubdistribuidor] = useState<iSubdistribuidor | null>(null);
 
   const [paciente, setPaciente] = useState<iPaciente | null>({ nombre: '', paterno: '', materno: '' });
-  const [procedimiento, setProcedimiento] = useState('');
+  const [solicitarEsteril, setSolicitarEsteril] = useState(false);
   const [notas, setNotas] = useState('');
 
-  // listas
-  const [estados, setEstados] = useState([]);
-  const [hospitales, setHospitales] = useState([]);
-  const [vendedores, setVendedores] = useState([]);
-  const [tecnicos, setTecnicos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+  // listas  
+  const [estados, setEstados] = useState<iEstado[]>([]);
+  const [hospitales, setHospitales] = useState<iHospital[]>([]);
+  const [vendedores, setVendedores] = useState<iVendedor[]>([]);
+  const [tecnicos, setTecnicos] = useState<iTecnico[]>([]);
+  const [categorias, setCategorias] = useState<iCategoria[]>([]);
+  const [equipospoder, setEquiposPoder] = useState<iEquipoPoder[]>([]);
+  const [instrumenales, setInstrumentales] = useState<iInstrumental[]>([]);
+  const [consumibles, setConsumibles] = useState<iConsumible[]>([]);
+  const [subdistribuidores, setSubdistribuidores] = useState<iSubdistribuidor[]>([]);
   // Estado para los materiales seleccionados
   const [selectedSubcats, setSelectedSubcats] = useState<Record<string, boolean>>({});
 
@@ -143,7 +194,7 @@ export default function ProgramaCirugiaScreen() {
   const [showVendedorPicker, setShowVendedorPicker] = useState(false);
   const [showTecnico1Picker, setShowTecnico1Picker] = useState(false);
   const [showTecnico2Picker, setShowTecnico2Picker] = useState(false);
-
+  const [showSubdistribuidorPicker, setShowSubdistribuidorPicker] = useState(false);
 
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -162,31 +213,60 @@ export default function ProgramaCirugiaScreen() {
     }
   };
 
+  // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
   useEffect(() => {
+    let isMounted = true;
+
     const loadData = async () => {
-      const estados = await ApiService.get_estados();
-      const hospitales = await ApiService.get_hospitales(user.id_almacen);
-      const vendedores = await ApiService.get_vendedores(user.id_usuario, "Vendedor");
-      const tecnicos = await ApiService.get_tecnicos(user.id_usuario);
-      const categorias = await ApiService.get_set_categorias_subcategorias();
+      // Si no hay usuario, no intentamos cargar nada
+      if (!user?.id_usuario) return;
 
-      //const cats = await ApiService.get_set_categorias();
+      try {
+        console.log("Iniciando carga de datos...");
 
-      // Cargar subcategorías para cada categoría
-      /*const subcatsMap = {};
-      for (const cat of cats) {
-        subcatsMap[cat.id_categoria] = await ApiService.get_set_subcategorias(cat.id_categoria);
-      }*/
-      //alert(JSON.stringify(categorias));
-      setEstados(estados);
-      setHospitales(hospitales);
-      setVendedores(vendedores);
-      setTecnicos(tecnicos);
-      setCategorias(categorias);
+        // Promise.all es más rápido porque dispara todas a la vez
+        const [resEstados, resHospitales, resVendedores, resTecnicos, resCategorias, resEquipopoder, resInstrumentales, resConsumibles, restSubdistribuidores] = await Promise.all([
+          ApiService.get_estados(),
+          ApiService.get_hospitales(user.id_almacen),
+          ApiService.get_vendedores(user.id_usuario, "Vendedor"),
+          ApiService.get_tecnicos(user.id_usuario),
+          ApiService.get_set_categorias_subcategorias(),
+          ApiService.get_equipos_poder_categoria(),
+          ApiService.get_instrumental_categoria(),
+          ApiService.get_consumible_categoria(),
+          ApiService.get_subdistribuidor()
+        ]);
+
+        if (!isMounted) return;
+
+        // Seteamos los datos validando que sean arrays
+        setEstados(Array.isArray(resEstados) ? resEstados : []);
+        setHospitales(Array.isArray(resHospitales) ? resHospitales : []);
+        setVendedores(Array.isArray(resVendedores) ? resVendedores : []);
+        setTecnicos(Array.isArray(resTecnicos) ? resTecnicos : []);
+        setCategorias(Array.isArray(resCategorias) ? resCategorias : []);
+        setEquiposPoder(Array.isArray(resEquipopoder) ? resEquipopoder : []);
+        setInstrumentales(Array.isArray(resInstrumentales) ? resInstrumentales : []);
+        setConsumibles(Array.isArray(resConsumibles) ? resConsumibles : []);
+        setSubdistribuidores(Array.isArray(restSubdistribuidores) ? restSubdistribuidores : []);
+
+      } catch (error) {
+        console.error("Error crítico en loadData:", error);
+      } finally {
+        if (isMounted) {
+          // Un pequeño delay opcional para que el gif no parpadee demasiado rápido
+          setTimeout(() => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setAppReady(true);
+          }, 500);
+        }
+      }
     };
+
     loadData();
-    //alert(select_data.estados);
-  }, []);
+
+    return () => { isMounted = false; };
+  }, []); // <-- DEJAMOS EL ARRAY VACÍO PARA QUE SOLO CORRA AL INICIO
 
 
   const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -223,7 +303,6 @@ export default function ProgramaCirugiaScreen() {
     if (!ciudad.trim()) return 'Ingrese la ciudad';
     if (!hospital || hospital.id_hospital === '0') return 'Ingrese el hospital';
     if (!medico || medico.id_medico === '0') return 'Ingrese el médico';
-    if (!procedimiento.trim()) return 'Ingrese el procedimiento';
     return null;
   };
   const finalizarSeleccion = () => {
@@ -263,8 +342,8 @@ export default function ProgramaCirugiaScreen() {
       setCiudad('');
       setHospital(null);
       setMedico(null);
+      setSubdistribuidor(null);
       setPaciente({ nombre: '', paterno: '', materno: '' });
-      setProcedimiento('');
       setNotas('');
     }, 1500);
   };
@@ -272,7 +351,7 @@ export default function ProgramaCirugiaScreen() {
   const renderPickerModal = (
     visible: boolean,
     onClose: () => void,
-    data: string[] | PickerOption[] | iEstado[],
+    data: string[] | PickerOption[] | iEstado[] | iVendedor[] | iTecnico[] | iCategoria[] | iHospital[] | iMedico[] | iSubdistribuidor[],
     key_name: string = "id",
     onSelect: (item: any) => void,
     title: string
@@ -291,10 +370,14 @@ export default function ProgramaCirugiaScreen() {
 
           <FlatList
             data={data as any[]}
-            keyExtractor={(item, index) => typeof
-              item === 'string' ?
-              index.toString() : key_name //item.id
-            }
+            keyExtractor={(item, index) => {
+              if (typeof item === 'string') {
+                return `str-${index}`;
+              }
+              // Accedemos al VALOR de la propiedad dinámica y le sumamos el index por seguridad
+              const idValue = item[key_name] || index;
+              return `${key_name}-${idValue}`;
+            }}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={[styles.pickerItem, { borderBottomColor: theme.border }]}
@@ -304,7 +387,9 @@ export default function ProgramaCirugiaScreen() {
                 }}
               >
                 <Text style={[styles.pickerItemText, { color: theme.text }]}>
-                  {typeof item === 'string' ? item : item.nombre}
+                  {typeof item === 'string'
+                    ? item
+                    : (item.nombre || item.subdistribuidor || 'Sin nombre')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -316,11 +401,24 @@ export default function ProgramaCirugiaScreen() {
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
+  const toggleSection_uniq = (sectionId: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    setExpandedSections((prev) => {
+      // Si la sección que clickeamos ya está abierta, la cerramos (devolvemos objeto vacío)
+      if (prev[sectionId]) {
+        return {};
+      }
+      // Si está cerrada, abrimos SOLO esa (creamos un objeto nuevo solo con esa llave)
+      return { [sectionId]: true };
+    });
+  };
   const toggleSection = (sectionId: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedSections(prev => ({
+
+    setExpandedSections((prev) => ({
       ...prev,
-      [sectionId]: !prev[sectionId] // Invierte el valor actual del ID
+      [sectionId]: !prev[sectionId] // Solo cambia el estado de ESTA sección
     }));
   };
   // Estados para Checkboxes (basados en programa_cirugia.html)
@@ -337,6 +435,23 @@ export default function ProgramaCirugiaScreen() {
     setChecks(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // 1. MIENTRAS CARGA (Splash Screen)
+  if (!appReady) {
+    return (
+      <View style={[styles.loadingDataContainer, { backgroundColor: theme.bg }]}>
+        <Image
+          source={require('../assets/images/loading_blue_circle.gif')} // <-- MODIFICADO: Ruta a tu GIF
+          style={styles.loadingGif}
+          resizeMode="contain"
+        />
+        <Text style={[styles.loadingText, { color: theme.textSub }]}>
+          {t('common.loading')}
+        </Text>
+      </View>
+    );
+  }
+
+  // 2. CUANDO TERMINA LA CARGA (Contenedor Principal)
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
       {/* Header */}
@@ -491,6 +606,22 @@ export default function ProgramaCirugiaScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Subdistribuidor */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                Subdistribuidor <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowSubdistribuidorPicker(true)}
+              >
+                <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                  {subdistribuidor?.id_distribuidor || 'Seleccione subdistribuidor...'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+              </TouchableOpacity>
+            </View>
+
             {/* Hospital */}
             <View style={styles.fieldContainer}>
               <Text style={[styles.label, { color: theme.text }]}>
@@ -584,6 +715,15 @@ export default function ProgramaCirugiaScreen() {
                 }}
               />
             </View>
+            {/* Campo: Solicitar Material Estéril */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
+              <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias.solicita_material_esteril')}</Text>
+              <Switch
+                value={solicitarEsteril}
+                onValueChange={setSolicitarEsteril}
+                trackColor={{ false: '#767577', true: theme.text }}
+              />
+            </View>
 
             {/* Notas */}
             <View style={styles.fieldContainer}>
@@ -609,53 +749,161 @@ export default function ProgramaCirugiaScreen() {
             onPress={() => toggleSection('materiales')}
             theme={theme}
           >
-            <text>{/*JSON.stringify(categorias)*/}</text>
+            {Array.isArray(categorias) &&
+              categorias.map((item: iCategoria) => {
+                if (Array.isArray(item.subcategorias)) {
+                  if (item.subcategorias.length == 0) {
 
-            { Array.isArray(categorias) &&
-               categorias.map((item: iCategoria) => {
-              // Calculamos cuántos seleccionados hay para ESTA categoría
-              const seleccionadosEnEstaCat = Array.isArray(item.subcategorias)
-                ? item.subcategorias.filter(sub => !!selectedSubcats[sub.id_set_subcategoria]).length
-                : 0;
+                  } else {
+                    // Calculamos cuántos seleccionados hay para ESTA categoría
+                    const seleccionadosEnEstaCat = Array.isArray(item.subcategorias)
+                      ? item.subcategorias.filter(sub => !!selectedSubcats["sub_"+sub.id_set_subcategoria]).length
+                      : 0;
 
-              return (
-                <AccordionSection
-                  key={item.id_set_categoria}
-                  // Si hay seleccionados, mostramos el número junto al nombre
-                  title={seleccionadosEnEstaCat > 0
-                    ? `${item.nombre} (${seleccionadosEnEstaCat})`
-                    : item.nombre
+                    return (
+
+                      <AccordionSection
+                        key={item.id_set_categoria}
+                        // Si hay seleccionados, mostramos el número junto al nombre
+                        title={seleccionadosEnEstaCat > 0
+                          ? `${item.nombre} (${seleccionadosEnEstaCat})`
+                          : item.nombre
+                        }
+                        isOpen={!!expandedSections["cat_" + item.id_set_categoria]}
+                        onPress={() => toggleSection("cat_" + item.id_set_categoria)}
+                        theme={theme}
+                      >
+                        {Array.isArray(item.subcategorias) &&
+                          item.subcategorias.map((sub: iSubCategoria) => {
+                            const isSelected = !!selectedSubcats["sub_" + sub.id_set_subcategoria];
+
+                            return (
+                              <TouchableOpacity
+                                key={sub.id_set_subcategoria}
+                                style={styles.checkboxContainer}
+                                onPress={(e) => {
+                                  e.stopPropagation();
+                                  toggleSubcategoria("sub_" + sub.id_set_subcategoria)
+                                }
+                                }
+                                activeOpacity={0.6}
+                              >
+                                <MaterialCommunityIcons
+                                  name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                                  size={24}
+                                  color={isSelected ? theme.text : theme.textSub}
+                                />
+                                <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                                  {sub.nombre}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                      </AccordionSection>
+                    );
                   }
-                  isOpen={!!expandedSections["cat_" + item.id_set_categoria]}
-                  onPress={() => toggleSection("cat_" + item.id_set_categoria)}
-                  theme={theme}
-                >
-                  {Array.isArray(item.subcategorias) &&
-                    item.subcategorias.map((sub: iSubCategoria) => {
-                      const isSelected = !!selectedSubcats[sub.id_set_subcategoria];
+                }
+              })}
 
-                      return (
-                        <TouchableOpacity
-                          key={sub.id_set_subcategoria}
-                          style={styles.checkboxContainer}
-                          onPress={() => toggleSubcategoria(sub.id_set_subcategoria)}
-                          activeOpacity={0.6}
-                        >
-                          <MaterialCommunityIcons
-                            name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                            size={24}
-                            color={isSelected ? theme.primary : theme.textSub}
-                          />
-                          <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                            {sub.nombre}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                </AccordionSection>
-              );
-            })}
+          </AccordionSection>
 
+          {/* EQUIPOS DE PODER */}
+          <AccordionSection
+            title={t('cirugias.equipospoder')}
+            isOpen={!!expandedSections['equipospoder']}
+            onPress={() => toggleSection('equipospoder')}
+            theme={theme}
+          >
+            {Array.isArray(equipospoder) &&
+              equipospoder.map((item: iEquipoPoder) => {
+
+                const isSelected = !!selectedSubcats["ep_" + item.id_ep_categoria];
+
+                return (
+                  <TouchableOpacity
+                    key={item.id_ep_categoria}
+                    style={styles.checkboxContainer}
+                    onPress={() => toggleSubcategoria("ep_" + item.id_ep_categoria)}
+                    activeOpacity={0.6}
+                  >
+                    <MaterialCommunityIcons
+                      name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={24}
+                      color={isSelected ? theme.text : theme.textSub}
+                    />
+                    <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                      {item.nombre}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            }
+          </AccordionSection>
+
+          {/* instrumenal */}
+          <AccordionSection
+            title={t('cirugias.instrumentales')}
+            isOpen={!!expandedSections['instrumentales']}
+            onPress={() => toggleSection('instrumentales')}
+            theme={theme}
+          >
+            {Array.isArray(equipospoder) &&
+              instrumenales.map((item: iInstrumental) => {
+
+                const isSelected = !!selectedSubcats["ins_" + item.id_instru_categoria];
+
+                return (
+                  <TouchableOpacity
+                    key={item.id_instru_categoria}
+                    style={styles.checkboxContainer}
+                    onPress={() => toggleSubcategoria("ins_" + item.id_instru_categoria)}
+                    activeOpacity={0.6}
+                  >
+                    <MaterialCommunityIcons
+                      name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={24}
+                      color={isSelected ? theme.text : theme.textSub}
+                    />
+                    <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                      {item.nombre}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            }
+          </AccordionSection>
+
+          {/* CONSUMIBLES */}
+          <AccordionSection
+            title={t('cirugias.consumibles')}
+            isOpen={!!expandedSections['consumibles']}
+            onPress={() => toggleSection('consumibles')}
+            theme={theme}
+          >
+            {Array.isArray(equipospoder) &&
+              consumibles.map((item: iConsumible) => {
+
+                const isSelected = !!selectedSubcats["ins_" + item.id_consu_categoria];
+
+                return (
+                  <TouchableOpacity
+                    key={item.id_consu_categoria}
+                    style={styles.checkboxContainer}
+                    onPress={() => toggleSubcategoria("ins_" + item.id_consu_categoria)}
+                    activeOpacity={0.6}
+                  >
+                    <MaterialCommunityIcons
+                      name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={24}
+                      color={isSelected ? theme.text : theme.textSub}
+                    />
+                    <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                      {item.nombre}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            }
           </AccordionSection>
 
 
@@ -724,6 +972,15 @@ export default function ProgramaCirugiaScreen() {
           "id_tecnico",
           (item: iTecnico) => setTecnico2(item),
           'Seleccionar Técnico'
+        )}
+      {
+        renderPickerModal(
+          showSubdistribuidorPicker,
+          () => setShowSubdistribuidorPicker(false),
+          subdistribuidores,
+          "id_subdistribuidor",
+          (item: iSubdistribuidor) => setSubdistribuidor(item),
+          'Seleccionar Subdistribuidor'
         )}
 
       {
@@ -904,5 +1161,21 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 15,
     flex: 1,
+  },
+  loadingDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingGif: {
+    width: 150, // Ajusta el tamaño según tu GIF
+    height: 150,
+    marginBottom: 20,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 10,
   },
 });

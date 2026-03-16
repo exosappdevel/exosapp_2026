@@ -15,7 +15,7 @@ import CustomModal from '../components/CustomModal';
 
 const menuItems = [
   { id: "1", titleKey: "screens.cirugias_programar", icon: "schedule", color: "#3182ce" },
-  { id: "2", titleKey: "screens.cirugias_buscar", icon: "file-seach", color: "#ecc94b" },
+  { id: "2", titleKey: "screens.cirugias_buscar", icon: "file-search", color: "#ecc94b" },
   { id: "3", titleKey: "screens.cirugias_calendario", icon: "calendar", color: "#48bb78" },
   //{ id: "4", titleKey: "screens.cirugias_", icon: "account-multiple", color: "#e53e3e" },
 ];

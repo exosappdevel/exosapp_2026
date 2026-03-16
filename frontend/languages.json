@@ -96,7 +96,11 @@
       "paciente_paterno_title":"Apellido paterno",
       "paciente_paterno":"Apellido paterno",
       "paciente_materno_title":"Apellido materno",
-      "paciente_materno":"Apellido materno"
+      "paciente_materno":"Apellido materno",
+      "equipospoder":"Equipos de poder",
+      "instrumentales":"Adicionales",
+      "consumibles":"Consumibles",
+      "solicita_material_esteril":"Solicitar Material Estéril"
 
     }
   },

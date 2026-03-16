@@ -98,7 +98,11 @@ class WebServiceController {
         'get_hospitales'=> [
             'descripcion' => 'Obtiene listado de hospitales por id_almacen',
             'parameters'  => ["id_almacen"]
-        ],         
+        ],     
+        "get_subdistribuidor" =>[
+            'descripcion' => 'Obtiene listado de subdistribuidor',
+            'parameters'  => []
+        ],     
     ];
 
     public function __construct() {
@@ -789,6 +793,28 @@ class WebServiceController {
             $data['item_' . $row['id_hospital']] = [                
                 'id_hospital' => $row['id_hospital'],
                 'nombre'        => $row['nombre'],
+            ];
+        }
+        return $data ?: ['result' => 'empty'];
+    }
+
+    public function get_subdistribuidor(){
+        // if IMPLEMENTED
+        if ($this->implemented && $this->result != null){
+           $this->sendResponse($this->result); 
+           return;
+        }  
+        // ELSE USE NEXT MOCKUP
+        
+        $query = "SELECT id_subdistribuidor, subdistribuidor FROM subdistribuidor where es_socio=0  ORDER BY subdistribuidor";
+        $qresult = DatasetSQL($query);
+        $data = [];
+
+        while ($row = mysqli_fetch_array($qresult)) {
+            // Se usa el prefijo 'prod_' para asegurar etiquetas XML válidas
+            $data['item_' . $row['id_subdistribuidor']] = [                
+                'id_subdistribuidor' => $row['id_subdistribuidor'],
+                'subdistribuidor'        => $row['subdistribuidor'],
             ];
         }
         return $data ?: ['result' => 'empty'];
