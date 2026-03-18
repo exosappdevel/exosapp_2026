@@ -1,4 +1,5 @@
 import { DOMParser } from 'xmldom';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 class ApiService {
   static URL_CONTROLLER = "";
@@ -19,6 +20,12 @@ class ApiService {
     }).toString();
 
     try {
+      // --- INICIO LÓGICA EXPIRACIÓN 5 MIN ---
+      // Cada vez que se hace una petición, actualizamos la última actividad
+      const now = Date.now().toString();
+      AsyncStorage.setItem('@exosapp_last_activity', now).catch(e => console.log("Error actualizando actividad"));
+      // --- FIN LÓGICA EXPIRACIÓN 5 MIN ---
+      
       const response = await fetch(`${this.URL_CONTROLLER}?${params}`);
       const text = await response.text();
 
@@ -196,7 +203,9 @@ class ApiService {
   static async get_subdistribuidor() {
     return await this.request("get_subdistribuidor", { });
   }
-
+  static async get_medicos_list(id_usuario: string) {
+    return await this.request("get_medicos_list", { id_usuario });
+  }
 }
 
 export default ApiService;

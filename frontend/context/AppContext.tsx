@@ -43,8 +43,9 @@ interface AppContextType {
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
   isLoggedIn: boolean;
-  setIsLoggedIn: (value: boolean) => void;
+  setIsLoggedIn: (value: boolean) => Promise<void>;
   logout: () => Promise<void>;
+
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -111,8 +112,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     tema: "light"
   });
 
+  const setIsLoggedIn = async (value: boolean) => {
+    setIsLoggedInState(value); // Actualiza el estado de la app inmediatamente
+    try {
+      if (value) {
+        // Si el usuario inicia sesión, guardamos el momento exacto (timestamp)
+        const now = Date.now().toString();
+        await AsyncStorage.setItem('@exosapp_last_activity', now);
+        await AsyncStorage.setItem('@exosapp_is_logged_in', 'true');
+      } else {
+        // Si cierra sesión, limpiamos los registros de actividad
+        await AsyncStorage.removeItem('@exosapp_last_activity');
+        await AsyncStorage.removeItem('@exosapp_is_logged_in');
+      }
+    } catch (e) {
+      console.log('Error saving login state:', e);
+    }
+  };
+
   const [language, setLanguageState] = useState<Language>('es');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedInState] = useState(false);
 
   useEffect(() => {
     loadSavedLanguage();
@@ -173,7 +192,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       alias_usuario: "",
       tema: "light"
     });
-    setIsLoggedIn(false);
+    await setIsLoggedIn(false); // Añade el await aquí
     try {
       await AsyncStorage.removeItem('@exosapp_user');
     } catch (e) {
@@ -182,6 +201,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const activeTheme = themes[user.tema] || themes.light;
+
+
 
   return (
     <AppContext.Provider value={{

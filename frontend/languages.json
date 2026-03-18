@@ -83,8 +83,8 @@
       "connectionError": "No se pudo conectar con el servidor.",
       "loadError": "No se pudieron obtener los productos del servidor.",
       "notice":"Aviso",
-      "submit":"Enviar"
-
+      "submit":"Enviar",
+      "requerido":"Requerido"
     },
     "cirugias":{
       "new_title":" Nueva Programación",
@@ -92,16 +92,24 @@
       "info_paciente":"Información del paciente",
       "materiales":"Materiales",
       "paciente_nombre_title":"Nombre",
-      "paciente_nombre":"Nombre del paciente",
+      "paciente_nombre":"Ej. Ana Maria",
       "paciente_paterno_title":"Apellido paterno",
-      "paciente_paterno":"Apellido paterno",
+      "paciente_paterno":"Ej. Perez",
       "paciente_materno_title":"Apellido materno",
-      "paciente_materno":"Apellido materno",
+      "paciente_materno":"Ej. Gonzalez",
       "equipospoder":"Equipos de poder",
       "instrumentales":"Adicionales",
       "consumibles":"Consumibles",
-      "solicita_material_esteril":"Solicitar Material Estéril"
-
+      "solicita_material_esteril":"Solicitar Material Estéril",
+      "regitro_pago_title":"Registro de pago de la cirugía",
+      "numero_de_orden_title":"Número de Orden de Cirugia",
+      "numero_de_orden":"Ej:123456",
+      "extra":"Información adicional",
+      "subir_comprobantes":"Subir comprobantes",
+      "notas_title":"Notas o Adicionales",
+      "notas" : "Observaciones adicionales...",
+      "success_title":"Cirugía Programada con éxito",
+      "success":"La cirugía ha sido programada exitosamente."
     }
   },
   "en": {

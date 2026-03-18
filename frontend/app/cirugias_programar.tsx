@@ -21,6 +21,7 @@ import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import CustomModal from '../components/CustomModal';
 import ApiService from '@/services/ApiServices';
+import * as ImagePicker from 'expo-image-picker';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -159,10 +160,12 @@ export default function ProgramaCirugiaScreen() {
   const [tecnico1, setTecnico1] = useState<iTecnico | null>(null);
   const [tecnico2, setTecnico2] = useState<iTecnico | null>(null);
   const [subdistribuidor, setSubdistribuidor] = useState<iSubdistribuidor | null>(null);
+  const [numero_ordenpago, setNumero_ordenpago] = useState('');
 
   const [paciente, setPaciente] = useState<iPaciente | null>({ nombre: '', paterno: '', materno: '' });
   const [solicitarEsteril, setSolicitarEsteril] = useState(false);
   const [notas, setNotas] = useState('');
+  const [archivos, setArchivos] = useState<any[]>([]);
 
   // listas  
   const [estados, setEstados] = useState<iEstado[]>([]);
@@ -176,6 +179,7 @@ export default function ProgramaCirugiaScreen() {
   const [subdistribuidores, setSubdistribuidores] = useState<iSubdistribuidor[]>([]);
   // Estado para los materiales seleccionados
   const [selectedSubcats, setSelectedSubcats] = useState<Record<string, boolean>>({});
+  const [medicos, setMedicos] = useState<iMedico[]>([]);
 
   // Función para alternar la selección
   const toggleSubcategoria = (id: string) => {
@@ -225,7 +229,7 @@ export default function ProgramaCirugiaScreen() {
         console.log("Iniciando carga de datos...");
 
         // Promise.all es más rápido porque dispara todas a la vez
-        const [resEstados, resHospitales, resVendedores, resTecnicos, resCategorias, resEquipopoder, resInstrumentales, resConsumibles, restSubdistribuidores] = await Promise.all([
+        const [resEstados, resHospitales, resVendedores, resTecnicos, resCategorias, resEquipopoder, resInstrumentales, resConsumibles, resSubdistribuidores, resMedicos] = await Promise.all([
           ApiService.get_estados(),
           ApiService.get_hospitales(user.id_almacen),
           ApiService.get_vendedores(user.id_usuario, "Vendedor"),
@@ -234,7 +238,8 @@ export default function ProgramaCirugiaScreen() {
           ApiService.get_equipos_poder_categoria(),
           ApiService.get_instrumental_categoria(),
           ApiService.get_consumible_categoria(),
-          ApiService.get_subdistribuidor()
+          ApiService.get_subdistribuidor(),
+          ApiService.get_medicos_list(user.id_usuario)
         ]);
 
         if (!isMounted) return;
@@ -248,7 +253,8 @@ export default function ProgramaCirugiaScreen() {
         setEquiposPoder(Array.isArray(resEquipopoder) ? resEquipopoder : []);
         setInstrumentales(Array.isArray(resInstrumentales) ? resInstrumentales : []);
         setConsumibles(Array.isArray(resConsumibles) ? resConsumibles : []);
-        setSubdistribuidores(Array.isArray(restSubdistribuidores) ? restSubdistribuidores : []);
+        setSubdistribuidores(Array.isArray(resSubdistribuidores) ? resSubdistribuidores : []);
+        setMedicos(Array.isArray(resMedicos) ? resMedicos : []);
 
       } catch (error) {
         console.error("Error crítico en loadData:", error);
@@ -280,7 +286,7 @@ export default function ProgramaCirugiaScreen() {
         month: '2-digit',
         year: 'numeric'
       });
-      setFecha(formattedDate);
+      alert(formattedDate);
     }
   };
 
@@ -300,9 +306,13 @@ export default function ProgramaCirugiaScreen() {
     if (!fecha) return 'Ingrese la fecha de la cirugía';
     if (!hora) return 'Seleccione la hora';
     if (!estado || estado.id_estado === '0') return 'Seleccione el estado';
-    if (!ciudad.trim()) return 'Ingrese la ciudad';
+    if (!vendedor) return 'Ingrese el vendedor';
+    if (!tecnico1) return 'Ingrese el Técnico';
+    if (!tecnico2) return 'Ingrese el Técnico 2';
+    if (!subdistribuidor) return 'Ingrese el Subdistribuidor';
     if (!hospital || hospital.id_hospital === '0') return 'Ingrese el hospital';
     if (!medico || medico.id_medico === '0') return 'Ingrese el médico';
+    if (!notas) return 'Ingrese notas o adicionales';
     return null;
   };
   const finalizarSeleccion = () => {
@@ -329,8 +339,8 @@ export default function ProgramaCirugiaScreen() {
       setSubmitting(false);
       setModal({
         visible: true,
-        titulo: 'Cirugía Programada',
-        mensaje: 'La cirugía ha sido programada exitosamente.',
+        titulo: t("cirugias.sucess_tile"),
+        mensaje: t("cirugias.sucess"),
         icon: 'check-circle-outline',
         colorIcon: '#48bb78'
       });
@@ -345,6 +355,7 @@ export default function ProgramaCirugiaScreen() {
       setSubdistribuidor(null);
       setPaciente({ nombre: '', paterno: '', materno: '' });
       setNotas('');
+      setNumero_ordenpago('');
     }, 1500);
   };
 
@@ -399,9 +410,10 @@ export default function ProgramaCirugiaScreen() {
     </Modal>
   );
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({lugar:true});
+  const [expandedSubsections, setExpandedSubsections] = useState<Record<string, boolean>>({});
 
-  const toggleSection_uniq = (sectionId: string) => {
+  const toggleSection = (sectionId: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
     setExpandedSections((prev) => {
@@ -413,7 +425,19 @@ export default function ProgramaCirugiaScreen() {
       return { [sectionId]: true };
     });
   };
-  const toggleSection = (sectionId: string) => {
+  const toggleSubsection = (SubsectionId: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    setExpandedSubsections((prev) => {
+      // Si la sección que clickeamos ya está abierta, la cerramos (devolvemos objeto vacío)
+      if (prev[SubsectionId]) {
+        return {};
+      }
+      // Si está cerrada, abrimos SOLO esa (creamos un objeto nuevo solo con esa llave)
+      return { [SubsectionId]: true };
+    });
+  };
+  const toggleSection_org = (sectionId: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
     setExpandedSections((prev) => ({
@@ -450,6 +474,38 @@ export default function ProgramaCirugiaScreen() {
       </View>
     );
   }
+ 
+
+  const pickDocument = async () => {
+    // Para fotos de la galería o archivos
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsMultipleSelection: true, // Permite varios archivos
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setArchivos([...archivos, ...result.assets]);
+    }
+  };
+
+  const takePhoto = async () => {
+    // Solicitar permisos de cámara
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Se necesitan permisos de cámara para continuar');
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.7, // Bajamos un poco la calidad para que no pese tanto el envío
+    });
+
+    if (!result.canceled) {
+      setArchivos([...archivos, ...result.assets]);
+    }
+  };
 
   // 2. CUANDO TERMINA LA CARGA (Contenedor Principal)
   return (
@@ -485,24 +541,64 @@ export default function ProgramaCirugiaScreen() {
                 Fecha <Text style={styles.required}>*</Text>
               </Text>
 
-              <TouchableOpacity
-                style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                onPress={showPicker}
-              >
-                <Text style={[styles.selectorText, { color: fecha ? theme.text : theme.textSub }]}>
-                  {fecha || 'DD/MM/YYYY'}
-                </Text>
-                <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-              </TouchableOpacity>
-              {/* Lógica del Picker según Plataforma */}
-              {showDatePicker && (
-                <DateTimePicker
-                  value={date}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={onDateChange}
-                  minimumDate={new Date()} // Evita programar cirugías en el pasado
-                />
+              {Platform.OS === 'web' ? (
+                /* --- VISTA PARA WEB --- */
+                <View style={[
+                  styles.selector,
+                  { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
+                ]}>
+                  <input
+                    type="date"
+                    // HTML5 requiere YYYY-MM-DD para el valor interno del input
+                    value={date instanceof Date && !isNaN(date.getTime())
+                      ? date.toISOString().split('T')[0]
+                      : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val) {
+                        const [year, month, day] = val.split('-').map(Number);
+                        const selectedDate = new Date(year, month - 1, day);
+
+                        // Llamamos a tu función para actualizar el estado 'fecha' (texto) y 'date' (objeto)
+                        onDateChange({ type: 'set' } as any, selectedDate);
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      color: date ? theme.text : theme.textSub,
+                      fontSize: 16,
+                      fontFamily: 'inherit',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                </View>
+              ) : (
+                /* --- VISTA PARA MÓVIL (iOS/Android) --- */
+                <>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={showPicker}
+                  >
+                    <Text style={[styles.selectorText, { color: fecha ? theme.text : theme.textSub }]}>
+                      {fecha || 'DD/MM/YYYY'}
+                    </Text>
+                    <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={date}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={onDateChange}
+                      minimumDate={new Date()}
+                    />
+                  )}
+                </>
               )}
 
             </View>
@@ -687,7 +783,7 @@ export default function ProgramaCirugiaScreen() {
               </Text>
               <TextInput
                 style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-                placeholder={t('cirugias.materno_nombre')}
+                placeholder={t('cirugias.paciente_materno')}
                 placeholderTextColor={theme.textSub}
                 value={paciente?.materno}
                 onChangeText={(text) => {
@@ -715,31 +811,61 @@ export default function ProgramaCirugiaScreen() {
                 }}
               />
             </View>
-            {/* Campo: Solicitar Material Estéril */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
-              <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias.solicita_material_esteril')}</Text>
-              <Switch
-                value={solicitarEsteril}
-                onValueChange={setSolicitarEsteril}
-                trackColor={{ false: '#767577', true: theme.text }}
+
+          </AccordionSection>
+
+          {/* SECCIÓN: Registro de Pago */}
+          <AccordionSection
+            title={t('cirugias.regitro_pago_title')}
+            isOpen={!!expandedSections['registro_pago']}
+            onPress={() => toggleSection('registro_pago')}
+            theme={theme}
+          >
+
+            {/* Numero de orden */}
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t('cirugias.numero_de_orden_title')}
+              </Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                placeholder={t('cirugias.numero_de_orden')}
+                placeholderTextColor={theme.textSub}
+                value={numero_ordenpago}
+                onChangeText={setNumero_ordenpago}
               />
+            </View>
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.label, { color: theme.text }]}>
+                {t('cirugias.subir_comprobantes')}
+              </Text>
             </View>
 
-            {/* Notas */}
-            <View style={styles.fieldContainer}>
-              <Text style={[styles.label, { color: theme.text }]}>Notas</Text>
-              <TextInput
-                style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-                placeholder="Observaciones adicionales..."
-                placeholderTextColor={theme.textSub}
-                value={notas}
-                onChangeText={setNotas}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 15 }}>
+              <TouchableOpacity onPress={pickDocument} style={styles.actionButton}>
+                <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
+                <Text style={{ color: theme.text }}>Galería</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={takePhoto} style={styles.actionButton}>
+                <MaterialCommunityIcons name="camera" size={24} color={theme.text} />
+                <Text style={{ color: theme.text }}>Cámara</Text>
+              </TouchableOpacity>
             </View>
+
+            {/* Lista de archivos seleccionados */}
+            {archivos.map((file, index) => (
+              <View key={index} style={styles.fileRow}>
+                <Text style={{ color: theme.text, flex: 1 }} numberOfLines={1}>
+                  {file.fileName || `Imagen_${index + 1}.jpg`}
+                </Text>
+                <TouchableOpacity onPress={() => setArchivos(archivos.filter((_, i) => i !== index))}>
+                  <MaterialCommunityIcons name="delete" size={20} color="red" />
+                </TouchableOpacity>
+              </View>
+            ))}
           </AccordionSection>
+
 
           {/* SECCIÓN 3: materiales */}
 
@@ -757,7 +883,7 @@ export default function ProgramaCirugiaScreen() {
                   } else {
                     // Calculamos cuántos seleccionados hay para ESTA categoría
                     const seleccionadosEnEstaCat = Array.isArray(item.subcategorias)
-                      ? item.subcategorias.filter(sub => !!selectedSubcats["sub_"+sub.id_set_subcategoria]).length
+                      ? item.subcategorias.filter(sub => !!selectedSubcats["sub_" + sub.id_set_subcategoria]).length
                       : 0;
 
                     return (
@@ -769,8 +895,8 @@ export default function ProgramaCirugiaScreen() {
                           ? `${item.nombre} (${seleccionadosEnEstaCat})`
                           : item.nombre
                         }
-                        isOpen={!!expandedSections["cat_" + item.id_set_categoria]}
-                        onPress={() => toggleSection("cat_" + item.id_set_categoria)}
+                        isOpen={!!expandedSubsections["cat_" + item.id_set_categoria]}
+                        onPress={() => toggleSubsection("cat_" + item.id_set_categoria)}
                         theme={theme}
                       >
                         {Array.isArray(item.subcategorias) &&
@@ -808,104 +934,172 @@ export default function ProgramaCirugiaScreen() {
           </AccordionSection>
 
           {/* EQUIPOS DE PODER */}
-          <AccordionSection
-            title={t('cirugias.equipospoder')}
-            isOpen={!!expandedSections['equipospoder']}
-            onPress={() => toggleSection('equipospoder')}
-            theme={theme}
-          >
-            {Array.isArray(equipospoder) &&
-              equipospoder.map((item: iEquipoPoder) => {
+          {(() => {
+            // Declaramos la constante exactamente igual que haces con las categorías
+            const seleccionadosEquipos = equipospoder.filter(
+              (item) => !!selectedSubcats["ep_" + item.id_ep_categoria]
+            ).length;
 
-                const isSelected = !!selectedSubcats["ep_" + item.id_ep_categoria];
+            return (
+              <AccordionSection
+                title={seleccionadosEquipos > 0 ? (t('cirugias.equipospoder') + ' (' + seleccionadosEquipos + ')') : t('cirugias.equipospoder')}
+                isOpen={!!expandedSections['equipospoder']}
+                onPress={() => toggleSection('equipospoder')}
+                theme={theme}
+              >
 
-                return (
-                  <TouchableOpacity
-                    key={item.id_ep_categoria}
-                    style={styles.checkboxContainer}
-                    onPress={() => toggleSubcategoria("ep_" + item.id_ep_categoria)}
-                    activeOpacity={0.6}
-                  >
-                    <MaterialCommunityIcons
-                      name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                      size={24}
-                      color={isSelected ? theme.text : theme.textSub}
-                    />
-                    <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                      {item.nombre}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })
-            }
-          </AccordionSection>
+                {Array.isArray(equipospoder) &&
+                  equipospoder.map((item: iEquipoPoder) => {
+
+                    const isSelected = !!selectedSubcats["ep_" + item.id_ep_categoria];
+
+                    return (
+                      <TouchableOpacity
+                        key={item.id_ep_categoria}
+                        style={styles.checkboxContainer}
+                        onPress={() => toggleSubcategoria("ep_" + item.id_ep_categoria)}
+                        activeOpacity={0.6}
+                      >
+                        <MaterialCommunityIcons
+                          name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                          size={24}
+                          color={isSelected ? theme.text : theme.textSub}
+                        />
+                        <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                          {item.nombre}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                }
+              </AccordionSection>
+            );
+          })()}
 
           {/* instrumenal */}
-          <AccordionSection
-            title={t('cirugias.instrumentales')}
-            isOpen={!!expandedSections['instrumentales']}
-            onPress={() => toggleSection('instrumentales')}
-            theme={theme}
-          >
-            {Array.isArray(equipospoder) &&
-              instrumenales.map((item: iInstrumental) => {
+          {(() => {
+            // Declaramos la constante exactamente igual que haces con las categorías
+            const seleccionadosInst = instrumenales.filter(
+              (item) => !!selectedSubcats["ins_" + item.id_instru_categoria]
+            ).length;
 
-                const isSelected = !!selectedSubcats["ins_" + item.id_instru_categoria];
+            return (
+              <AccordionSection
+                title={seleccionadosInst > 0 ? (t('cirugias.instrumentales') + ' (' + seleccionadosInst + ')') : t('cirugias.instrumentales')}
+                isOpen={!!expandedSections['instrumentales']}
+                onPress={() => toggleSection('instrumentales')}
+                theme={theme}
+              >
+                {Array.isArray(equipospoder) &&
+                  instrumenales.map((item: iInstrumental) => {
 
-                return (
-                  <TouchableOpacity
-                    key={item.id_instru_categoria}
-                    style={styles.checkboxContainer}
-                    onPress={() => toggleSubcategoria("ins_" + item.id_instru_categoria)}
-                    activeOpacity={0.6}
-                  >
-                    <MaterialCommunityIcons
-                      name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                      size={24}
-                      color={isSelected ? theme.text : theme.textSub}
-                    />
-                    <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                      {item.nombre}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })
-            }
-          </AccordionSection>
+                    const isSelected = !!selectedSubcats["ins_" + item.id_instru_categoria];
 
+                    return (
+                      <TouchableOpacity
+                        key={item.id_instru_categoria}
+                        style={styles.checkboxContainer}
+                        onPress={() => toggleSubcategoria("ins_" + item.id_instru_categoria)}
+                        activeOpacity={0.6}
+                      >
+                        <MaterialCommunityIcons
+                          name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                          size={24}
+                          color={isSelected ? theme.text : theme.textSub}
+                        />
+                        <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                          {item.nombre}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                }
+              </AccordionSection>
+            );
+          })()}
           {/* CONSUMIBLES */}
-          <AccordionSection
-            title={t('cirugias.consumibles')}
-            isOpen={!!expandedSections['consumibles']}
-            onPress={() => toggleSection('consumibles')}
-            theme={theme}
-          >
-            {Array.isArray(equipospoder) &&
-              consumibles.map((item: iConsumible) => {
+          {(() => {
+            // Declaramos la constante exactamente igual que haces con las categorías
+            const seleccionadosCons = consumibles.filter(
+              (item) => !!selectedSubcats["cons_" + item.id_consu_categoria]
+            ).length;
 
-                const isSelected = !!selectedSubcats["ins_" + item.id_consu_categoria];
+            return (
+              <AccordionSection
+                title={seleccionadosCons > 0 ? (t('cirugias.consumibles') + ' (' + seleccionadosCons + ')') : t('cirugias.consumibles')}
+                isOpen={!!expandedSections['consumibles']}
+                onPress={() => toggleSection('consumibles')}
+                theme={theme}
+              >
+                {Array.isArray(consumibles) &&
+                  consumibles.map((item: iConsumible) => {
 
-                return (
-                  <TouchableOpacity
-                    key={item.id_consu_categoria}
-                    style={styles.checkboxContainer}
-                    onPress={() => toggleSubcategoria("ins_" + item.id_consu_categoria)}
-                    activeOpacity={0.6}
-                  >
-                    <MaterialCommunityIcons
-                      name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                      size={24}
-                      color={isSelected ? theme.text : theme.textSub}
-                    />
-                    <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                      {item.nombre}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })
-            }
-          </AccordionSection>
+                    const isSelected = !!selectedSubcats["cons_" + item.id_consu_categoria];
 
+                    return (
+                      <TouchableOpacity
+                        key={item.id_consu_categoria}
+                        style={styles.checkboxContainer}
+                        onPress={() => toggleSubcategoria("cons_" + item.id_consu_categoria)}
+                        activeOpacity={0.6}
+                      >
+                        <MaterialCommunityIcons
+                          name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                          size={24}
+                          color={isSelected ? theme.text : theme.textSub}
+                        />
+                        <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                          {item.nombre}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                }
+
+              </AccordionSection>
+
+            );
+          })()}
+
+          <View style={{
+            height: 1,
+            backgroundColor: theme.border,
+            marginVertical: 10,
+            opacity: 0.5
+          }} />
+          {/* Campo: Solicitar Material Estéril */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
+            <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias.solicita_material_esteril')}</Text>
+            <Switch
+              value={solicitarEsteril}
+              onValueChange={setSolicitarEsteril}
+              trackColor={{ false: '#767577', true: theme.text }}
+            />
+          </View>
+
+          {/* Notas */}
+          <View style={styles.fieldContainer}>
+            <Text style={[styles.label, { color: theme.text }]}>{t('cirugias.notas_title')}<Text style={styles.required}>*</Text></Text>
+            <TextInput
+              style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+              placeholder={t('cirugias.notas')}
+              placeholderTextColor={theme.textSub}
+              value={notas}
+              onChangeText={setNotas}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+          <View style={{
+            height: 1,
+            backgroundColor: theme.border,
+            marginVertical: 10,
+            opacity: 0.5
+          }} />
+          <View style={styles.fieldContainer}>
+            <Text style={styles.required}>* {t("common.requerido")}</Text>
+          </View>
 
           {/* Submit Button */}
           <TouchableOpacity
@@ -992,6 +1186,16 @@ export default function ProgramaCirugiaScreen() {
           (item: iHospital) => setHospital(item),
           'Seleccionar hospital'
         )}
+      {
+        renderPickerModal(
+          showMedicoPicker,
+          () => setShowMedicoPicker(false),
+          medicos,
+          "id_medico",
+          (item: iMedico) => setMedico(item),
+          'Seleccionar Medico'
+        )}
+
 
 
 
@@ -1178,4 +1382,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 10,
   },
+  actionButton: {
+    alignItems: 'center',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    width: '45%'
+  },
+  fileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#ccc'
+  }
 });
