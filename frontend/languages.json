@@ -1,5 +1,9 @@
 {
   "es": {
+    "languages" :{
+      "es":"Español",
+      "en":"Ingles"
+    },
     "app":{
       "name":"ExosApp 2026"
     },
@@ -113,6 +117,10 @@
     }
   },
   "en": {
+    "languages" :{
+      "es":"Spanish",
+      "en":"English"
+    },
     "app":{
       "name":"ExosApp 2026"
     },

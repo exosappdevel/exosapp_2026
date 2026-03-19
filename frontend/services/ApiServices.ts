@@ -149,6 +149,9 @@ class ApiService {
   static async inicia_sesion(usuario: string, password: string) {
     return await this.request("inicia_sesion", { login_usuario: usuario, login_password: password });
   }
+  static async save_profile(id_usuario_app: string, tema:string, app_language:string) {
+    return await this.request("save_profile", { id_usuario_app, tema, app_language });
+  }
 
   static async get_almacenes_list(id_usuario: string) {
     return await this.request("get_almacenes_list", { id_usuario });

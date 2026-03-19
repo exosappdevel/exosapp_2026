@@ -42,7 +42,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAlmacenPicker, setShowAlmacenPicker] = useState(false);
-  
+  const [sel_language,setSel_language] = useState(language);
   const [modal, setModal] = useState({
     visible: false,
     titulo: '',
@@ -83,11 +83,16 @@ export default function ProfileScreen() {
         almacen_nombre: selectedAlmacen?.nombre || user.almacen_nombre,
         almacen_codigo: selectedAlmacen?.codigo || user.almacen_codigo,
       };
+
+      const response = await ApiService.save_profile(updatedUser.id_usuario_app, updatedUser.tema, sel_language );
       
-      setUser(updatedUser);
-      await AsyncStorage.setItem('@exosapp_user', JSON.stringify(updatedUser));
-      
-      router.replace('/home');
+      if (response.result === 'ok') {
+        setLanguage(sel_language);
+        setUser(updatedUser);
+        await AsyncStorage.setItem('@exosapp_user', JSON.stringify(updatedUser));
+        
+        router.replace('/home');
+      }
     } catch (e) {
       setModal({
         visible: true,
@@ -176,25 +181,25 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={[
                 styles.languageOption,
-                { borderColor: language === 'es' ? theme.accent : theme.border },
-                language === 'es' && { backgroundColor: theme.accent + '20' }
+                { borderColor: sel_language === 'es' ? theme.accent : theme.border },
+                sel_language === 'es' && { backgroundColor: theme.accent + '20' }
               ]}
-              onPress={() => setLanguage('es')}
+              onPress={() => setSel_language('es')}
             >
-              <Text style={[styles.languageText, { color: language === 'es' ? theme.accent : theme.text }]}>
-                Español
+              <Text style={[styles.languageText, { color: sel_language === 'es' ? theme.accent : theme.text }]}>
+                {t("languages.es")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.languageOption,
-                { borderColor: language === 'en' ? theme.accent : theme.border },
-                language === 'en' && { backgroundColor: theme.accent + '20' }
+                { borderColor: sel_language === 'en' ? theme.accent : theme.border },
+                sel_language === 'en' && { backgroundColor: theme.accent + '20' }
               ]}
-              onPress={() => setLanguage('en')}
+              onPress={() => setSel_language('en')}
             >
               <Text style={[styles.languageText, { color: language === 'en' ? theme.accent : theme.text }]}>
-                English
+                {t("languages.en")}
               </Text>
             </TouchableOpacity>
           </View>

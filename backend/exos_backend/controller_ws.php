@@ -107,6 +107,10 @@ class WebServiceController
         "get_medicos_list" => [
             'descripcion' => 'Obtiene listado de medicos por usuario',
             'parameters' => ["id_usuario"]
+        ],
+        "save_profile" => [
+            'descripcion' => 'Actualiza los datos del perfil del usuario app',
+            'parameters' => ["id_usuario_app","tema","app_language"],
         ]
     ];
 
@@ -387,15 +391,17 @@ class WebServiceController
 
             $id_usuario_app = GetValueSQL_WS($query, "id_usuario_app");
             $tema = GetValueSQL_WS($query, "tema");
+            $app_language =GetValueSQL_WS($query, "app_language"); 
         } catch (Exception $e) {
             $id_usuario_app = 0;
             $tema = "light";
+            $app_language ="es";
             $this->result["exception"] = 'Excepción recibida: ' . $e->getMessage();
         }
 
         $this->result["id_usuario_app"] = $id_usuario_app;
         $this->result["tema"] = $tema;
-
+        $this->result["app_language"] = $app_language;
 
         return ($this->result);
     }
@@ -921,6 +927,41 @@ class WebServiceController
         }
 
         return $data ?: ['result' => 'empty'];
+    }
+
+    public function save_profile()
+    {
+         // if IMPLEMENTED
+        if ($this->implemented && $this->result != null) {
+            $this->sendResponse($this->result);
+            return;
+        }
+        // ELSE USE NEXT MOCKUP    
+
+        $id_usuario_app = Requesting("id_usuario_app");
+        $tema = Requesting("tema");
+        $app_language = Requesting("app_language");
+
+        if (!$id_usuario_app || !$tema || !$app_language) {
+            return $this->DatosIncorrectos();
+        }
+
+        try {
+            $query = "update user_profile set tema='" . $tema ."', app_language='" .  $app_language . "' where id_usuario_app=" . $id_usuario_app;
+            ExecuteSQL_WS($query);
+            $this->result["result"] = 'ok';
+            $this->result["result_text"] = 'Perfil guardado con éxito';
+            
+        } catch (Exception $e) {
+            $this->result["result_text"] = 'Excepción recibida: ' . $e->getMessage();
+            $this->result["result"] = 'error';
+        }
+
+        $this->result["id_usuario_app"] = $id_usuario_app;
+        $this->result["tema"] = $tema;
+        $this->result["app_language"] = $app_language;
+
+        return ($this->result);
     }
 
 }
