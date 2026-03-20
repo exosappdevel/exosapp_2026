@@ -136,9 +136,19 @@ export const _Footer = () => {
         </View>
     );
 }
+export const _Footer_custom = ({ children }: { children: any })=> {
+    const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
+    const router = useRouter();
+    return (
+        /* Footer */
+        <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
+          {children}
+        </View>
+    );
+}
 
 export const _TouchableWithoutFeedback = ({ children }: { children: any }) => {
-
+    /*onPress={Keyboard.dismiss}*/
     return <>
         {children}
     </>

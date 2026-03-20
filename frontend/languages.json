@@ -113,7 +113,8 @@
       "notas_title":"Notas o Adicionales",
       "notas" : "Observaciones adicionales...",
       "success_title":"Cirugía Programada con éxito",
-      "success":"La cirugía ha sido programada exitosamente."
+      "success":"La cirugía ha sido programada exitosamente.",
+      "submit_button" :"PROGRAMAR CIRUGÍA"
     }
   },
   "en": {

@@ -23,10 +23,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
-import CustomModal from '../components/CustomModal';
 import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
-import {_TouchableWithoutFeedback} from '../components/elidev_components';
+import { _TouchableWithoutFeedback } from '../components/elidev_components';
+import CustomModal, { Soon_Modal } from '../components/CustomModal';
+import { _Header, _Footer, _Footer_custom, _MenuGrid } from '../components/elidev_components';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -150,6 +151,13 @@ interface iSubdistribuidor {
 export default function ProgramaCirugiaScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
+  const pageConfig = {
+    name: t("screens.cirugias"),
+    icon: "calendar-check",
+    previous: "/cirugias",
+    show_user: true,
+    show_menu: true
+  };
 
   const [appReady, setAppReady] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -525,19 +533,13 @@ export default function ProgramaCirugiaScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Programar Cirugía</Text>
-        <View style={{ width: 28 }} />
-      </View>
+      <_Header page_info={pageConfig} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0} // Ajusta este número según el alto de tu header
       >
-        <_TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <_TouchableWithoutFeedback>
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             {/* Form Card */}
             <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -1136,8 +1138,12 @@ export default function ProgramaCirugiaScreen() {
               <View style={styles.fieldContainer}>
                 <Text style={styles.required}>* {t("common.requerido")}</Text>
               </View>
-
-              {/* Submit Button */}
+            </View>
+          </ScrollView>
+        </_TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+      <_Footer_custom>
+            {/* Submit Button */}
               <TouchableOpacity
                 style={[styles.submitButton, { backgroundColor: theme.accent }]}
                 onPress={handleSubmit}
@@ -1152,10 +1158,7 @@ export default function ProgramaCirugiaScreen() {
                   </>
                 )}
               </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </_TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+      </_Footer_custom>
 
 
 
@@ -1269,7 +1272,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 15,
+    padding: 3,
   },
   formCard: {
     borderRadius: 16,
@@ -1339,6 +1342,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 10,
+    paddingHorizontal:10
   },
   submitButtonText: {
     color: '#fff',
