@@ -850,6 +850,7 @@ class WebServiceController
             $data['item_' . $row['id_subdistribuidor']] = [
                 'id_subdistribuidor' => $row['id_subdistribuidor'],
                 'subdistribuidor' => $row['subdistribuidor'],
+                'no_registrado' => $row['subdistribuidor'] == "01 NO REGISTRADO" ? 1 : 0
             ];
         }
         return $data ?: ['result' => 'empty'];

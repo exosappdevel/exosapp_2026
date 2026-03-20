@@ -14,7 +14,7 @@ import {
   UIManager,
   Image,
   Switch,
-  KeyboardAvoidingView, 
+  KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard
 } from 'react-native';
@@ -26,6 +26,7 @@ import { useApp } from '../context/AppContext';
 import CustomModal from '../components/CustomModal';
 import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
+import {_TouchableWithoutFeedback} from '../components/elidev_components';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -140,6 +141,7 @@ interface iConsumible {
 interface iSubdistribuidor {
   id_subdistribuidor: string;
   subdistribuidor: string;
+  no_registrado: string;
 }
 
 
@@ -165,6 +167,7 @@ export default function ProgramaCirugiaScreen() {
   const [tecnico2, setTecnico2] = useState<iTecnico | null>(null);
   const [subdistribuidor, setSubdistribuidor] = useState<iSubdistribuidor | null>(null);
   const [numero_ordenpago, setNumero_ordenpago] = useState('');
+  const [subdistribuidor_otro, setSubdistribuidor_otro] = useState("");
 
   const [paciente, setPaciente] = useState<iPaciente | null>({ nombre: '', paterno: '', materno: '' });
   const [solicitarEsteril, setSolicitarEsteril] = useState(false);
@@ -534,7 +537,7 @@ export default function ProgramaCirugiaScreen() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0} // Ajusta este número según el alto de tu header
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <_TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             {/* Form Card */}
             <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -723,6 +726,7 @@ export default function ProgramaCirugiaScreen() {
                   <Text style={[styles.label, { color: theme.text }]}>
                     Subdistribuidor <Text style={styles.required}>*</Text>
                   </Text>
+
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
                     onPress={() => setShowSubdistribuidorPicker(true)}
@@ -733,6 +737,22 @@ export default function ProgramaCirugiaScreen() {
                     <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
                   </TouchableOpacity>
                 </View>
+                {/* Subdistribuidor_txt */}
+                {((subdistribuidor?.no_registrado ?? "0") == "1") && (
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      Subdistribuidor no registrado
+                      <Text style={styles.required}>*</Text>
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+                      placeholder="Ej. Johnson"
+                      placeholderTextColor={theme.textSub}
+                      value={subdistribuidor_otro}
+                      onChangeText={(text) => setSubdistribuidor_otro(text)}
+                    />
+                  </View>
+                )}
 
                 {/* Hospital */}
                 <View style={styles.fieldContainer}>
@@ -1134,7 +1154,7 @@ export default function ProgramaCirugiaScreen() {
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </TouchableWithoutFeedback>
+        </_TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
 
@@ -1288,6 +1308,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     fontSize: 14,
+    zIndex: 1,           // Asegura que esté al frente
+    cursor: 'text',      // Solo para Web, ayuda a identificar que es editable
+    userSelect: 'text',  // Permite que el navegador reconozca la selección de texto
   },
   textArea: {
     borderWidth: 1,
