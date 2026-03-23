@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
+import { _Footer_custom } from '@/components/elidev_components';
 
 const CODE_ZIP_URL = 'https://exos-credential-qr.preview.emergentagent.com/assets/code.zip';
 
@@ -35,14 +36,14 @@ interface Almacen {
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, setUser, theme, t, language, setLanguage, appConfig } = useApp();
-  
+
   const [selectedTheme, setSelectedTheme] = useState(user.tema);
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
   const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAlmacenPicker, setShowAlmacenPicker] = useState(false);
-  const [sel_language,setSel_language] = useState(language);
+  const [sel_language, setSel_language] = useState(language);
   const [modal, setModal] = useState({
     visible: false,
     titulo: '',
@@ -84,13 +85,13 @@ export default function ProfileScreen() {
         almacen_codigo: selectedAlmacen?.codigo || user.almacen_codigo,
       };
 
-      const response = await ApiService.save_profile(updatedUser.id_usuario_app, updatedUser.tema, sel_language );
-      
+      const response = await ApiService.save_profile(updatedUser.id_usuario_app, updatedUser.tema, sel_language);
+
       if (response.result === 'ok') {
         setLanguage(sel_language);
         setUser(updatedUser);
         await AsyncStorage.setItem('@exosapp_user', JSON.stringify(updatedUser));
-        
+
         router.replace('/home');
       }
     } catch (e) {
@@ -133,7 +134,7 @@ export default function ProfileScreen() {
           {loading ? (
             <ActivityIndicator color={theme.accent} />
           ) : (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.almacenSelector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
               onPress={() => setShowAlmacenPicker(true)}
             >
@@ -164,7 +165,7 @@ export default function ProfileScreen() {
                   <MaterialCommunityIcons name="check" size={24} color={themeOpt.id === 'dark' ? '#fff' : '#333'} />
                 )}
                 <Text style={[
-                  styles.themeLabel, 
+                  styles.themeLabel,
                   { color: themeOpt.id === 'dark' ? '#fff' : '#333' }
                 ]}>
                   {t(`profile.themes.${themeOpt.id}`)}
@@ -205,22 +206,27 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        
+
 
         {/* Save Button */}
-        <TouchableOpacity 
-          style={[styles.saveButton, { backgroundColor: theme.accent }]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.saveButtonText}>{t('common.save')}</Text>
-          )}
-        </TouchableOpacity>
-      
+
+
+        
+
       </ScrollView>
+      <_Footer_custom>
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: theme.accent }]}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>{t('common.save')}</Text>
+            )}
+          </TouchableOpacity>
+        </_Footer_custom>
 
       {/* Almacen Picker Modal */}
       {showAlmacenPicker && (
@@ -314,7 +320,7 @@ const styles = StyleSheet.create({
   },
   themeOption: {
     width: '48%',
-    height: 70,
+    height: 50,
     borderRadius: 12,
     borderWidth: 2,
     justifyContent: 'center',
@@ -328,7 +334,7 @@ const styles = StyleSheet.create({
   themeLabel: {
     fontSize: 12,
     fontWeight: '600',
-    marginTop: 4,
+    marginTop: 1,
   },
   languageRow: {
     flexDirection: 'row',
@@ -369,6 +375,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+    paddingVertical: 1,
+    paddingHorizontal: 20
   },
   codeButton: {
     flexDirection: 'row',

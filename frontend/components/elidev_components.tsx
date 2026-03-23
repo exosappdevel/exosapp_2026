@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert } from "react-native";
+import { Dispatch, SetStateAction, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch } from "react-native";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { useRouter } from 'expo-router';
@@ -54,12 +54,12 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
             {/* Lado Izquierdo: Título de la página o Botón Atrás */}
             <View style={styles.headerLeft}>
                 {page_info.previous ? (
-                    <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous==""? router.back():router.replace(page_info?.previous)}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "" ? router.back() : router.replace(page_info?.previous)}>
                         <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
                     </TouchableOpacity>
                 ) : null}
 
-                <MaterialCommunityIcons name={page_info?.icon} size={24} color={theme.accent} style={[{paddingLeft:5, paddingRight:5}]} />
+                <MaterialCommunityIcons name={page_info?.icon} size={24} color={theme.accent} style={[{ paddingLeft: 5, paddingRight: 5 }]} />
                 <Text style={[styles.pageTitle, { color: theme.text }]}>{page_info.name}</Text>
             </View>
 
@@ -136,13 +136,13 @@ export const _Footer = () => {
         </View>
     );
 }
-export const _Footer_custom = ({ children }: { children: any })=> {
+export const _Footer_custom = ({ children }: { children: any }) => {
     const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
     const router = useRouter();
     return (
         /* Footer */
         <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-          {children}
+            {children}
         </View>
     );
 }
@@ -199,6 +199,48 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
             renderItem={renderMenuItem}
         />
     );
+};
+
+interface checkBoxOptions {
+    key: string;
+    text: string;
+    use_switch: boolean;
+    value: boolean;
+    setValue: Dispatch<SetStateAction<boolean>>;    
+};
+
+export const _checkBox = ({ key, text, use_switch, value, setValue}: checkBoxOptions ) => {
+    const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
+    if (use_switch) {
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
+                <Text style={{ color: theme.text, fontSize: 15 }}>{text}</Text>
+                <Switch
+                    key={key}
+                    value={value}
+                    onValueChange={setValue}
+                    trackColor={{ false: theme.textSub, true: theme.text }}
+                />                
+            </View>
+        );
+    }
+    else {
+        <TouchableOpacity
+            key={key}
+            onPress={() => setValue(!value)}
+            activeOpacity={0.6}
+            style={styles.checkboxContainer}
+        >
+            <MaterialCommunityIcons
+                name={value ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                size={24}
+                color={value ? theme.text : theme.textSub}
+            />
+            <Text style={[styles.checkboxLabel, { color: theme.text }]}>
+                {text}
+            </Text>
+        </TouchableOpacity>
+    }
 };
 
 const styles = StyleSheet.create({
@@ -334,5 +376,20 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         textAlign: 'center',
+    },
+    checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+    checkLabel: { marginLeft: 10, fontSize: 15 },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12, // Espacio suficiente para el touch
+        paddingHorizontal: 15,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: 'rgba(0,0,0,0.1)',
+    },
+    checkboxLabel: {
+        marginLeft: 12,
+        fontSize: 15,
+        flex: 1,
     },
 });

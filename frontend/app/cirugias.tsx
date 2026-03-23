@@ -20,7 +20,7 @@ export default function CirugiasScreen() {
   const { user, theme, t } = useApp();
   const pageConfig = {
     name: t('screens.cirugias'),
-    icon: "doctor",
+    icon: "stethoscope",
     previous: "/logistica",
     show_user: true,
     show_menu: true

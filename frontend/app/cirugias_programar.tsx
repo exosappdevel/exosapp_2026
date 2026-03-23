@@ -27,7 +27,7 @@ import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _Footer_custom, _MenuGrid } from '../components/elidev_components';
+import { _Header, _Footer, _Footer_custom, _MenuGrid, _checkBox } from '../components/elidev_components';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -939,29 +939,18 @@ export default function ProgramaCirugiaScreen() {
                           >
                             {Array.isArray(item.subcategorias) &&
                               item.subcategorias.map((sub: iSubCategoria) => {
-                                const isSelected = !!selectedSubcats["sub_" + sub.id_set_subcategoria];
+                                const key = "sub_" + sub.id_set_subcategoria;
+                                const isSelected = !!selectedSubcats[key];
 
                                 return (
-                                  <TouchableOpacity
-                                    key={sub.id_set_subcategoria}
-                                    style={styles.checkboxContainer}
-                                    onPress={(e) => {
-                                      e.stopPropagation();
-                                      toggleSubcategoria("sub_" + sub.id_set_subcategoria)
-                                    }
-                                    }
-                                    activeOpacity={0.6}
-                                  >
-                                    <MaterialCommunityIcons
-                                      name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                                      size={24}
-                                      color={isSelected ? theme.text : theme.textSub}
-                                    />
-                                    <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                                      {sub.nombre}
-                                    </Text>
-                                  </TouchableOpacity>
-                                );
+                                  <_checkBox
+                                    key={key}
+                                    use_switch={true}
+                                    text={sub.nombre}
+                                    value={isSelected}
+                                    setValue={() => toggleSubcategoria(key)}
+                                  />
+                                );                                
                               })}
                           </AccordionSection>
                         );
@@ -988,8 +977,20 @@ export default function ProgramaCirugiaScreen() {
 
                     {Array.isArray(equipospoder) &&
                       equipospoder.map((item: iEquipoPoder) => {
+                        const key = "ep_" + item.id_ep_categoria;
+                        const isSelected = !!selectedSubcats[key];
 
-                        const isSelected = !!selectedSubcats["ep_" + item.id_ep_categoria];
+                        return (
+                          <_checkBox
+                            key={key}
+                            use_switch={true}
+                            text={item.nombre}
+                            value={isSelected}
+                            setValue={() => toggleSubcategoria(key)}
+                          />
+                        );
+
+                        /*const isSelected = !!selectedSubcats["ep_" + item.id_ep_categoria];
 
                         return (
                           <TouchableOpacity
@@ -1007,7 +1008,7 @@ export default function ProgramaCirugiaScreen() {
                               {item.nombre}
                             </Text>
                           </TouchableOpacity>
-                        );
+                        );*/
                       })
                     }
                   </AccordionSection>
@@ -1031,24 +1032,17 @@ export default function ProgramaCirugiaScreen() {
                     {Array.isArray(equipospoder) &&
                       instrumenales.map((item: iInstrumental) => {
 
-                        const isSelected = !!selectedSubcats["ins_" + item.id_instru_categoria];
+                        const key = "ins_" + item.id_instru_categoria;
+                        const isSelected = !!selectedSubcats[key];
 
                         return (
-                          <TouchableOpacity
-                            key={item.id_instru_categoria}
-                            style={styles.checkboxContainer}
-                            onPress={() => toggleSubcategoria("ins_" + item.id_instru_categoria)}
-                            activeOpacity={0.6}
-                          >
-                            <MaterialCommunityIcons
-                              name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                              size={24}
-                              color={isSelected ? theme.text : theme.textSub}
-                            />
-                            <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                              {item.nombre}
-                            </Text>
-                          </TouchableOpacity>
+                          <_checkBox
+                            key={key}
+                            use_switch={true}
+                            text={item.nombre}
+                            value={isSelected}
+                            setValue={() => toggleSubcategoria(key)}
+                          />
                         );
                       })
                     }
@@ -1071,25 +1065,16 @@ export default function ProgramaCirugiaScreen() {
                   >
                     {Array.isArray(consumibles) &&
                       consumibles.map((item: iConsumible) => {
-
-                        const isSelected = !!selectedSubcats["cons_" + item.id_consu_categoria];
-
+                        const key = "cons_" + item.id_consu_categoria;
+                        const isSelected = !!selectedSubcats[key];
                         return (
-                          <TouchableOpacity
-                            key={item.id_consu_categoria}
-                            style={styles.checkboxContainer}
-                            onPress={() => toggleSubcategoria("cons_" + item.id_consu_categoria)}
-                            activeOpacity={0.6}
-                          >
-                            <MaterialCommunityIcons
-                              name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                              size={24}
-                              color={isSelected ? theme.text : theme.textSub}
-                            />
-                            <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                              {item.nombre}
-                            </Text>
-                          </TouchableOpacity>
+                          <_checkBox
+                            key={key}
+                            use_switch={true}
+                            text={item.nombre}
+                            value={isSelected}
+                            setValue={() => toggleSubcategoria(key)}
+                          />
                         );
                       })
                     }
@@ -1143,21 +1128,21 @@ export default function ProgramaCirugiaScreen() {
         </_TouchableWithoutFeedback>
       </KeyboardAvoidingView>
       <_Footer_custom>
-            {/* Submit Button */}
-              <TouchableOpacity
-                style={[styles.submitButton, { backgroundColor: theme.accent }]}
-                onPress={handleSubmit}
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="calendar-check" size={24} color="#fff" />
-                    <Text style={styles.submitButtonText}>PROGRAMAR CIRUGÍA</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+        {/* Submit Button */}
+        <TouchableOpacity
+          style={[styles.submitButton, { backgroundColor: theme.accent }]}
+          onPress={handleSubmit}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="calendar-check" size={24} color="#fff" />
+              <Text style={styles.submitButtonText}>PROGRAMAR CIRUGÍA</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </_Footer_custom>
 
 
@@ -1342,7 +1327,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 10,
-    paddingHorizontal:10
+    paddingHorizontal: 10
   },
   submitButtonText: {
     color: '#fff',

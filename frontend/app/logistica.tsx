@@ -27,8 +27,8 @@ export default function LogisticaScreen() {
   };
   const [show_soon, setShow_soon] = useState(false);
   const menuItems = [
-    { id: "1", titleKey: "screens.cirugias", icon: "doctor", color: "#3182ce", href: '/cirugias' },
-    { id: "2", titleKey: "screens.activos", icon: "scissors-cutting", color: "#ecc94b", href: () => { setShow_soon(true); } },
+    { id: "1", titleKey: "screens.cirugias", icon: "stethoscope", color: "#3182ce", href: '/cirugias' },
+    { id: "2", titleKey: "screens.activos", icon: "finance", color: "#ecc94b", href: () => { setShow_soon(true); } },
     { id: "3", titleKey: "screens.carpetas", icon: "folder-account", color: "#48bb78", href: () => { setShow_soon(true); } },
     { id: "4", titleKey: "screens.socios", icon: "account-multiple", color: "#e53e3e", href: () => { setShow_soon(true); } },
   ];
