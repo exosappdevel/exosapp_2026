@@ -34,7 +34,7 @@ export default function HomeScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg}]}>
       <_Header page_info={pageConfig} />
       {/* new grid */}
       <_MenuGrid 

@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch, TouchableWithoutFeedback, Keyboard,Pressable } from "react-native";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { useRouter } from 'expo-router';
@@ -54,7 +54,7 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
             {/* Lado Izquierdo: Título de la página o Botón Atrás */}
             <View style={styles.headerLeft}>
                 {page_info.previous ? (
-                    <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "" ? router.back() : router.replace(page_info?.previous)}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "" ? router.back() : router.replace({ pathname: page_info?.previous })}>
                         <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
                     </TouchableOpacity>
                 ) : null}
@@ -147,12 +147,34 @@ export const _Footer_custom = ({ children }: { children: any }) => {
     );
 }
 
-export const _TouchableWithoutFeedback = ({ children }: { children: any }) => {
-    /*onPress={Keyboard.dismiss}*/
-    return <>
-        {children}
-    </>
 
+export const _TouchableWithoutFeedback = ({ children }: { children: React.ReactNode }) => {
+
+    // Función para cerrar teclado en Mobile
+    const handlePress = () => {
+        if (Platform.OS !== 'web') {
+            Keyboard.dismiss();
+        }
+    };
+
+    // React Native requiere que TouchableWithoutFeedback tenga UN solo hijo.
+    // Envolvemos children en un View para garantizar que sea un único elemento.
+    return (
+        <TouchableWithoutFeedback onPress={handlePress} accessible={false}>
+            <Pressable
+                onPress={() => {
+                    if (Platform.OS !== 'web') Keyboard.dismiss();
+                }}
+                style={{ flex: 1 }}
+                // Esta propiedad es vital: permite que el scroll funcione aunque presiones aquí
+                hitSlop={0}
+            >
+                <View pointerEvents="box-none" style={{ flex: 1 }}>
+                    {children}
+                </View>
+            </Pressable>
+        </TouchableWithoutFeedback>
+    );
 };
 
 interface MenuItem {
@@ -202,31 +224,35 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
 };
 
 interface checkBoxOptions {
-    key: string;
+    key_id: string;
     text: string;
     use_switch: boolean;
     value: boolean;
-    setValue: Dispatch<SetStateAction<boolean>>;    
+    setValue: Dispatch<SetStateAction<boolean>>;
 };
 
-export const _checkBox = ({ key, text, use_switch, value, setValue}: checkBoxOptions ) => {
-    const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
+export const _checkBox = ({ key_id, text, use_switch, value, setValue }: checkBoxOptions) => {
+    const { theme, user, t, logout } = useApp(); // Obtenemos el contexto    
     if (use_switch) {
         return (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
-                <Text style={{ color: theme.text, fontSize: 15 }}>{text}</Text>
+            <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 5 }}>
+                <Text
+                    selectable={false}
+                    pointerEvents="none"
+                    style={{ color: theme.text, fontSize: 12, flex: 1, marginRight: 5, textAlign: "right" }}
+                    ellipsizeMode="tail"
+                >{text}</Text>
                 <Switch
-                    key={key}
+                    key={key_id}
                     value={value}
                     onValueChange={setValue}
                     trackColor={{ false: theme.textSub, true: theme.text }}
-                />                
+                />
             </View>
         );
     }
     else {
-        <TouchableOpacity
-            key={key}
+        return <TouchableOpacity            
             onPress={() => setValue(!value)}
             activeOpacity={0.6}
             style={styles.checkboxContainer}
@@ -249,8 +275,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 15,
-        paddingTop: Platform.OS === 'ios' ? 45 : 15, // Ajustado para Notch de iOS
-        paddingBottom: 15,
+        paddingTop: Platform.OS === 'ios' ? 15 : 15, // Ajustado para Notch de iOS
+        paddingBottom: 5,
         borderBottomWidth: 1,
         elevation: 4,
         shadowColor: '#000',
@@ -337,7 +363,7 @@ const styles = StyleSheet.create({
     userMenuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
+        paddingVertical: 5,
         paddingHorizontal: 15,
     },
     menuDivider: {
@@ -348,8 +374,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 15,
+        paddingVertical: Platform.OS === 'ios' ? 5 : 5,
         borderTopWidth: 1,
+        color: "green",
+        marginBottom: (Platform.OS === 'ios') ? -28 : (Platform.OS === 'android') ? 15 : 0,
     },
     footerText: {
         marginLeft: 10,

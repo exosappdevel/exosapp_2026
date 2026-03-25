@@ -12,9 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.exos.exosapp",
       "infoPlist": {
-        "NSCameraUsageDescription": "Scan QR codes and barcodes",
-        "NSLocationWhenInUseUsageDescription": "Track warehouse location",
-        "NSFaceIDUsageDescription": "Quick and secure login"
+        "NSCameraUsageDescription": "Scanea QR y codigo de barras",
+        "NSLocationWhenInUseUsageDescription": "Trackea localidad del warehouse",
+        "NSFaceIDUsageDescription": "Usa el faceid para iniciar sesión"
       }
     },
     "android": {

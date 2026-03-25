@@ -37,11 +37,16 @@
       "password": "Contraseña",
       "submit": "Iniciar sessión",
       "useFaceId": "Usar Face ID",
+      "usePassword":"Usar Contraseña",
       "enableFaceId": "Habilitar Face ID",
       "rememberCredentials": "Recordar credenciales",
+      "faceid_title":"Autenticación biométrica",
       "faceidSuccess": "Autenticación biométrica exitosa",
       "faceidError": "Error en autenticación biométrica",
-      "faceidNotAvailable": "Face ID no disponible"   
+      "faceidNotAvailable": "Face ID no disponible",
+      "credentials_missing":"Por favor ingrese usuario y contraseña",
+      "authenticationError":"Error de autenticación",
+      "connectionError":"Error de conexión"
     },
     
     "profile": {

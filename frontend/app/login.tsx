@@ -84,8 +84,8 @@ export default function LoginScreen() {
   const authenticateWithBiometrics = async () => {
     try {
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Autenticación biométrica',
-        fallbackLabel: 'Usar contraseña',
+        promptMessage: t('login.faceid_title'),
+        fallbackLabel: t('login.usePassword'),
       });
 
       if (result.success) {
@@ -138,7 +138,7 @@ export default function LoginScreen() {
       setModal({
         visible: true,
         titulo: t('common.error'),
-        mensaje: 'Por favor ingrese usuario y contraseña',
+        mensaje: t("login.credentials_missing"),
         icon: 'alert-circle-outline',
         colorIcon: '#f56565'
       });
@@ -176,7 +176,7 @@ export default function LoginScreen() {
         setModal({
           visible: true,
           titulo: t('common.error'),
-          mensaje: response.result_text || 'Error de autenticación',
+          mensaje: response.result_text || t("login.authenticationError"),
           icon: 'alert-circle-outline',
           colorIcon: '#f56565'
         });
@@ -185,7 +185,7 @@ export default function LoginScreen() {
       setModal({
         visible: true,
         titulo: t('common.error'),
-        mensaje: 'Error de conexión',
+        mensaje: t('login.connectionError'),
         icon: 'wifi-off',
         colorIcon: '#f56565'
       });

@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
+import { _Header, _Footer } from '@/components/elidev_components';
 
 interface Terminal {
   id_terminal: string;
@@ -22,7 +23,14 @@ interface Terminal {
 export default function TerminalesScreen() {
   const router = useRouter();
   const { user, theme, t, appConfig } = useApp();
-  
+  const pageConfig = {
+    name: t("screens.terminales"),
+    icon: "desktop-tower-monitor",
+    previous: "almacen",
+    show_user: true,
+    show_menu: true
+  };
+
   const [terminales, setTerminales] = useState<Terminal[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,9 +55,9 @@ export default function TerminalesScreen() {
   const handleTerminalPress = (terminal: Terminal) => {
     router.push({
       pathname: '/pickeo',
-      params: { 
-        id_terminal: terminal.id_terminal, 
-        terminal_nombre: terminal.nombre 
+      params: {
+        id_terminal: terminal.id_terminal,
+        terminal_nombre: terminal.nombre
       }
     });
   };
@@ -73,14 +81,7 @@ export default function TerminalesScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.terminales')}</Text>
-        <MaterialCommunityIcons name="desktop-tower-monitor"  size={24} color={theme.accent} />
-      </View>
+      <_Header page_info={pageConfig} />
 
       {/* Content */}
       {loading ? (
@@ -101,14 +102,7 @@ export default function TerminalesScreen() {
           contentContainerStyle={styles.listContent}
         />
       )}
-
-      {/* Footer */}
-      <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-        <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
-        <Text style={[styles.footerText, { color: theme.text }]}>
-          {user.almacen_nombre || user.almacen_codigo || 'Sin almacén'}
-        </Text>
-      </View>
+      <_Footer />
     </SafeAreaView>
   );
 }
@@ -117,17 +111,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
+  terminalInfo: {
+    flex: 1,
+    marginLeft: 15,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  terminalName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  terminalDesc: {
+    fontSize: 12,
+    marginTop: 2,
   },
   loadingContainer: {
     flex: 1,
@@ -164,29 +158,5 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  terminalInfo: {
-    flex: 1,
-    marginLeft: 15,
-  },
-  terminalName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  terminalDesc: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    borderTopWidth: 1,
-  },
-  footerText: {
-    marginLeft: 10,
-    fontSize: 14,
-    fontWeight: '500',
   },
 });
