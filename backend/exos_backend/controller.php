@@ -10746,7 +10746,7 @@ if (Requesting("action")=="guardar_cirugia_reprogramar"){
 }  
  
 if (Requesting("action")=="guardar_cirugia"){  
-	$tipo							= Requesting("tipo"); 
+	$tipo							= Requesting("tipo"); 	
 	$nuevo_cirugia_id 				= Requesting("nuevo_cirugia_id"); 
 	$nuevo_cirugia_fecha 			= Requesting("nuevo_cirugia_fecha");
 	$nuevo_cirugia_hora 			= Requesting("nuevo_cirugia_hora");

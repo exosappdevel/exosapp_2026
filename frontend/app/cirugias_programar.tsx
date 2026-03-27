@@ -313,6 +313,23 @@ export default function ProgramaCirugiaScreen() {
     colorIcon: '#f56565'
   });
 
+  const get_subcat_selected = (tipo: string): string => {
+  // 1. Obtenemos todas las llaves del objeto (ej: ["ins_24", "ep_10", "ins_45"])
+  return Object.keys(selectedSubcats)
+    .filter((key) => {
+      // 2. Verificamos que el valor sea true
+      // 3. Verificamos que la llave empiece con el tipo buscado + "_"
+      return selectedSubcats[key] === true && key.startsWith(`${tipo}_`);
+    })
+    .map((key) => {
+      // 4. Extraemos lo que está después del primer "_"
+      // Usamos split('_').slice(1).join('_') por si el ID contiene más guiones
+      return key.split('_')[1];
+    })
+    // 5. Unimos todos los IDs encontrados con una coma
+    .join(',');
+};
+
   const validateForm = () => {
     if (!fecha) return 'Ingrese la fecha de la cirugía';
     if (!hora) return 'Seleccione la hora';
@@ -344,30 +361,69 @@ export default function ProgramaCirugiaScreen() {
     }
 
     setSubmitting(true);
+    const materiales_sel = get_subcat_selected("cat");
+    const ep_sel = get_subcat_selected("ep");
+    const adi_sel = get_subcat_selected("ins");
+    const cons_sel = get_subcat_selected("cons");
+    
+    /*alert(materiales_sel);
+    alert(ep_sel);
+    alert(adi_sel);
+    alert(cons_sel);*/
 
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+
+      const response = 
+          await ApiService.guarda_cirugia(
+                user.id_usuario,
+                user.id_almacen,
+                "nuevo",
+                "0",
+                fecha,
+                hora,
+                estado?.id_estado ?? "0",
+                ciudad,
+                vendedor?.id_vendedor ?? "0",
+                tecnico1?.id_tecnico ?? "0",
+                tecnico2?.id_tecnico ?? "0",
+                subdistribuidor?.id_subdistribuidor ?? "0",
+                subdistribuidor_otro,
+                hospital?.id_hospital ?? "0",
+                medico?.id_medico ?? "0",
+                materiales_sel,
+                ep_sel,
+                adi_sel,
+                cons_sel, 
+                notas,
+                paciente?.nombre ?? "",
+                paciente?.paterno ?? "",
+                paciente?.materno ?? "",
+                solicitarEsteril ? '1':'0',
+                numero_ordenpago,
+                "");      
+
+      if (response.result === 'ok') {
+        setSubmitting(false);
+        setModal({
+          visible: true,
+          titulo: t("cirugias.sucess_tile"),
+          mensaje: t("cirugias.sucess"),
+          icon: 'check-circle-outline',
+          colorIcon: '#48bb78'
+        });
+      }
+    } catch (e) {
       setModal({
         visible: true,
-        titulo: t("cirugias.sucess_tile"),
-        mensaje: t("cirugias.sucess"),
-        icon: 'check-circle-outline',
-        colorIcon: '#48bb78'
+        titulo: t('common.error'),
+        mensaje: 'Error al guardar los cambios',
+        icon: 'alert-circle-outline',
+        colorIcon: '#f56565'
       });
-
-      // Reset form
-      setFecha('');
-      setHora('');
-      setEstado(null);
-      setCiudad('');
-      setHospital(null);
-      setMedico(null);
-      setSubdistribuidor(null);
-      setPaciente({ nombre: '', paterno: '', materno: '' });
-      setNotas('');
-      setNumero_ordenpago('');
-    }, 1500);
+    } finally {
+      setSubmitting(false);
+    }
+          
   };
 
   const renderPickerModal = (
@@ -926,13 +982,13 @@ export default function ProgramaCirugiaScreen() {
                         >
                           {Array.isArray(item.subcategorias) &&
                             item.subcategorias.map((sub: iSubCategoria) => {
-                              const key_id = "sub_" + item.id_set_categoria + "_" + sub.id_set_subcategoria;
+                              const key_id = "cat_"+item.id_set_categoria + "/" + sub.id_set_subcategoria;                              
                               const isSelected = !!selectedSubcats[key_id];
 
                               return (
                                 <_checkBox
                                   key={key_id}
-                                  key_id={key_id}
+                                  key_id={key_id}                                  
                                   use_switch={true}
                                   text={sub.nombre}
                                   value={isSelected}

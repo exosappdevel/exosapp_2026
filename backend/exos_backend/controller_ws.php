@@ -111,6 +111,37 @@ class WebServiceController
         "save_profile" => [
             'descripcion' => 'Actualiza los datos del perfil del usuario app',
             'parameters' => ["id_usuario_app","tema","app_language"],
+        ],
+        "guardar_cirugia" => [
+            'description' => 'Guarda una cirugia',
+            'parameters' => [
+                'id_usuario',
+                'id_almacen',
+                'tipo',
+                'nuevo_cirugia_id',
+                'nuevo_cirugia_fecha',
+                'nuevo_cirugia_hora',
+                'nuevo_cirugia_estado',
+                'nuevo_cirugia_ciudad',
+                'nuevo_cirugia_vendedor',
+                'nuevo_cirugia_tecnico',
+                'nuevo_cirugia_tecnico_2',                
+                'nuevo_cirugia_subdistribuidor',
+                'nuevo_cirugia_subdistribuidor_txt',
+                'nuevo_cirugia_hospital',
+                'nuevo_cirugia_medico',
+                'minialmacen_string',
+                'equipopoder_string',
+                'adicionales_string',
+                'consumibles_string',
+                'nuevo_cirugia_notas',
+                'nuevo_cirugia_paciente',
+                'nuevo_cirugia_paciente_p',
+                'nuevo_cirugia_paciente_m',
+                'nuevo_cirugia_esteril',
+                'nuevo_cirugia_orden_pago',
+                'nuevo_cirugia_file_name'
+            ]
         ]
     ];
 
@@ -965,6 +996,111 @@ class WebServiceController
         return ($this->result);
     }
 
+    public function guardar_cirugia(){
+        // if IMPLEMENTED
+        if ($this->implemented && $this->result != null) {
+            $this->sendResponse($this->result);
+            return;
+        }        
+        // ELSE USE NEXT MOCKUP
+
+        $id_usuario 					= Requesting("id_usuario"); 
+        $id_almacen 					= Requesting("id_almacen"); 
+        $tipo							= Requesting("tipo"); 
+        $nuevo_cirugia_id 				= Requesting("nuevo_cirugia_id"); 
+        $nuevo_cirugia_fecha 			= Requesting("nuevo_cirugia_fecha");
+        $nuevo_cirugia_hora 			= Requesting("nuevo_cirugia_hora");
+        $nuevo_cirugia_estado 			= Requesting("nuevo_cirugia_estado");
+        $nuevo_cirugia_ciudad 			= Requesting("nuevo_cirugia_ciudad");
+        $nuevo_cirugia_vendedor 		= Requesting("nuevo_cirugia_vendedor");
+        $nuevo_cirugia_tecnico 			= Requesting("nuevo_cirugia_tecnico"); 
+        $nuevo_cirugia_tecnico_2 		= Requesting("nuevo_cirugia_tecnico_2");
+		$nuevo_cirugia_tecnico_2 = ($nuevo_cirugia_tecnico_2 == "0") ? $nuevo_cirugia_tecnico : $nuevo_cirugia_tecnico_2;
+        $nuevo_cirugia_subdistribuidor 	= Requesting("nuevo_cirugia_subdistribuidor");
+        $nuevo_cirugia_subdistribuidor_txt 	= Requesting("nuevo_cirugia_subdistribuidor_txt");
+        $nuevo_cirugia_hospital 		= Requesting("nuevo_cirugia_hospital"); 
+        $nuevo_cirugia_medico 			= Requesting("nuevo_cirugia_medico");
+        $minialmacen_string 			= Requesting("minialmacen_string");
+        $equipopoder_string 			= Requesting("equipopoder_string");
+        $adicionales_string 			= Requesting("adicionales_string");
+        $consumibles_string 			= Requesting("consumibles_string");
+        $nuevo_cirugia_notas 			= Requesting("nuevo_cirugia_notas");        
+        $nuevo_cirugia_paciente 		= Requesting("nuevo_cirugia_paciente");
+        $nuevo_cirugia_paciente_p 		= Requesting("nuevo_cirugia_paciente_p");
+        $nuevo_cirugia_paciente_m 		= Requesting("nuevo_cirugia_paciente_m");
+        
+        $nuevo_cirugia_esteril 			= Requesting("nuevo_cirugia_esteril");
+        
+        $nuevo_cirugia_orden_pago 		= Requesting("nuevo_cirugia_orden_pago");
+        $nuevo_cirugia_file_name 		= Requesting("nuevo_cirugia_file_name"); 
+        
+        $query ="SELECT case when id_subdistribuidor=6 then concat(subdistribuidor,upper('-" . $nuevo_cirugia_subdistribuidor_txt . "')) else subdistribuidor end as subdistribuidor_name "
+                . " FROM subdistribuidor where id_subdistribuidor=".$nuevo_cirugia_subdistribuidor;
+        $subdistribuidor = GetValueSQL($query,"subdistribuidor_name");
+        $notas = $nuevo_cirugia_notas;
+
+        $resultStatus 	= "ok"; 
+	    $resultText 	= "Correcto.";
+
+        
+
+        $fecha = $nuevo_cirugia_fecha." ".$nuevo_cirugia_hora;        
+
+        if($nuevo_cirugia_id == "0"){
+                $thisyear = date("Y");
+                $query = "select concat('". $thisyear ."','CX', case when count(*)=0 then 1 else max(cast(mid(mid(c.codigo,1, instr(c.codigo, a.codigo)-1),5) as integer))+1 end,a.codigo) as codigo_num " 
+                         . " from cirugia c left join almacen a on c.id_almacen=a.id_almacen where c.year=" . $thisyear
+                         . " and c.id_almacen=" . $id_almacen;
+
+                $codigo_de_cirugia = GetValueSQL($query,"codigo_num");
+
+                $query = "INSERT INTO cirugia (codigo, id_solicitud, id_vendedor, id_almacen, id_tecnico,id_tecnico2, 
+					id_medico, id_hospital, id_estado, municipio, fecha_programacion, fecha_cirugia, id_subdistribuidor, 
+					subdistribuidor, minialmacen, equipo_poder, adicionales, consumibles, notas, estatus, 
+					paciente, paciente_p, paciente_m, paciente_edad, esteril, diagnostico, year, codigo_qr, kardex, id_usuario_kardex)
+					VALUES ( '".$codigo_de_cirugia."', 0, ".$nuevo_cirugia_vendedor.", ".$id_almacen.", ".$nuevo_cirugia_tecnico.", ".$nuevo_cirugia_tecnico_2.",  
+					".$nuevo_cirugia_medico.",  ".$nuevo_cirugia_hospital.", ".$nuevo_cirugia_estado.", '".$nuevo_cirugia_ciudad."', NOW(), '".$fecha."', ".$nuevo_cirugia_subdistribuidor.", 
+					'".$subdistribuidor."', '".$minialmacen_string."', '".$equipopoder_string."', '".$adicionales_string."','".$consumibles_string."','".$notas."', 5, 
+					'".$nuevo_cirugia_paciente."' ,'".$nuevo_cirugia_paciente_p."' ,'".$nuevo_cirugia_paciente_m."' , 0, ".$nuevo_cirugia_esteril.", '', ".$thisyear.", '', NOW(),  ".$id_usuario.")";
+				
+				$nuevo_cirugia_id = -1; //ExecuteSQL_ReturnID($query);
+        }
+        else {
+                $query = "UPDATE cirugia SET 
+						id_vendedor = ".$nuevo_cirugia_vendedor.", 
+						id_tecnico = ".$nuevo_cirugia_tecnico.", 
+						id_tecnico2 = ".$nuevo_cirugia_tecnico_2.", 
+						id_medico = ".$nuevo_cirugia_medico.", 
+						id_hospital = ".$nuevo_cirugia_hospital.", 
+						id_estado = ".$nuevo_cirugia_estado.", 
+						municipio = '".$nuevo_cirugia_ciudad."', 
+						fecha_cirugia = '".$fecha."', 
+						minialmacen = '".$minialmacen_string."',  
+						equipo_poder = '".$equipopoder_string."', 
+						adicionales = '".$adicionales_string."',  
+						consumibles = '".$consumibles_string."', 
+						notas = '".$notas."',  
+						paciente = '".$nuevo_cirugia_paciente."',
+						paciente_p = '".$nuevo_cirugia_paciente_p."',
+						paciente_m = '".$nuevo_cirugia_paciente_m."',
+						esteril = '".$nuevo_cirugia_esteril."',
+						kardex = NOW(), id_usuario_kardex = ".$id_usuario." 
+					WHERE id_cirugia = ".$nuevo_cirugia_id ;
+                //ExecuteSQL($query); 
+        }
+
+        $this->result = array(    
+                        'nuevo_cirugia_hospital' 	=> $nuevo_cirugia_hospital,    
+                        'nuevo_cirugia_id' 	=> $nuevo_cirugia_id,    
+                        'result' 			=> $resultStatus,  
+                        'result_text' 		=> $resultText,
+                        'sql'               => $query
+	                 );	
+        return ($this->result);	
+    }
+
 }
+
+    
 
 new WebServiceController();

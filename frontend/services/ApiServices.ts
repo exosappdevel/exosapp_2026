@@ -209,6 +209,62 @@ class ApiService {
   static async get_medicos_list(id_usuario: string) {
     return await this.request("get_medicos_list", { id_usuario });
   }
+  static async guarda_cirugia(
+                id_usuario : string,
+                id_almacen : string,
+                tipo : string,
+                nuevo_cirugia_id : string,
+                nuevo_cirugia_fecha : string,
+                nuevo_cirugia_hora : string,
+                nuevo_cirugia_estado : string,
+                nuevo_cirugia_ciudad : string,
+                nuevo_cirugia_vendedor : string,
+                nuevo_cirugia_tecnico : string,
+                nuevo_cirugia_tecnico_2 : string,
+                nuevo_cirugia_subdistribuidor : string,
+                nuevo_cirugia_subdistribuidor_txt : string,
+                nuevo_cirugia_hospital : string,
+                nuevo_cirugia_medico : string,
+                minialmacen_string : string,
+                equipopoder_string : string,
+                adicionales_string : string,
+                consumibles_string : string,
+                nuevo_cirugia_notas : string,
+                nuevo_cirugia_paciente : string,
+                nuevo_cirugia_paciente_p : string,
+                nuevo_cirugia_paciente_m : string,
+                nuevo_cirugia_esteril : string,
+                nuevo_cirugia_orden_pago : string,
+                nuevo_cirugia_file_name : string){
+    return await this.request("guarda_cirugia", { 
+                id_usuario,
+                id_almacen,
+                tipo,
+                nuevo_cirugia_id,
+                nuevo_cirugia_fecha,
+                nuevo_cirugia_hora,
+                nuevo_cirugia_estado,
+                nuevo_cirugia_ciudad,
+                nuevo_cirugia_vendedor,
+                nuevo_cirugia_tecnico,
+                nuevo_cirugia_tecnico_2,                
+                nuevo_cirugia_subdistribuidor,
+                nuevo_cirugia_subdistribuidor_txt,
+                nuevo_cirugia_hospital,
+                nuevo_cirugia_medico,
+                minialmacen_string,
+                equipopoder_string,
+                adicionales_string,
+                consumibles_string,
+                nuevo_cirugia_notas,
+                nuevo_cirugia_paciente,
+                nuevo_cirugia_paciente_p,
+                nuevo_cirugia_paciente_m,
+                nuevo_cirugia_esteril,
+                nuevo_cirugia_orden_pago,
+                nuevo_cirugia_file_name
+             });
+  }
 }
 
 export default ApiService;
