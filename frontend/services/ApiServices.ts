@@ -1,4 +1,4 @@
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -6,12 +6,12 @@ class ApiService {
   static URL_CONTROLLER = "";
   static PASSKEY = "";
   static URL_FILES_CIRUGIAS = "";
-  
+
 
   static init(config: { url: string; passkey: string }) {
     this.URL_CONTROLLER = config.url.endsWith('/')
-                                  ? config.url + "controller_ws.php"
-                                  : config.url + "/controller_ws.php";
+      ? config.url + "controller_ws.php"
+      : config.url + "/controller_ws.php";
     this.URL_FILES_CIRUGIAS = "https://exorta.creaccionesweb.com/pagos_cirugias/"; /*config.url.endsWith('/')
                                   ? config.url + "pagos_cirugias/"
                                   : config.url + "/pagos_cirugias/";*/
@@ -46,68 +46,17 @@ class ApiService {
       return { result: "error", result_text: "Error de conexión" };
     }
   }
-  static parseXmlToJson_org(xmlString: string): any {
-    try {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlString.trim(), "text/xml");
-      const nodes = xmlDoc.documentElement.childNodes;
-      const list: any[] = [];
-      const obj: Record<string, string> = {};
-      let isList = false;
-
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i] as any;
-        if (node.nodeType === 1) {
-          let value = "";
-          if (node.childNodes && node.childNodes.length > 0) {
-            for (let j = 0; j < node.childNodes.length; j++) {
-              const child = node.childNodes[j];
-              if (child.nodeType === 3 || child.nodeType === 4) {
-                value += child.nodeValue;
-              }
-            }
-          } else {
-            value = node.textContent || "";
-          }
-          value = value.trim();
-
-          if (node.nodeName.startsWith('item_') || node.nodeName.startsWith('prod_') || node.nodeName.startsWith('subitem_')) {
-            isList = true;
-            const item: Record<string, string> = {};
-            for (let k = 0; k < node.childNodes.length; k++) {
-              const child = node.childNodes[k];
-              if (child.nodeType === 1) {
-                let childValue = "";
-                if (child.childNodes && child.childNodes.length > 0) {
-                  for (let l = 0; l < child.childNodes.length; l++) {
-                    const gChild = child.childNodes[l];
-                    if (gChild.nodeType === 3 || gChild.nodeType === 4) {
-                      childValue += gChild.nodeValue;
-                    }
-                  }
-                } else {
-                  childValue = child.textContent || "";
-                }
-                item[child.nodeName] = childValue.trim();
-              }
-            }
-            list.push(item);
-          } else {
-            obj[node.nodeName] = value;
-          }
-        }
-      }
-      return isList ? list : obj;
-    } catch (e) {
-      console.error("Error parseando XML:", e);
-      return { result: "error", result_text: "Error de lectura XML" };
-    }
-  }
+  
 
   static parseXmlToJson(xmlString: string): any {
     try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString.trim(), "text/xml");
+      // Validamos que exista el elemento raíz
+      if (!xmlDoc || !xmlDoc.documentElement) {
+        console.error("Error: El XML recibido está vacío o mal formado");
+        return null; // O el valor por defecto que manejes
+      }
 
       // Función interna para procesar nodos
       const parseNode = (node: Node): any => {
@@ -145,7 +94,7 @@ class ApiService {
       };
 
       // Empezamos desde el primer elemento (saltando el <response>)
-      return parseNode(xmlDoc.documentElement);
+      return parseNode(xmlDoc.documentElement as any);
     } catch (e) {
       console.error("Error parseando XML:", e);
       return { result: "error", result_text: "Error de lectura XML" };
@@ -279,13 +228,23 @@ class ApiService {
     const uploader = "UploadHandler.php";
     const formData = new FormData();
 
-    // El servidor espera 'files[]' según tu código de jQuery
-    // @ts-ignore
-    formData.append('files[]', {
-      uri: Platform.OS === 'android' ? file.uri : file.uri.replace('file://', ''),
-      name: file.name,
-      type: file.type,
-    });
+    if (Platform.OS === 'web') {
+      // LÓGICA PARA WEB
+      try {
+        const response = await fetch(file.uri);
+        const blob = await response.blob();
+        formData.append('files[]', blob, file.name);
+      } catch (e) {
+        console.error("Error convirtiendo URI a Blob en Web", e);
+      }
+    } else {// El servidor espera 'files[]' según tu código de jQuery
+      // @ts-ignore
+      formData.append('files[]', {
+        uri: Platform.OS === 'android' ? file.uri : file.uri.replace('file://', ''),
+        name: file.name,
+        type: file.type,
+      });
+    }
 
     const uploadUrl = this.URL_FILES_CIRUGIAS + "UploadHandler.php";
 
@@ -302,7 +261,7 @@ class ApiService {
       const result = await response.json();
       if (result.files && result.files.length > 0) {
         // Retornamos la URL final del servidor
-        return this.URL_FILES_CIRUGIAS +  "files/" + result.files[0].name;
+        return this.URL_FILES_CIRUGIAS + "files/" + result.files[0].name;
       }
       return "";
     } catch (error) {
