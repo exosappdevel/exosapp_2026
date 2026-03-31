@@ -93,6 +93,16 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
                             style={styles.userMenuItem}
                             onPress={() => {
                                 setShowUserMenu(false);
+                                router.push('/home');
+                            }}
+                        >
+                            <MaterialCommunityIcons name="home" size={24} color={theme.accent} />
+                            <Text style={[styles.userMenuText, { color: theme.text }]}>{t('screens.home')}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.userMenuItem}
+                            onPress={() => {
+                                setShowUserMenu(false);
                                 router.push('/profile');
                             }}
                         >
