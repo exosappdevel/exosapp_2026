@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
 import { _Header, _Footer, _MenuGrid } from '../components/elidev_components';
+import { iMenuItem, AddMenuItem } from '@/context/AppmenuItems';
 
 
 
@@ -25,13 +26,12 @@ export default function HomeScreen() {
     show_user: true,
     show_menu: true
   };
-  const [show_soon, setShow_soon] = useState(false);
-  const menuItems = [
-    { id: "1", titleKey: "screens.pickeo", icon: "hospital", color: "#3182ce", href: '/terminales' },
-    { id: "2", titleKey: "screens.inventario", icon: "format-list-checks", color: "#ecc94b", href: () => { setShow_soon(true); } },
-    { id: "3", titleKey: "screens.entradas", icon: "home-import-outline", color: "#48bb78", href: () => { setShow_soon(true); } },
-    { id: "4", titleKey: "screens.salidas", icon: "home-export-outline", color: "#e53e3e", href: () => { setShow_soon(true); } },
-  ];
+  const [show_soon, setShow_soon] = useState(false);  
+  const menuItems:iMenuItem[] = [];
+    AddMenuItem(menuItems, "screens.pickeo", setShow_soon);
+    AddMenuItem(menuItems, "screens.inventario", setShow_soon);
+    AddMenuItem(menuItems, "screens.recepcion", setShow_soon);
+    AddMenuItem(menuItems, "screens.entradas", setShow_soon);
 
 
   return (

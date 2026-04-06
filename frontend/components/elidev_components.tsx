@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { useRouter } from 'expo-router';
 import CustomModal from '../components/CustomModal';
 import { Href } from 'expo-router';
+import { iMenuItem } from "@/context/AppmenuItems";
 
 // 1. Definición de la Interfaz (en JS es descriptiva, en TS es funcional)
 // Si usas TypeScript, asegúrate de que el archivo termine en .tsx
@@ -187,15 +188,8 @@ export const _TouchableWithoutFeedback = ({ children }: { children: React.ReactN
     );
 };
 
-interface MenuItem {
-    id: string;
-    titleKey: string;
-    icon: string;
-    color: string;
-    href: any;
-}
 interface MenuGridProps {
-    menuItems: MenuItem[];               // Lista de ítems
+    menuItems: iMenuItem[];               // Lista de ítems    
 }
 export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
     const { theme, t } = useApp();
@@ -230,6 +224,91 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
             columnWrapperStyle={styles.menuRow}
             renderItem={renderMenuItem}
         />
+    );
+};
+
+export const _MenuSection = ({ title, icon, menuItems }: { title: string, icon: any, menuItems: any[] }) => {
+    const { theme } = useApp();
+    const [isOpen, setIsOpen] = useState(false); // Por defecto empieza abierto
+
+    return (
+        <View style={[styles.iconGroup_Container, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            {/* Encabezado Cliqueable */}
+            <TouchableOpacity 
+                style={styles.groupHeader} 
+                onPress={() => setIsOpen(!isOpen)}
+                activeOpacity={0.7}
+            >
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <MaterialCommunityIcons 
+                        name={icon} 
+                        size={26} 
+                        color={theme.text} 
+                        style={{ marginRight: 10 }} 
+                    />
+                    <Text style={[styles.iconGroup_Title, { color: theme.text }]}>
+                        {title}
+                    </Text>
+                </View>
+                
+                {/* Icono indicador de estado */}
+                <MaterialCommunityIcons 
+                    name={isOpen ? "chevron-up" : "chevron-down"} 
+                    size={24} 
+                    color={theme.text} 
+                    style={{ opacity: 0.5 }}
+                />
+            </TouchableOpacity>
+
+            {/* Contenido Condicional */}
+            {isOpen && (
+                <View style={styles.listWrapper}>
+                    <_MenuList menuItems={menuItems} />
+                </View>
+            )}
+        </View>
+    );
+};
+
+const _MenuListItem = ({ item }: { item: iMenuItem }) => {
+    const { theme, t } = useApp();
+    const router = useRouter();
+
+    const handlePress = () => {
+        if (typeof item.href === 'function') {
+            item.href();
+        } else {
+            router.push(item.href as Href);
+        }
+    };
+
+    return (
+        <TouchableOpacity 
+            style={[styles.listItemContainer, { borderBottomColor: theme.border }]} 
+            onPress={handlePress}
+        >
+            <View style={[styles.listIconContainer, { backgroundColor: item.color + '20' }]}>
+                <MaterialCommunityIcons name={item.icon as any} size={24} color={item.color} />
+            </View>
+            
+            <View style={styles.listTextContainer}>
+                <Text style={[styles.listTitle, { color: theme.text }]}>
+                    {t(item.titleKey)}
+                </Text>
+                
+            </View>
+        </TouchableOpacity>
+    );
+};
+
+// Componente principal que recibe el array
+export const _MenuList = ({ menuItems }: { menuItems: iMenuItem[] }) => {
+    return (
+        <View style={styles.listWrapper}>
+            {menuItems.map((item) => (
+                <_MenuListItem key={item.id} item={item} />
+            ))}
+        </View>
     );
 };
 
@@ -429,5 +508,59 @@ const styles = StyleSheet.create({
         marginLeft: 12,
         fontSize: 15,
         flex: 1,
+    },
+    iconGroup_Container: {
+        width: '94%',
+        alignSelf: 'center',
+        borderRadius: 20,
+        marginVertical: 12,
+        padding: 15,
+        borderWidth: 1,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        overflow: 'hidden', // Importante para que el contenido no sobresalga al cerrar
+    },
+    groupHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between', // Para mandar el chevron a la derecha
+        paddingVertical: 5,
+    },
+    iconGroup_Title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    itemsWrapper: {
+        paddingTop: 5,
+    },
+    listWrapper: {
+        width: '100%',
+    },
+    listItemContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 5,
+    },
+    listIconContainer: {
+        width: 45,
+        height: 45,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    listTextContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    listTitle: {
+        fontSize: 16,
+        fontWeight: '500',
     },
 });

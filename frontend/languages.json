@@ -28,9 +28,9 @@
       "cirugias":"Cirugías",
       "socios":"Socios",
       "activos":"Activos",
-      "cirugias_programar" : "Programar",
-      "cirugias_buscar":"Buscar",
-      "cirugias_calendario" : "calendario"
+      "cirugias_programar" : "Programar cirugía",
+      "cirugias_buscar":"Buscar cirugía",
+      "cirugias_calendario" : "Calendario de cirugías"
     },
     "login": {      
       "username": "Usuario",

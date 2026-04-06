@@ -29,6 +29,8 @@ import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
 import { _Header, _Footer, _Footer_custom, _MenuGrid, _checkBox } from '../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
+import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -43,8 +45,8 @@ const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
       style={styles.accordionHeader}
       onPress={onPress}
       activeOpacity={0.7}
-    >            
-      <Text style={[styles.accordionTitle, { color: theme.text }]}>{title}</Text>      
+    >
+      <Text style={[styles.accordionTitle, { color: theme.text }]}>{title}</Text>
       <MaterialCommunityIcons
         name={isOpen ? 'chevron-up' : 'chevron-down'}
         size={24}
@@ -142,7 +144,7 @@ export default function ProgramaCirugiaScreen() {
   const pageConfig = {
     name: t("screens.cirugias"),
     icon: "calendar-check",
-    previous: "/cirugias",
+    previous: "/home",
     show_user: true,
     show_menu: true
   };
@@ -209,6 +211,7 @@ export default function ProgramaCirugiaScreen() {
   const [expandedCats, setExpandedCats] = useState({}); // Para manejar acordeones anidados
   const scrollRef = React.useRef<ScrollView>(null);
 
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
 
   const validaData = async (response: any) => {
     try {
@@ -349,9 +352,33 @@ export default function ProgramaCirugiaScreen() {
     const materialesSeleccionados = Object.keys(selectedSubcats).filter(id => selectedSubcats[id]);
     console.log("IDs a enviar al servidor:", materialesSeleccionados);
   };
+  async function playSuccessSound() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../assets/sounds/success.mp3') // Asegúrate de que la ruta sea correcta
+    );
+    setSound(sound);
+    await sound.playAsync();
+  }
+  async function playErrorSound() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../assets/sounds/success.mp3') // Asegúrate de que la ruta sea correcta
+    );
+    setSound(sound);
+    await sound.playAsync();
+  }
+  useEffect(() => {
+    return sound
+      ? () => { sound.unloadAsync(); }
+      : undefined;
+  }, [sound]);
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
+      playErrorSound();
+      Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Error
+      );
+
       setModal({
         visible: true,
         titulo: 'Campos Requeridos',
@@ -423,6 +450,10 @@ export default function ProgramaCirugiaScreen() {
 
       if (response.result === 'ok') {
         setSubmitting(false);
+        playSuccessSound();
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success
+        );
         setModal({
           visible: true,
           titulo: t("cirugias.success_title"),
@@ -432,6 +463,10 @@ export default function ProgramaCirugiaScreen() {
         });
       }
       else {
+        playErrorSound();
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Error
+        );
         setModal({
           visible: true,
           titulo: t('common.error'),
@@ -519,11 +554,11 @@ export default function ProgramaCirugiaScreen() {
       }
       // Si está cerrada, abrimos SOLO esa (creamos un objeto nuevo solo con esa llave)
       return { [sectionId]: true };
-    })    
+    })
     if (isOpening) {
       // El delay es vital para que la animación de LayoutAnimation 
       // termine de expandir el contenido antes de calcular el scroll.
-      setTimeout(() => {       
+      setTimeout(() => {
         // Ejecutar el scroll        
         scrollRef.current?.scrollTo({
           y: yOffset,
@@ -532,7 +567,7 @@ export default function ProgramaCirugiaScreen() {
       }, 100); // 400ms es el tiempo ideal para esperar la animación de Expo/RN
     }
   };
-  const toggleSubsection = (SubsectionId: string, yOffset:number=0) => {
+  const toggleSubsection = (SubsectionId: string, yOffset: number = 0) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     const isOpening = !expandedSections[SubsectionId];
 
@@ -548,7 +583,7 @@ export default function ProgramaCirugiaScreen() {
     if (isOpening) {
       // El delay es vital para que la animación de LayoutAnimation 
       // termine de expandir el contenido antes de calcular el scroll.
-      setTimeout(() => {       
+      setTimeout(() => {
         // Ejecutar el scroll        
         scrollRef.current?.scrollTo({
           y: yOffset,
@@ -659,7 +694,7 @@ export default function ProgramaCirugiaScreen() {
             <AccordionSection
               title="Lugar y Fecha"
               isOpen={!!expandedSections['lugar']}
-              onPress={() => toggleSection('lugar',10)}
+              onPress={() => toggleSection('lugar', 10)}
               theme={theme}
             >
 
@@ -784,7 +819,7 @@ export default function ProgramaCirugiaScreen() {
             <AccordionSection
               title="Participantes"
               isOpen={!!expandedSections['programacion']}
-              onPress={() => toggleSection('programacion',150)}
+              onPress={() => toggleSection('programacion', 150)}
               theme={theme}
             >
 
@@ -905,7 +940,7 @@ export default function ProgramaCirugiaScreen() {
             <AccordionSection
               title={t('cirugias.info_paciente')}
               isOpen={!!expandedSections['paciente']}
-              onPress={() => toggleSection('paciente',220)}
+              onPress={() => toggleSection('paciente', 220)}
               theme={theme}
             >
 
@@ -971,7 +1006,7 @@ export default function ProgramaCirugiaScreen() {
             <AccordionSection
               title={t('cirugias.regitro_pago_title')}
               isOpen={!!expandedSections['registro_pago']}
-              onPress={() => toggleSection('registro_pago',290)}
+              onPress={() => toggleSection('registro_pago', 290)}
               theme={theme}
             >
 
@@ -1025,11 +1060,11 @@ export default function ProgramaCirugiaScreen() {
             <AccordionSection
               title={t('cirugias.materiales')}
               isOpen={!!expandedSections['materiales']}
-              onPress={() => toggleSection('materiales',360)}
+              onPress={() => toggleSection('materiales', 360)}
               theme={theme}
             >
               {Array.isArray(categorias) &&
-                categorias.map((item: iCategoria, index:number) => {
+                categorias.map((item: iCategoria, index: number) => {
                   if (Array.isArray(item.subcategorias)) {
                     if (item.subcategorias.length == 0) {
 
@@ -1049,8 +1084,8 @@ export default function ProgramaCirugiaScreen() {
                             : item.nombre
                           }
                           isOpen={!!expandedSubsections["cat_" + item.id_set_categoria]}
-                          onPress={() => toggleSubsection("cat_" + item.id_set_categoria,360+(index*68))}
-                          theme={theme}                         
+                          onPress={() => toggleSubsection("cat_" + item.id_set_categoria, 360 + (index * 68))}
+                          theme={theme}
                         >
                           {Array.isArray(item.subcategorias) &&
                             item.subcategorias.map((sub: iSubCategoria) => {
@@ -1087,7 +1122,7 @@ export default function ProgramaCirugiaScreen() {
                 <AccordionSection
                   title={seleccionadosEquipos > 0 ? (t('cirugias.equipospoder') + ' (' + seleccionadosEquipos + ')') : t('cirugias.equipospoder')}
                   isOpen={!!expandedSections['equipospoder']}
-                  onPress={() => toggleSection('equipospoder',430)}
+                  onPress={() => toggleSection('equipospoder', 430)}
                   theme={theme}
                 >
 
@@ -1124,7 +1159,7 @@ export default function ProgramaCirugiaScreen() {
                 <AccordionSection
                   title={seleccionadosInst > 0 ? (t('cirugias.instrumentales') + ' (' + seleccionadosInst + ')') : t('cirugias.instrumentales')}
                   isOpen={!!expandedSections['instrumentales']}
-                  onPress={() => toggleSection('instrumentales',500)}
+                  onPress={() => toggleSection('instrumentales', 500)}
                   theme={theme}
                 >
                   {Array.isArray(equipospoder) &&
@@ -1159,7 +1194,7 @@ export default function ProgramaCirugiaScreen() {
                 <AccordionSection
                   title={seleccionadosCons > 0 ? (t('cirugias.consumibles') + ' (' + seleccionadosCons + ')') : t('cirugias.consumibles')}
                   isOpen={!!expandedSections['consumibles']}
-                  onPress={() => toggleSection('consumibles',570)}
+                  onPress={() => toggleSection('consumibles', 570)}
                   theme={theme}
                 >
                   {Array.isArray(consumibles) &&

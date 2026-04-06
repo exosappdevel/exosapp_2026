@@ -26,7 +26,7 @@ export default function TerminalesScreen() {
   const pageConfig = {
     name: t("screens.terminales"),
     icon: "desktop-tower-monitor",
-    previous: "almacen",
+    previous: "home",
     show_user: true,
     show_menu: true
   };

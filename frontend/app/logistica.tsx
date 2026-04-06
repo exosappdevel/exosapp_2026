@@ -10,8 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _MenuGrid } from '../components/elidev_components';
-
+import { _Header, _Footer, _MenuGrid, _MenuSection } from '../components/elidev_components';
+import { iMenuItem, AddMenuItem } from '@/context/AppmenuItems';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '@react-navigation/native';
 
 
 
@@ -26,21 +28,32 @@ export default function LogisticaScreen() {
     show_menu: true
   };
   const [show_soon, setShow_soon] = useState(false);
-  const menuItems = [
-    { id: "1", titleKey: "screens.cirugias", icon: "stethoscope", color: "#3182ce", href: '/cirugias' },
-    { id: "2", titleKey: "screens.activos", icon: "finance", color: "#ecc94b", href: () => { setShow_soon(true); } },
-    { id: "3", titleKey: "screens.carpetas", icon: "folder-account", color: "#48bb78", href: () => { setShow_soon(true); } },
-    { id: "4", titleKey: "screens.socios", icon: "account-multiple", color: "#e53e3e", href: () => { setShow_soon(true); } },
-  ];
+  
+  const menuItems:iMenuItem[] = [];
+  const menuItemsCirugias:iMenuItem[] = [];
+      //AddMenuItem(menuItems, "screens.cirugias", setShow_soon);
+      AddMenuItem(menuItemsCirugias, "screens.cirugias_programar", setShow_soon);
+      AddMenuItem(menuItemsCirugias, "screens.cirugias_buscar", setShow_soon);
+      AddMenuItem(menuItemsCirugias, "screens.cirugias_calendario", setShow_soon);
+      AddMenuItem(menuItems, "screens.activos", setShow_soon);
+      AddMenuItem(menuItems, "screens.carpetas", setShow_soon);
+      AddMenuItem(menuItems, "screens.socios", setShow_soon);
 
 
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
       <_Header page_info={pageConfig} />
-      {/* new grid */}
+      
+      <_MenuSection 
+        title="Cirugías" 
+        icon="stethoscope" 
+        menuItems={menuItemsCirugias} 
+    />
+
+
       <_MenuGrid
-        menuItems={menuItems}
+        menuItems={menuItems}        
       />
 
       {/* Footer */}
@@ -58,4 +71,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  
 });

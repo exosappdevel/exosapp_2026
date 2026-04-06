@@ -4,13 +4,15 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  FlatList
+  FlatList,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header,_Footer,_MenuGrid } from '../components/elidev_components';
+import { _Header,_Footer,_MenuGrid,_MenuSection } from '../components/elidev_components';
+import { iMenuItem, AddMenuItem } from '@/context/AppmenuItems';
 
 
 
@@ -26,20 +28,54 @@ export default function HomeScreen() {
         show_menu: true
     };
   const [show_soon, setShow_soon] = useState(false);
-  const menuItems = [
-    { id: "1", titleKey: "screens.almacen", icon: "warehouse", color: "#3182ce", href:'/almacen' },
-    { id: "2", titleKey: "screens.logistica", icon: "truck-delivery", color: "#0b4e27", href:'/logistica' },
-    { id: "3", titleKey: "screens.recepcion", icon: "clipboard-list", color: "#48bb78", href:()=>{setShow_soon(true);}},
-    { id: "4", titleKey: "screens.carpetas", icon: "folder-account", color: "#beb535", href:()=>{setShow_soon(true);} },
-  ];
+const menuItems:iMenuItem[] = [];
+const menuItems_Almacen:iMenuItem[] = [];
+const menuItems_Cirugias:iMenuItem[] = [];
+const menuItems_Logistica:iMenuItem[] = [];
+const menuItems_Carpetas:iMenuItem[] = [];
 
-  return (
+// Almacen
+AddMenuItem(menuItems_Almacen, "screens.pickeo", setShow_soon);
+AddMenuItem(menuItems_Almacen, "screens.inventario", setShow_soon);
+AddMenuItem(menuItems_Almacen, "screens.recepcion", setShow_soon);
+AddMenuItem(menuItems_Almacen, "screens.entradas", setShow_soon);
+
+// --- Cirugias
+AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar", setShow_soon);
+AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar", setShow_soon);
+AddMenuItem(menuItems_Cirugias, "screens.cirugias_calendario", setShow_soon);
+
+// --- Logistica
+AddMenuItem(menuItems_Logistica, "screens.activos", setShow_soon);
+AddMenuItem(menuItems_Logistica, "screens.carpetas", setShow_soon);
+AddMenuItem(menuItems_Logistica, "screens.socios", setShow_soon);
+
+/*AddMenuItem(menuItems, "screens.logistica", setShow_soon);
+AddMenuItem(menuItems, "screens.recepcion", setShow_soon);
+AddMenuItem(menuItems, "screens.carpetas", setShow_soon);*/
+
+return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg}]}>
+      
       <_Header page_info={pageConfig} />
+      <ScrollView>
       {/* new grid */}
-      <_MenuGrid 
-        menuItems={menuItems} 
+      <_MenuSection
+        title='Almacen'
+        icon='warehouse'
+        menuItems={menuItems_Almacen} 
       />
+      <_MenuSection
+        title='Cirugias'
+        icon='stethoscope'
+        menuItems={menuItems_Cirugias} 
+      />
+      <_MenuSection
+        title='Logística'
+        icon='truck-delivery'
+        menuItems={menuItems_Logistica} 
+      />
+      </ScrollView>
 
       {/* Footer */}
       <_Footer></_Footer>      
