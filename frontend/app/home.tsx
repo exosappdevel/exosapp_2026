@@ -35,27 +35,26 @@ export default function HomeScreen() {
   const menuItems_Logistica: iMenuItem[] = [];
   const menuItems_Favorites: iMenuItem[] = [];
 
-  const Show_soonModal=() =>{
-    alert(show_soon);
-    setShow_soon(true);
+  const Show_soonModal=() =>{    
+    setShow_soon(true);    
   }
 
 
   // Almacen
-  AddMenuItem(menuItems_Almacen, "screens.pickeo", Show_soonModal);
-  AddMenuItem(menuItems_Almacen, "screens.inventario", Show_soonModal);
-  AddMenuItem(menuItems_Almacen, "screens.recepcion", Show_soonModal);
-  AddMenuItem(menuItems_Almacen, "screens.entradas", Show_soonModal);
+  AddMenuItem(menuItems_Almacen, "screens.pickeo");
+  AddMenuItem(menuItems_Almacen, "screens.inventario");
+  AddMenuItem(menuItems_Almacen, "screens.recepcion");
+  AddMenuItem(menuItems_Almacen, "screens.entradas");
 
   // --- Cirugias
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar", Show_soonModal);
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar", Show_soonModal);
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_calendario", Show_soonModal);
+  AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar");
+  AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar");
+  AddMenuItem(menuItems_Cirugias, "screens.cirugias_calendario");
 
   // --- Logistica
-  AddMenuItem(menuItems_Logistica, "screens.activos", Show_soonModal);
-  AddMenuItem(menuItems_Logistica, "screens.carpetas", Show_soonModal);
-  AddMenuItem(menuItems_Logistica, "screens.socios", Show_soonModal);
+  AddMenuItem(menuItems_Logistica, "screens.activos");
+  AddMenuItem(menuItems_Logistica, "screens.carpetas");
+  AddMenuItem(menuItems_Logistica, "screens.socios");
 
   // ---- Favoritos
   const favoriteItems = AppmenuItems.filter(item =>
@@ -75,7 +74,8 @@ export default function HomeScreen() {
             title="Favoritos"
             icon="star"
             menuItems={favoriteItems}     
-            defaultOpen={true}                     
+            defaultOpen={true}    
+            onSoon={Show_soonModal}                 
           />
         )}
 
@@ -83,16 +83,19 @@ export default function HomeScreen() {
           title='Almacen'
           icon='warehouse'
           menuItems={menuItems_Almacen}
+          onSoon={Show_soonModal} 
         />
         <_MenuSection
           title='Cirugias'
           icon='stethoscope'
           menuItems={menuItems_Cirugias}
+          onSoon={Show_soonModal} 
         />
         <_MenuSection
           title='Logística'
           icon='truck-delivery'
           menuItems={menuItems_Logistica}
+          onSoon={Show_soonModal} 
         />
       </ScrollView>
 

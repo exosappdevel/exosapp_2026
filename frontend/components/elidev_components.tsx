@@ -228,7 +228,7 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
     );
 }
 
-export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false }: { title: string, icon: any, menuItems: any[], defaultOpen?: boolean }) => {
+export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false, onSoon }: { title: string, icon: any, menuItems: any[], defaultOpen?: boolean, onSoon:()=>void }) => {
     const { theme } = useApp();
     const [isOpen, setIsOpen] = useState(defaultOpen); // Por defecto empieza abierto    
 
@@ -264,7 +264,7 @@ export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false }: { 
             {/* Contenido Condicional */}
             {isOpen && (
                 <View style={styles.listWrapper}>
-                    <_MenuList menuItems={menuItems} />
+                    <_MenuList menuItems={menuItems} onSoon={onSoon} />
                 </View>
             )}
         </View>
@@ -272,7 +272,7 @@ export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false }: { 
 };
 
 // Busca el componente _MenuListItem y reemplázalo por este:
-const _MenuListItem = ({ item }: { item: iMenuItem }) => {
+const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon:()=>void }) => {
     const { theme, t, user, setUser, language } = useApp(); // Extraemos user y setUser
     const router = useRouter();
 
@@ -280,9 +280,10 @@ const _MenuListItem = ({ item }: { item: iMenuItem }) => {
     const isFavorite = user.menu_favorites?.includes(item.id);    
 
     const handlePress = () => {        
-        if (typeof item.href === 'function') {
-            item.href();
-        } else if (item.href) {
+        // Nueva lógica: si NO es un string válido, ejecutamos la función del modal
+        if (typeof item.href !== 'string' || item.href === "" || item.href === "soon") {
+            onSoon(); 
+        } else {
             router.push(item.href as Href);
         }
     };
@@ -360,11 +361,11 @@ const _MenuListItem = ({ item }: { item: iMenuItem }) => {
 };
 
 // Componente principal que recibe el array
-export const _MenuList = ({ menuItems }: { menuItems: iMenuItem[]}) => {
+export const _MenuList = ({ menuItems, onSoon }: { menuItems: iMenuItem[], onSoon:()=>void}) => {
     return (
         <View style={styles.listWrapper}>
             {menuItems.map((item) => (
-                <_MenuListItem key={item.id} item={item}/>
+                <_MenuListItem key={item.id} item={item} onSoon={onSoon} />
             ))}
         </View>
     );

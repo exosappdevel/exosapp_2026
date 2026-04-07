@@ -28,7 +28,7 @@ export const AppmenuItems:iMenuItem[] = [
 ];
 
 
-export const AddMenuItem=(menu:any, key: string, set_soon: Dispatch<SetStateAction<boolean>>)=> {
+export const AddMenuItem=(menu:any, key: string/*, set_soon: Dispatch<SetStateAction<boolean>>*/)=> {
   for (const item of AppmenuItems){
     if (item.titleKey === key){      
       const new_item : iMenuItem={
@@ -39,11 +39,11 @@ export const AddMenuItem=(menu:any, key: string, set_soon: Dispatch<SetStateActi
         href: item.href        
       };
 
-      if (!item.href && set_soon){
+      /*if (!item.href && set_soon){
         item.href =()=>{             
             set_soon(true);             
           };
-      }        
+      }    */    
 
       menu.push(new_item);
       break;
