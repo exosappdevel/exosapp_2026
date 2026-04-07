@@ -25,7 +25,7 @@ import CustomModal from '../components/CustomModal';
 export default function LoginScreen() {
   const ImageCustom = Image as any;
   const router = useRouter();
-  const { appConfig, setUser, theme, t, setIsLoggedIn } = useApp();
+  const { appConfig, setUser, theme, t, setIsLoggedIn, menuFav_str, menuFav_set} = useApp();
   
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -157,10 +157,11 @@ export default function LoginScreen() {
           almacen_nombre: response.almacen_nombre || '',
           almacen_codigo: response.almacen_codigo || '',
           alias_usuario: response.alias_usuario.toUpperCase() || '',
-          tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light'
-        };
-        
-        setUser(userData);
+          tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light'   ,
+          menu_favorites : []       
+        };        
+        setUser(userData);        
+        menuFav_set(response.menu_favorites);
         setIsLoggedIn(true);
         
         // Save user to AsyncStorage
@@ -185,7 +186,7 @@ export default function LoginScreen() {
       setModal({
         visible: true,
         titulo: t('common.error'),
-        mensaje: t('login.connectionError'),
+        mensaje: t('login.connectionError') + e,
         icon: 'wifi-off',
         colorIcon: '#f56565'
       });

@@ -13,6 +13,7 @@ interface User {
   almacen_codigo: string;
   alias_usuario: string;
   tema: ThemeType;
+  menu_favorites: string[];
 }
 
 interface AppConfig {
@@ -45,7 +46,8 @@ interface AppContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => Promise<void>;
   logout: () => Promise<void>;
-
+  menuFav_str: () => string;
+  menuFav_set: (value: any) => void
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -109,7 +111,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     almacen_nombre: "",
     almacen_codigo: "",
     alias_usuario: "",
-    tema: "light"
+    tema: "light",
+    menu_favorites: []
   });
 
   const setIsLoggedIn = async (value: boolean) => {
@@ -190,7 +193,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       almacen_nombre: "",
       almacen_codigo: "",
       alias_usuario: "",
-      tema: "light"
+      tema: "light",
+      menu_favorites: []
     });
     await setIsLoggedIn(false); // Añade el await aquí
     try {
@@ -202,7 +206,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const activeTheme = themes[user.tema] || themes.light;
 
+  const menuFav_str = (): string => {
+    if (!user.menu_favorites || user.menu_favorites.length === 0) {
+      return "";
+    }
 
+    // .join(';') une los elementos: "1;2;9"
+    return user.menu_favorites.join(';');
+  };
+  const menuFav_set = (value: any) => {
+    if (!value) {
+      setUser(prev => ({ ...prev, menu_favorites: [] }));
+      return;
+    }
+    if (typeof value == "string") {
+      if (value.trim() === "") {
+        setUser(prev => ({ ...prev, menu_favorites: [] }));
+        return;
+      }
+      const favoritesArray = value.split(';').filter(item => item !== "");
+      setUser(prev => ({
+        ...prev,
+        menu_favorites: favoritesArray
+      }));
+
+    }
+  };
 
   return (
     <AppContext.Provider value={{
@@ -215,12 +244,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       t,
       isLoggedIn,
       setIsLoggedIn,
-      logout
+      logout,
+      menuFav_str,
+      menuFav_set
     }}>
       {children}
     </AppContext.Provider>
   );
+
+
 };
+
+
 
 export const useApp = () => {
   const context = useContext(AppContext);

@@ -35,7 +35,7 @@ interface Almacen {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, setUser, theme, t, language, setLanguage, appConfig } = useApp();
+  const { user, setUser, theme, t, language, setLanguage, appConfig, menuFav_str } = useApp();
 
   const [selectedTheme, setSelectedTheme] = useState(user.tema);
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
@@ -76,7 +76,7 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     setSaving(true);
-    try {
+    try {      
       const updatedUser = {
         ...user,
         tema: selectedTheme as 'light' | 'dark' | 'blue' | 'pink',
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
         almacen_codigo: selectedAlmacen?.codigo || user.almacen_codigo,
       };
 
-      const response = await ApiService.save_profile(updatedUser.id_usuario_app, updatedUser.tema, sel_language);
+      const response = await ApiService.save_profile(updatedUser.id_usuario_app, updatedUser.tema, sel_language, menuFav_str() );
 
       if (response.result === 'ok') {
         setLanguage(sel_language);

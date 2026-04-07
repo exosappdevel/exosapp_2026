@@ -39,7 +39,6 @@ class ApiService {
         console.error("El servidor devolvió HTML en lugar de XML. Posible error 404 o 500.");
         return { result: "error", result_text: "Respuesta inválida del servidor (HTML)" };
       }
-
       return this.parseXmlToJson(text);
     } catch (error) {
       console.error("Error en request:", error);
@@ -104,9 +103,9 @@ class ApiService {
   static async inicia_sesion(usuario: string, password: string) {
     return await this.request("inicia_sesion", { login_usuario: usuario, login_password: password });
   }
-  static async save_profile(id_usuario_app: string, tema: string, app_language: string) {
-    return await this.request("save_profile", { id_usuario_app, tema, app_language });
-  }
+  static async save_profile(id_usuario_app: string, tema: string, app_language: string, menu_favorites:string) {
+    return await this.request("save_profile", { id_usuario_app, tema, app_language, menu_favorites });
+  }    
 
   static async get_almacenes_list(id_usuario: string) {
     return await this.request("get_almacenes_list", { id_usuario });
@@ -153,7 +152,7 @@ class ApiService {
     return await this.request("get_vendedores", { id_usuario, first_row });
   }
   static async get_tecnicos(id_usuario: string) {
-    return await this.request("get_vendedores", { id_usuario });
+    return await this.request("get_tecnicos", { id_usuario });
   }
   static async get_hospitales(id_almacen: string) {
     return await this.request("get_hospitales", { id_almacen });

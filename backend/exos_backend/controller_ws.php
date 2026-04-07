@@ -110,7 +110,7 @@ class WebServiceController
         ],
         "save_profile" => [
             'descripcion' => 'Actualiza los datos del perfil del usuario app',
-            'parameters' => ["id_usuario_app","tema","app_language"],
+            'parameters' => ["id_usuario_app","tema","app_language","menu_favorites"],
         ],
         "guardar_cirugia" => [
             'description' => 'Guarda una cirugia',
@@ -422,17 +422,19 @@ class WebServiceController
 
             $id_usuario_app = GetValueSQL_WS($query, "id_usuario_app");
             $tema = GetValueSQL_WS($query, "tema");
-            $app_language =GetValueSQL_WS($query, "app_language"); 
+            $app_language = GetValueSQL_WS($query, "app_language"); 
+            $menu_favorites = GetValueSQL_WS($query, "menu_favorites"); 
         } catch (Exception $e) {
             $id_usuario_app = 0;
             $tema = "light";
-            $app_language ="es";
+            $app_language ="es";            
             $this->result["exception"] = 'Excepción recibida: ' . $e->getMessage();
         }
 
         $this->result["id_usuario_app"] = $id_usuario_app;
         $this->result["tema"] = $tema;
         $this->result["app_language"] = $app_language;
+        $this->result["menu_favorites"] = $menu_favorites;
 
         return ($this->result);
     }
@@ -973,13 +975,14 @@ class WebServiceController
         $id_usuario_app = Requesting("id_usuario_app");
         $tema = Requesting("tema");
         $app_language = Requesting("app_language");
+        $menu_favorites = Requesting("menu_favorites");
 
         if (!$id_usuario_app || !$tema || !$app_language) {
             return $this->DatosIncorrectos();
         }
 
         try {
-            $query = "update user_profile set tema='" . $tema ."', app_language='" .  $app_language . "' where id_usuario_app=" . $id_usuario_app;
+            $query = "update user_profile set tema='" . $tema ."', app_language='" .  $app_language . "', menu_favorites='". $menu_favorites ."' where id_usuario_app=" . $id_usuario_app;
             ExecuteSQL_WS($query);
             $this->result["result"] = 'ok';
             $this->result["result_text"] = 'Perfil guardado con éxito';

@@ -1,11 +1,12 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch, TouchableWithoutFeedback, Keyboard,Pressable } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch, TouchableWithoutFeedback, Keyboard, Pressable } from "react-native";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { useRouter } from 'expo-router';
 import CustomModal from '../components/CustomModal';
 import { Href } from 'expo-router';
 import { iMenuItem } from "@/context/AppmenuItems";
+import ApiService from "../services/ApiServices";
 
 // 1. Definición de la Interfaz (en JS es descriptiva, en TS es funcional)
 // Si usas TypeScript, asegúrate de que el archivo termine en .tsx
@@ -227,35 +228,35 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
     );
 };
 
-export const _MenuSection = ({ title, icon, menuItems }: { title: string, icon: any, menuItems: any[] }) => {
+export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false }: { title: string, icon: any, menuItems: any[], defaultOpen?: boolean }) => {
     const { theme } = useApp();
-    const [isOpen, setIsOpen] = useState(false); // Por defecto empieza abierto
+    const [isOpen, setIsOpen] = useState(defaultOpen); // Por defecto empieza abierto
 
     return (
         <View style={[styles.iconGroup_Container, { borderColor: theme.border, backgroundColor: theme.card }]}>
             {/* Encabezado Cliqueable */}
-            <TouchableOpacity 
-                style={styles.groupHeader} 
+            <TouchableOpacity
+                style={styles.groupHeader}
                 onPress={() => setIsOpen(!isOpen)}
                 activeOpacity={0.7}
             >
                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                    <MaterialCommunityIcons 
-                        name={icon} 
-                        size={26} 
-                        color={theme.text} 
-                        style={{ marginRight: 10 }} 
+                    <MaterialCommunityIcons
+                        name={icon}
+                        size={26}
+                        color={theme.text}
+                        style={{ marginRight: 10 }}
                     />
                     <Text style={[styles.iconGroup_Title, { color: theme.text }]}>
                         {title}
                     </Text>
                 </View>
-                
+
                 {/* Icono indicador de estado */}
-                <MaterialCommunityIcons 
-                    name={isOpen ? "chevron-up" : "chevron-down"} 
-                    size={24} 
-                    color={theme.text} 
+                <MaterialCommunityIcons
+                    name={isOpen ? "chevron-up" : "chevron-down"}
+                    size={24}
+                    color={theme.text}
                     style={{ opacity: 0.5 }}
                 />
             </TouchableOpacity>
@@ -270,32 +271,89 @@ export const _MenuSection = ({ title, icon, menuItems }: { title: string, icon: 
     );
 };
 
+// Busca el componente _MenuListItem y reemplázalo por este:
 const _MenuListItem = ({ item }: { item: iMenuItem }) => {
-    const { theme, t } = useApp();
+    const { theme, t, user, setUser, language } = useApp(); // Extraemos user y setUser
     const router = useRouter();
+
+    // Verificamos si el ítem actual YA está en favoritos
+    const isFavorite = user.menu_favorites?.includes(item.id);
 
     const handlePress = () => {
         if (typeof item.href === 'function') {
             item.href();
-        } else {
+        } else if (item.href) {
             router.push(item.href as Href);
         }
     };
 
+    // Función para AGREGAR
+    const addFavorite = async () => {
+        if (!isFavorite) {
+            const newFavoritesArray = [...(user.menu_favorites || []), item.id];
+            updateFavorites(newFavoritesArray);
+        }
+    };
+
+    // Función para ELIMINAR
+    const removeFavorite = async () => {
+        if (isFavorite) {
+            const newFavoritesArray = user.menu_favorites.filter((id: string) => id !== item.id);
+            updateFavorites(newFavoritesArray);
+        }
+    };
+
+    // Lógica común de guardado (usa ApiService.request como en save_profile)
+    const updateFavorites = async (newArray: string[]) => {
+        // 1. Actualización local inmediata
+        setUser((prev: any) => ({
+            ...prev,
+            menu_favorites: newArray
+        }));
+
+        // 2. Formateo a string separado por ;
+        const favString = newArray.join(';');
+
+        try {
+            // 3. Sincronización con servidor usando la misma lógica de ApiService
+            // Se envía el objeto usuario con el string de favoritos actualizado
+            await ApiService.request('save_profile', {
+                ...user,
+                menu_favorites: favString
+            });
+        } catch (error) {
+            console.error("Error al sincronizar favoritos:", error);
+        }
+    };
+
+
+
     return (
-        <TouchableOpacity 
-            style={[styles.listItemContainer, { borderBottomColor: theme.border }]} 
+        <TouchableOpacity
+            style={[styles.listItemContainer, { borderBottomColor: theme.border }]}
             onPress={handlePress}
         >
             <View style={[styles.listIconContainer, { backgroundColor: item.color + '20' }]}>
                 <MaterialCommunityIcons name={item.icon as any} size={24} color={item.color} />
             </View>
-            
+
             <View style={styles.listTextContainer}>
                 <Text style={[styles.listTitle, { color: theme.text }]}>
                     {t(item.titleKey)}
                 </Text>
-                
+
+                {/* Lógica de iconos dinámica */}
+                {isFavorite ? (
+                    // Icono para ELIMINAR (Estrella rellena)
+                    <TouchableOpacity onPress={removeFavorite} style={{ padding: 10 }}>
+                        <MaterialCommunityIcons name="star" size={22} color="#ecc94b" />
+                    </TouchableOpacity>
+                ) : (
+                    // Icono para AGREGAR (Estrella vacía)
+                    <TouchableOpacity onPress={addFavorite} style={{ padding: 10 }}>
+                        <MaterialCommunityIcons name="star-outline" size={22} color={theme.textSub} />
+                    </TouchableOpacity>
+                )}
             </View>
         </TouchableOpacity>
     );
@@ -341,7 +399,7 @@ export const _checkBox = ({ key_id, text, use_switch, value, setValue }: checkBo
         );
     }
     else {
-        return <TouchableOpacity            
+        return <TouchableOpacity
             onPress={() => setValue(!value)}
             activeOpacity={0.6}
             style={styles.checkboxContainer}
