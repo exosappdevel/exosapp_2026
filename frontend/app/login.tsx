@@ -197,7 +197,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor:"#003857"  }]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -206,12 +206,7 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.logoContainer}>
-            {/*<MaterialCommunityIcons 
-              name="cube-scan" 
-              size={80} 
-              color={theme.accent} 
-            />*/}
+          <View style={styles.logoContainer}>           
             <ImageCustom
                 source={require("../assets/images/logo_login.png")}
                 style={styles.logo}
@@ -257,7 +252,7 @@ export default function LoginScreen() {
             {hasBiometrics && (
               <View style={styles.faceIdContainer}>
                 <View style={styles.faceIdRow}>
-                  <MaterialCommunityIcons name="face-recognition" size={24} color={theme.textSub} />
+                  <MaterialCommunityIcons name="face-recognition" size={18} color={theme.textSub} />
                   <Text style={[styles.faceIdText, { color: theme.text }]}>
                     {t('login.enableFaceId')}
                   </Text>
@@ -267,6 +262,7 @@ export default function LoginScreen() {
                   onValueChange={setEnableFaceId}
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor={enableFaceId ? '#fff' : '#f4f3f4'}
+                  style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                 />
                 
               </View>
@@ -284,12 +280,12 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            {hasBiometrics && hasStoredCredentials && (
+            {hasBiometrics && hasStoredCredentials && enableFaceId && (
               <TouchableOpacity 
                 style={[styles.faceIdButton, { borderColor: theme.accent }]}
-                onPress={authenticateWithBiometrics}
-              >
-                <MaterialCommunityIcons name="face-recognition" size={28} color={theme.accent} />
+                onPress={authenticateWithBiometrics}                
+              >                
+                <MaterialCommunityIcons name="face-recognition" size={24} color={theme.accent} />
                 <Text style={[styles.faceIdButtonText, { color: theme.accent }]}>
                   {t('login.useFaceId')}
                 </Text>
@@ -340,7 +336,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   appName: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
     marginTop: 10,
     color:"white"
@@ -351,7 +347,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 25,
@@ -386,11 +382,11 @@ const styles = StyleSheet.create({
   },
   faceIdText: {
     marginLeft: 10,
-    fontSize: 14,
+    fontSize: 12,
   },
   loginButton: {
     borderRadius: 12,
-    paddingVertical: 15,
+    paddingVertical: 10,
     alignItems: 'center',
     marginTop: 10,
   },
@@ -404,7 +400,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
-    paddingVertical: 15,
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 2,
   },
@@ -416,8 +412,8 @@ const styles = StyleSheet.create({
   logo: {
     width: "100%",       // Ocupa todo el ancho disponible del padre
     maxWidth: 400,      // Pero no se pasa del máximo que tiene el form
-    height: 120,        // Ajusta la altura a tu gusto
-    marginBottom: 30,
+    height: 80,        // Ajusta la altura a tu gusto
+    marginBottom: 10,
     borderRadius: 8,
     //backgroundColor: "#ececec", // Fondo blanco para el logo
     alignSelf: "center", // Se asegura de estar centrado si el padre es más ancho
@@ -436,7 +432,7 @@ const styles = StyleSheet.create({
   versionText: {
     color: "gray",
     textAlign: "center",
-    marginTop: 30,
+    marginTop: 10,
     fontSize: 12,
   },
 });

@@ -112,7 +112,7 @@ export default function ProfileScreen() {
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
+          <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.perfil')}</Text>
         <View style={{ width: 28 }} />
@@ -123,7 +123,7 @@ export default function ProfileScreen() {
         <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.user')}</Text>
           <View style={styles.userInfo}>
-            <MaterialCommunityIcons name="account-circle" size={50} color={theme.accent} />
+            <MaterialCommunityIcons name="account-circle" size={30} color={theme.accent} />
             <Text style={[styles.userName, { color: theme.text }]}>{user.alias_usuario}</Text>
           </View>
         </View>

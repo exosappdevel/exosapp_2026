@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
         padding: 5, // Aumenta el área de toque
     },
     pageTitle: {
-        fontSize: 16,
+        fontSize: 12,
         fontWeight: 'bold',
     },
     userInfo: {
