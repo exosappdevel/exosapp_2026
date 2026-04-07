@@ -2,14 +2,15 @@
   "expo": {
     "name": "ExosApp",
     "slug": "exosapp",
-    "version": "1.0.0",
+    "version": "1.0.1.20260406",
     "orientation": "portrait",
     "icon": "./assets/images/icon-exorta.png",
     "scheme": "exosapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
+    
+    "ios": {    
       "supportsTablet": true,
+      "newArchEnabled": true,
       "bundleIdentifier": "com.exos.exosapp",
       "infoPlist": {
         "NSCameraUsageDescription": "Scanea QR y codigo de barras",
@@ -18,12 +19,14 @@
       }
     },
     "android": {
+      "newArchEnabled": true,
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "backgroundColor": "#0000000"
       },
       "splash": {
-        "image": "./assets/splash.png",
+        "image": "./assets/images/splash.png",
         "resizeMode": "contain",
         "backgroundColor": "#ffffff",
         "mdpi": "./assets/splash.png",
@@ -36,7 +39,7 @@
           "backgroundColor": "#000000"
         }
       },
-      "edgeToEdgeEnabled": true,
+      
       "package": "com.exos.exosapp",
       "permissions": [
         "android.permission.CAMERA",

@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
+import Constants from 'expo-constants';
 
 export default function LoginScreen() {
   const ImageCustom = Image as any;
@@ -297,7 +298,7 @@ export default function LoginScreen() {
             
           </View>
           <Text style={styles.versionText} >
-              Versión de la App: 2026.0310.21
+              Versión de la App: {Constants.expoConfig?.version || "1.0.0"}
             </Text>
 
           <ImageCustom

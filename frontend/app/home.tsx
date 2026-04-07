@@ -35,26 +35,33 @@ export default function HomeScreen() {
   const menuItems_Logistica: iMenuItem[] = [];
   const menuItems_Favorites: iMenuItem[] = [];
 
+  const Show_soonModal=() =>{
+    alert(show_soon);
+    setShow_soon(true);
+  }
+
+
   // Almacen
-  AddMenuItem(menuItems_Almacen, "screens.pickeo", setShow_soon);
-  AddMenuItem(menuItems_Almacen, "screens.inventario", setShow_soon);
-  AddMenuItem(menuItems_Almacen, "screens.recepcion", setShow_soon);
-  AddMenuItem(menuItems_Almacen, "screens.entradas", setShow_soon);
+  AddMenuItem(menuItems_Almacen, "screens.pickeo", Show_soonModal);
+  AddMenuItem(menuItems_Almacen, "screens.inventario", Show_soonModal);
+  AddMenuItem(menuItems_Almacen, "screens.recepcion", Show_soonModal);
+  AddMenuItem(menuItems_Almacen, "screens.entradas", Show_soonModal);
 
   // --- Cirugias
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar", setShow_soon);
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar", setShow_soon);
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_calendario", setShow_soon);
+  AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar", Show_soonModal);
+  AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar", Show_soonModal);
+  AddMenuItem(menuItems_Cirugias, "screens.cirugias_calendario", Show_soonModal);
 
   // --- Logistica
-  AddMenuItem(menuItems_Logistica, "screens.activos", setShow_soon);
-  AddMenuItem(menuItems_Logistica, "screens.carpetas", setShow_soon);
-  AddMenuItem(menuItems_Logistica, "screens.socios", setShow_soon);
+  AddMenuItem(menuItems_Logistica, "screens.activos", Show_soonModal);
+  AddMenuItem(menuItems_Logistica, "screens.carpetas", Show_soonModal);
+  AddMenuItem(menuItems_Logistica, "screens.socios", Show_soonModal);
 
   // ---- Favoritos
   const favoriteItems = AppmenuItems.filter(item =>
     user.menu_favorites?.includes(item.id)
   );
+
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
@@ -68,7 +75,7 @@ export default function HomeScreen() {
             title="Favoritos"
             icon="star"
             menuItems={favoriteItems}     
-            defaultOpen={true}                   
+            defaultOpen={true}                     
           />
         )}
 

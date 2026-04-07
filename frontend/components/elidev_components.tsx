@@ -57,11 +57,11 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
             <View style={styles.headerLeft}>
                 {page_info.previous ? (
                     <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "" ? router.back() : router.replace({ pathname: page_info?.previous })}>
-                        <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
+                        <MaterialCommunityIcons name="arrow-left" size={20} color={theme.text} />
                     </TouchableOpacity>
                 ) : null}
 
-                <MaterialCommunityIcons name={page_info?.icon} size={24} color={theme.accent} style={[{ paddingLeft: 5, paddingRight: 5 }]} />
+                <MaterialCommunityIcons name={page_info?.icon} size={20} color={theme.accent} style={[{ paddingLeft: 5, paddingRight: 5 }]} />
                 <Text style={[styles.pageTitle, { color: theme.text }]}>{page_info.name}</Text>
             </View>
 
@@ -69,11 +69,11 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
             {page_info.show_user && (
                 <TouchableOpacity onPress={() => setShowUserMenu(true)}>
                     <View style={styles.userInfo}>
-                        <MaterialCommunityIcons name="account-circle" size={32} color={theme.accent} />
+                        <MaterialCommunityIcons name="account-circle" size={20} color={theme.accent} />
                         <Text style={[styles.userName, { color: theme.text }]} numberOfLines={1}>
                             {user?.alias_usuario || 'Usuario'}
                         </Text>
-                        <MaterialCommunityIcons name="menu" size={24} color={theme.text} />
+                        <MaterialCommunityIcons name="menu" size={20} color={theme.text} />
                     </View>
                 </TouchableOpacity>
             )}
@@ -226,11 +226,11 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
             renderItem={renderMenuItem}
         />
     );
-};
+}
 
 export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false }: { title: string, icon: any, menuItems: any[], defaultOpen?: boolean }) => {
     const { theme } = useApp();
-    const [isOpen, setIsOpen] = useState(defaultOpen); // Por defecto empieza abierto
+    const [isOpen, setIsOpen] = useState(defaultOpen); // Por defecto empieza abierto    
 
     return (
         <View style={[styles.iconGroup_Container, { borderColor: theme.border, backgroundColor: theme.card }]}>
@@ -277,9 +277,9 @@ const _MenuListItem = ({ item }: { item: iMenuItem }) => {
     const router = useRouter();
 
     // Verificamos si el ítem actual YA está en favoritos
-    const isFavorite = user.menu_favorites?.includes(item.id);
+    const isFavorite = user.menu_favorites?.includes(item.id);    
 
-    const handlePress = () => {
+    const handlePress = () => {        
         if (typeof item.href === 'function') {
             item.href();
         } else if (item.href) {
@@ -360,11 +360,11 @@ const _MenuListItem = ({ item }: { item: iMenuItem }) => {
 };
 
 // Componente principal que recibe el array
-export const _MenuList = ({ menuItems }: { menuItems: iMenuItem[] }) => {
+export const _MenuList = ({ menuItems }: { menuItems: iMenuItem[]}) => {
     return (
         <View style={styles.listWrapper}>
             {menuItems.map((item) => (
-                <_MenuListItem key={item.id} item={item} />
+                <_MenuListItem key={item.id} item={item}/>
             ))}
         </View>
     );
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
         padding: 5, // Aumenta el área de toque
     },
     pageTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
     },
     userInfo: {
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
     },
     userName: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '600',
         marginHorizontal: 8,
         maxWidth: 120, // Evita que nombres largos rompan el diseño
