@@ -240,12 +240,16 @@ class WebServiceController
             'result_text' => "Datos incorrectos"
         ]);
     }
-    private function sendError($message)
+    private function ResultError($message)
     {
-        $this->sendResponse([
+        return[
             'result' => 'error',
             'result_text' => $message
-        ]);
+        ];
+    }
+    private function sendError($message)
+    {
+        $this->sendResponse($this->ResultError($message));
     }
     /**
      * Lista todos los métodos registrados en el sistema de auditoría.
@@ -391,8 +395,7 @@ class WebServiceController
             $existe = GetValueSQL($query, "existe");
 
             if ($existe == 0) {
-                $this->sendError("Usuario o Contraseña incorrectos.");
-                return;
+                return $this->ResultError("Usuario o Contraseña incorrectos.");                
             }
             $id_usuario = GetValueSQL($query, "id_usuario");
             $this->result =

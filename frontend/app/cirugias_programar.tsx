@@ -692,7 +692,7 @@ export default function ProgramaCirugiaScreen() {
 
             {/* SECCIÓN 1: PROGRAMACIÓN */}
             <AccordionSection
-              title="Lugar y Fecha"
+              title={t('cirugias.lugar_fecha')}
               isOpen={!!expandedSections['lugar']}
               onPress={() => toggleSection('lugar', 10)}
               theme={theme}
@@ -701,7 +701,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Fecha */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Fecha <Text style={styles.required}>*</Text>
+                  {t('cirugias.fecha')} <Text style={styles.required}>*</Text>
                 </Text>
 
                 {Platform.OS === 'web' ? (
@@ -769,7 +769,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Hora */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Hora <Text style={styles.required}>*</Text>
+                  {t('cirugias.hora')} <Text style={styles.required}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -785,7 +785,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Estado */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Estado <Text style={styles.required}>*</Text>
+                  {t('cirugias.estado')} <Text style={styles.required}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -802,7 +802,7 @@ export default function ProgramaCirugiaScreen() {
               <_TouchableWithoutFeedback>
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    Ciudad <Text style={styles.required}>*</Text>
+                    {t('cirugias.ciudad')} <Text style={styles.required}>*</Text>
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
@@ -817,7 +817,7 @@ export default function ProgramaCirugiaScreen() {
               </_TouchableWithoutFeedback>
             </AccordionSection>
             <AccordionSection
-              title="Participantes"
+              title={t('cirugias.participantes')}
               isOpen={!!expandedSections['programacion']}
               onPress={() => toggleSection('programacion', 150)}
               theme={theme}
@@ -826,7 +826,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Agente */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Agente <Text style={styles.required}>*</Text>
+                  {t('cirugias.agente')} <Text style={styles.required}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -841,7 +841,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Tecnico1 */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Técnico <Text style={styles.required}>*</Text>
+                  {t('cirugias.tecnico')} <Text style={styles.required}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -856,7 +856,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Tecnico2 */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Técnico 2 <Text style={styles.required}>*</Text>
+                  {t('cirugias.tecnico')} 2 <Text style={styles.required}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -872,7 +872,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Subdistribuidor */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Subdistribuidor <Text style={styles.required}>*</Text>
+                  {t('cirugias.subdistribuidor')} <Text style={styles.required}>*</Text>
                 </Text>
 
                 <TouchableOpacity
@@ -889,7 +889,7 @@ export default function ProgramaCirugiaScreen() {
               {((subdistribuidor?.no_registrado ?? "0") == "1") && (
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    Subdistribuidor no registrado
+                    {t('cirugias.subdistribuidor')} no registrado
                     <Text style={styles.required}>*</Text>
                   </Text>
                   <TextInput
@@ -906,7 +906,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Hospital */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Hospital <Text style={styles.required}>*</Text>
+                  {t('cirugias.hospital')} <Text style={styles.required}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -922,7 +922,7 @@ export default function ProgramaCirugiaScreen() {
               {/* Médico */}
               <View style={styles.fieldContainer}>
                 <Text style={[styles.label, { color: theme.text }]}>
-                  Médico <Text style={styles.required}>*</Text>
+                  {t('cirugias.medico')} <Text style={styles.required}>*</Text>
                 </Text>
                 <TouchableOpacity
                   style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}

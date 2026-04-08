@@ -150,7 +150,7 @@ export default function LoginScreen() {
     try {
       const response = await ApiService.inicia_sesion(loginUser, loginPass);
       
-      if (response.result === 'ok') {
+      if (response.result === 'ok') {        
         const userData = {
           id_usuario_app: response.id_usuario_app || '',
           id_usuario: response.id_usuario || '',
@@ -159,11 +159,11 @@ export default function LoginScreen() {
           almacen_codigo: response.almacen_codigo || '',
           alias_usuario: response.alias_usuario.toUpperCase() || '',
           tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light'   ,
-          menu_favorites : []       
+          menu_favorites : (response.menu_favorites || '').split(';').filter((item:String) => item !== "")
         };        
         setUser(userData);        
         menuFav_set(response.menu_favorites);
-        setIsLoggedIn(true);
+        setIsLoggedIn(true);                
         
         // Save user to AsyncStorage
         await AsyncStorage.setItem('@exosapp_user', JSON.stringify(userData));

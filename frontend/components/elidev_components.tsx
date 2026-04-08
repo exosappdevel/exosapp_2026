@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
         paddingVertical: Platform.OS === 'ios' ? 5 : 5,
         borderTopWidth: 1,
         color: "green",
-        marginBottom: (Platform.OS === 'ios') ? -28 : (Platform.OS === 'android') ? 15 : 0,
+        marginBottom: (Platform.OS === 'ios') ? -28 : (Platform.OS === 'android') ? 3 : 0,
     },
     footerText: {
         marginLeft: 10,

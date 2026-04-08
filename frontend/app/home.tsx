@@ -49,7 +49,7 @@ export default function HomeScreen() {
   // --- Cirugias
   AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar");
   AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar");
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_calendario");
+  AddMenuItem(menuItems_Cirugias, "screens.cirugias_vista_diario");
 
   // --- Logistica
   AddMenuItem(menuItems_Logistica, "screens.activos");

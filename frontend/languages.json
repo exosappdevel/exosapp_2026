@@ -30,7 +30,9 @@
       "activos":"Activos",
       "cirugias_programar" : "Programar cirugía",
       "cirugias_buscar":"Buscar cirugía",
-      "cirugias_calendario" : "Calendario de cirugías"
+      "cirugias_calendario" : "Calendario de cirugías",
+      "cirugias_vista_diario" : "Vista diaria"      
+
     },
     "login": {      
       "username": "Usuario",
@@ -119,7 +121,28 @@
       "notas" : "Observaciones adicionales...",
       "success_title":"Cirugía Programada con éxito",
       "success":"La cirugía ha sido programada exitosamente.",
-      "submit_button" :"PROGRAMAR CIRUGÍA"
+      "submit_button" :"PROGRAMAR CIRUGÍA",
+      "lugar_fecha":"Lugar y Fecha",
+      "fecha":"Fecha",
+      "hora":"Hora",
+      "estado":"Estado",
+      "ciudad":"Ciudad",
+      "participantes":"Participantes",
+      "agente":"Agente",
+      "tecnico":"Técnico",
+      "subdistribuidor":"Subdistribuidor",
+      "hospital":"Hospital",
+      "medico":"Medico",            
+      "parameters_search_title":"Parametros de búsqueda",
+      "fecha_ini":"Fecha inicial",
+      "fecha_fin":"Fecha final",
+      "limite":"Número máx. de resultados",
+      "codigo_cirugia":"Código de cirugía",
+      "resultados_programadas":"Cirugías programadas",
+      "resultados_apoyo":"Cirugías que solicitan apoyo",
+      "search_button":"Buscar cirugias",
+      "search_success_title":"Resultado",
+      "search_success":"cirugias encontradas"
     }
   },
   "en": {
