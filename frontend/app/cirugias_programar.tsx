@@ -254,16 +254,16 @@ export default function ProgramaCirugiaScreen() {
         if (!isMounted) return;
 
         // Seteamos los datos validando que sean arrays
-        setEstados(Array.isArray(resEstados) ? resEstados : []);
-        setHospitales(Array.isArray(resHospitales) ? resHospitales : []);
-        setVendedores(Array.isArray(resVendedores) ? resVendedores : []);
-        setTecnicos(Array.isArray(resTecnicos) ? resTecnicos : []);
-        setCategorias(Array.isArray(resCategorias) ? resCategorias : []);
-        setEquiposPoder(Array.isArray(resEquipopoder) ? resEquipopoder : []);
-        setInstrumentales(Array.isArray(resInstrumentales) ? resInstrumentales : []);
-        setConsumibles(Array.isArray(resConsumibles) ? resConsumibles : []);
-        setSubdistribuidores(Array.isArray(resSubdistribuidores) ? resSubdistribuidores : []);
-        setMedicos(Array.isArray(resMedicos) ? resMedicos : []);
+        setEstados(Array.isArray(resEstados.data) ? resEstados.data : []);
+        setHospitales(Array.isArray(resHospitales.data) ? resHospitales.data : []);
+        setVendedores(Array.isArray(resVendedores.data) ? resVendedores.data : []);
+        setTecnicos(Array.isArray(resTecnicos.data) ? resTecnicos.data : []);
+        setCategorias(Array.isArray(resCategorias.data) ? resCategorias.data : []);
+        setEquiposPoder(Array.isArray(resEquipopoder.data) ? resEquipopoder.data : []);
+        setInstrumentales(Array.isArray(resInstrumentales.data) ? resInstrumentales.data : []);
+        setConsumibles(Array.isArray(resConsumibles.data) ? resConsumibles.data : []);
+        setSubdistribuidores(Array.isArray(resSubdistribuidores.data) ? resSubdistribuidores.data : []);
+        setMedicos(Array.isArray(resMedicos.data) ? resMedicos.data : []);
 
       } catch (error) {
         console.error("Error crítico en loadData:", error);

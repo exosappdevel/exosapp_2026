@@ -48,3 +48,16 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+const handleToggle = () => {
+    if (isControlled) {
+        onToggleSection!(isOpen ? '' : sectionId!); // close if open, open if closed
+    } else {
+        setInternalOpen(!internalOpen); // old behavior
+    }
+};
+const [activeSection, setActiveSection] = useState<string | null>(null);
+
+// Each section gets:
+sectionId="almacen"           // unique ID
+activeSection={activeSection} // shared state
+onToggleSection={setActiveSection} // shared setter

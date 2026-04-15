@@ -80,11 +80,11 @@ export default function PickeoScreen() {
 
       let listaWS: any[] = [];
       if (sync_server) {
-        const dataWS = await ApiService.get_pickeo_list(user.id_usuario, id_terminal);
-        if (Array.isArray(dataWS)) {
-          listaWS = dataWS;
-        } else if (dataWS && typeof dataWS === "object" && !dataWS.result) {
-          listaWS = [dataWS];
+        const response = await ApiService.get_pickeo_list(user.id_usuario, id_terminal);
+        if (Array.isArray(response.data)) {
+          listaWS = response.data;
+        } else if (response && typeof response === "object" && !response.result) {
+          listaWS = [response];
         }
       }
 
@@ -142,11 +142,11 @@ export default function PickeoScreen() {
     const confirmarEnvio = async () => {
       try {
         setIsSubmitting(true);
-        const res = await ApiService.pickeo_checkout(user.id_usuario, id_terminal, productos);
+        const response = await ApiService.pickeo_checkout(user.id_usuario, id_terminal, productos);
         setIsSubmitting(false);
 
-        const mensaje = res?.result_text || "Error desconocido";
-        const esExito = res?.result === "ok";
+        const mensaje = response?.result_text || "Error desconocido";
+        const esExito = response?.result === "ok";
 
         if (Platform.OS === "web") {
           alert(esExito ? `${t('common.success')}: ${mensaje}` : `${t('common.notice')}: ${mensaje}`);

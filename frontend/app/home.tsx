@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _MenuGrid, _MenuSection } from '../components/elidev_components';
+import { _Header, _Footer, _MenuGrid, _MenuSection, _Background } from '../components/elidev_components';
 import { iMenuItem, AddMenuItem } from '@/context/AppmenuItems';
 import { AppmenuItems } from '@/context/AppmenuItems';
 
@@ -35,8 +35,8 @@ export default function HomeScreen() {
   const menuItems_Logistica: iMenuItem[] = [];
   const menuItems_Favorites: iMenuItem[] = [];
 
-  const Show_soonModal=() =>{    
-    setShow_soon(true);    
+  const Show_soonModal = () => {
+    setShow_soon(true);
   }
 
 
@@ -61,51 +61,52 @@ export default function HomeScreen() {
     user.menu_favorites?.includes(item.id)
   );
 
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
+    <SafeAreaView style={[styles.container]}>
+      <_Background id_almacen={user?.id_almacen}>
 
-      <_Header page_info={pageConfig} />
-      <ScrollView>
+        <_Header page_info={pageConfig} />
+        <ScrollView style={{ backgroundColor: 'transparent' }}>
 
-        {/* Solo mostramos la sección si hay favoritos */}
-        {favoriteItems.length > 0 && (
+          {/* Solo mostramos la sección si hay favoritos */}
+          {favoriteItems.length > 0 && (
+            <_MenuSection
+              title="Favoritos"
+              icon="star"
+              menuItems={favoriteItems}
+              defaultOpen={true}
+              onSoon={Show_soonModal}
+            />
+          )}
+
           <_MenuSection
-            title="Favoritos"
-            icon="star"
-            menuItems={favoriteItems}     
-            defaultOpen={true}    
-            onSoon={Show_soonModal}                 
+            title='Almacen'
+            icon='warehouse'
+            menuItems={menuItems_Almacen}
+            onSoon={Show_soonModal}
           />
-        )}
+          <_MenuSection
+            title='Cirugias'
+            icon='stethoscope'
+            menuItems={menuItems_Cirugias}
+            onSoon={Show_soonModal}
+          />
+          <_MenuSection
+            title='Logística'
+            icon='truck-delivery'
+            menuItems={menuItems_Logistica}
+            onSoon={Show_soonModal}
+          />
+        </ScrollView>
 
-        <_MenuSection
-          title='Almacen'
-          icon='warehouse'
-          menuItems={menuItems_Almacen}
-          onSoon={Show_soonModal} 
-        />
-        <_MenuSection
-          title='Cirugias'
-          icon='stethoscope'
-          menuItems={menuItems_Cirugias}
-          onSoon={Show_soonModal} 
-        />
-        <_MenuSection
-          title='Logística'
-          icon='truck-delivery'
-          menuItems={menuItems_Logistica}
-          onSoon={Show_soonModal} 
-        />
-      </ScrollView>
+        {/* Footer */}
+        <_Footer></_Footer>
 
-      {/* Footer */}
-      <_Footer></_Footer>
-
-      <Soon_Modal
-        visible={show_soon}
-        setVisible={setShow_soon}
-      ></Soon_Modal>
+        <Soon_Modal
+          visible={show_soon}
+          setVisible={setShow_soon}
+        ></Soon_Modal>
+      </_Background>
     </SafeAreaView>
   );
 }

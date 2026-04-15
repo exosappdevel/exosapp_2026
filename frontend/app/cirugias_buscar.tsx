@@ -182,11 +182,11 @@ export default function Cirugia_BuscarScreen() {
         if (!isMounted) return;
 
         // Seteamos los datos validando que sean arrays
-        setHospitales(Array.isArray(resHospitales) ? resHospitales : []);
-        setVendedores(Array.isArray(resVendedores) ? resVendedores : []);
-        setTecnicos(Array.isArray(resTecnicos) ? resTecnicos : []);
-        setSubdistribuidores(Array.isArray(resSubdistribuidores) ? resSubdistribuidores : []);
-        setMedicos(Array.isArray(resMedicos) ? resMedicos : []);
+        setHospitales(Array.isArray(resHospitales.data) ? resHospitales.data : []);
+        setVendedores(Array.isArray(resVendedores.data) ? resVendedores.data : []);
+        setTecnicos(Array.isArray(resTecnicos.data) ? resTecnicos.data : []);
+        setSubdistribuidores(Array.isArray(resSubdistribuidores.data) ? resSubdistribuidores.data : []);
+        setMedicos(Array.isArray(resMedicos.data) ? resMedicos.data : []);
         
         const today=new Date();
         const day = today.getDate().toString().padStart(2, '0');

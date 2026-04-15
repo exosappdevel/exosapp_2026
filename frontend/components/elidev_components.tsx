@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch, TouchableWithoutFeedback, Keyboard, Pressable } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch, TouchableWithoutFeedback, Keyboard, Pressable, ImageBackground } from "react-native";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { useRouter } from 'expo-router';
@@ -228,12 +228,12 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
     );
 }
 
-export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false, onSoon }: { title: string, icon: any, menuItems: any[], defaultOpen?: boolean, onSoon:()=>void }) => {
+export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false, onSoon }: { title: string, icon: any, menuItems: any[], defaultOpen?: boolean, onSoon: () => void }) => {
     const { theme } = useApp();
     const [isOpen, setIsOpen] = useState(defaultOpen); // Por defecto empieza abierto    
 
     return (
-        <View style={[styles.iconGroup_Container, { borderColor: theme.border, backgroundColor: theme.card }]}>
+        <View style={[styles.iconGroup_Container, { backgroundColor: theme.card + '70' }]}>
             {/* Encabezado Cliqueable */}
             <TouchableOpacity
                 style={styles.groupHeader}
@@ -244,19 +244,17 @@ export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false, onSo
                     <MaterialCommunityIcons
                         name={icon}
                         size={26}
-                        color={theme.text}
+                        color={theme.iconColor}
                         style={{ marginRight: 10 }}
-                    />
-                    <Text style={[styles.iconGroup_Title, { color: theme.text }]}>
-                        {title}
-                    </Text>
+                    />                    
+                    <Text style={[styles.iconGroup_Title, { color: theme.iconTextColor }]}>{title}</Text>
                 </View>
 
                 {/* Icono indicador de estado */}
                 <MaterialCommunityIcons
                     name={isOpen ? "chevron-up" : "chevron-down"}
                     size={24}
-                    color={theme.text}
+                    color="white"
                     style={{ opacity: 0.5 }}
                 />
             </TouchableOpacity>
@@ -272,17 +270,17 @@ export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false, onSo
 };
 
 // Busca el componente _MenuListItem y reemplázalo por este:
-const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon:()=>void }) => {
+const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }) => {
     const { theme, t, user, setUser, language } = useApp(); // Extraemos user y setUser
     const router = useRouter();
 
     // Verificamos si el ítem actual YA está en favoritos
-    const isFavorite = user.menu_favorites?.includes(item.id);    
+    const isFavorite = user.menu_favorites?.includes(item.id);
 
-    const handlePress = () => {        
+    const handlePress = () => {
         // Nueva lógica: si NO es un string válido, ejecutamos la función del modal
         if (typeof item.href !== 'string' || item.href === "" || item.href === "soon") {
-            onSoon(); 
+            onSoon();
         } else {
             router.push(item.href as Href);
         }
@@ -334,12 +332,12 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon:()=>void }) =
             style={[styles.listItemContainer, { borderBottomColor: theme.border }]}
             onPress={handlePress}
         >
-            <View style={[styles.listIconContainer, { backgroundColor: item.color + '20' }]}>
-                <MaterialCommunityIcons name={item.icon as any} size={24} color={item.color} />
+            <View style={[styles.listIconContainer, { backgroundColor: theme.iconColor + '80' }]}>
+                <MaterialCommunityIcons name={item.icon as any} size={24} color={theme.iconTextColor } />
             </View>
 
             <View style={styles.listTextContainer}>
-                <Text style={[styles.listTitle, { color: theme.text }]}>
+                <Text style={[styles.listTitle, { color: theme.iconTextColor }]}>
                     {t(item.titleKey)}
                 </Text>
 
@@ -347,7 +345,7 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon:()=>void }) =
                 {isFavorite ? (
                     // Icono para ELIMINAR (Estrella rellena)
                     <TouchableOpacity onPress={removeFavorite} style={{ padding: 10 }}>
-                        <MaterialCommunityIcons name="star" size={22} color="#ecc94b" />
+                        <MaterialCommunityIcons name="star" size={22} color={theme.iconColor} />
                     </TouchableOpacity>
                 ) : (
                     // Icono para AGREGAR (Estrella vacía)
@@ -361,7 +359,7 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon:()=>void }) =
 };
 
 // Componente principal que recibe el array
-export const _MenuList = ({ menuItems, onSoon }: { menuItems: iMenuItem[], onSoon:()=>void}) => {
+export const _MenuList = ({ menuItems, onSoon }: { menuItems: iMenuItem[], onSoon: () => void }) => {
     return (
         <View style={styles.listWrapper}>
             {menuItems.map((item) => (
@@ -415,6 +413,39 @@ export const _checkBox = ({ key_id, text, use_switch, value, setValue }: checkBo
             </Text>
         </TouchableOpacity>
     }
+
+};
+interface BackgroundProps {
+    id_almacen: string | undefined | null; // Acepta nulos del user context
+    children: React.ReactNode;            // El contenido de la pantalla
+}
+
+export const _Background = ({ id_almacen, children }: BackgroundProps) => {
+    const { theme, appConfig } = useApp();
+
+    // URL base de tu servidor para las imágenes de fondo    
+    const baseUrl = appConfig.url.endsWith('/') ? appConfig.url : `${appConfig.url}/`;
+    const SERVER_IMAGE_BASE = `${baseUrl}assets/images/${appConfig.name}/`;
+
+    // Construcción de la URL dinámica
+    // Si id_almacen es nulo/vacio, no carga imagen (usa theme.bg)    
+    const backgroundSource = (id_almacen && id_almacen.trim() !== "")
+        ? { uri: `${SERVER_IMAGE_BASE}almacen_background_${id_almacen}.png` }
+        : undefined;
+
+    return (
+        // Envolvemos todo con ImageBackground
+        <ImageBackground
+            source={backgroundSource}
+            style={[styles.backgroundImage, { backgroundColor: theme.bg }]} // Fondo por defecto si falla la carga
+            resizeMode="cover" // Importante para que cubra todo el celular verticalmente
+        //blurRadius={Platform.OS === 'ios' ? 8 : 4} // Opcional: Desenfoque si los menúes no son legibles
+        >
+            {/* Overlay sutil para mejorar legibilidad (Opcional, depende de tus imágenes) */}
+            {/* <View style={[styles.backgroundOverlay, { backgroundColor: theme.bg + '50' }]} pointerEvents="none" /> */}
+            {children}
+        </ImageBackground>
+    );
 };
 
 const styles = StyleSheet.create({
@@ -575,12 +606,26 @@ const styles = StyleSheet.create({
         marginVertical: 12,
         padding: 15,
         borderWidth: 1,
+
+        // 1. Transparencia: Usamos un blanco muy tenue con 15% de opacidad
+        // IMPORTANTE: Esto debe sobreescribir cualquier color sólido
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+
+        // 2. Sombras
         elevation: 3,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        overflow: 'hidden', // Importante para que el contenido no sobresalga al cerrar
+        shadowRadius: 8,
+        overflow: 'hidden',
+
+        // 3. Hack para Web sin errores de TypeScript
+        // Al usar "as any", evitamos el error de "Property does not exist"
+        ...({
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+        } as any),
     },
     groupHeader: {
         flexDirection: 'row',
@@ -621,5 +666,14 @@ const styles = StyleSheet.create({
     listTitle: {
         fontSize: 16,
         fontWeight: '500',
+    },
+    // --- Estilos para el nuevo _Background
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
+    backgroundOverlay: {
+        ...StyleSheet.absoluteFillObject, // Ocupa todo el ImageBackground
     },
 });

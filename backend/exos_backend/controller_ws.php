@@ -447,8 +447,7 @@ class WebServiceController
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
 
@@ -468,7 +467,7 @@ class WebServiceController
         $data = [];
 
         while ($row = mysqli_fetch_array($qresult)) {
-            // Usamos el prefijo 'item_' para que el XML sea válido y el frontend lo reconozca como lista
+            // Usamos el prefijo 'item_' para que el XML sea válido y el frontend lo reconozca como lista            
             $data['item_' . $row['id_almacen']] = [
                 'id_almacen' => $row['id_almacen'],
                 'nombre' => $row['nombre'],
@@ -476,7 +475,11 @@ class WebServiceController
             ];
         }
 
-        return ($data ?: ['result' => 'empty']);
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
 
@@ -485,8 +488,7 @@ class WebServiceController
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
 
         // ELSE USE NEXT MOCKUP
@@ -516,7 +518,11 @@ class WebServiceController
             ];
         }
 
-        return ($data ?: ['result' => 'empty']);
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
     // --- GET PICKEO (RESTAURADO) ---
@@ -524,8 +530,7 @@ class WebServiceController
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+           return $this->result;
         }
 
         // ELSE USE NEXT MOCKUP
@@ -561,14 +566,17 @@ class WebServiceController
             ];
         }
 
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
     public function pickeo_checkout()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+           return $this->result;
         }
 
         // ELSE USE NEXT MOCKUP
@@ -597,8 +605,7 @@ class WebServiceController
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
 
@@ -613,15 +620,18 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
     public function get_set_subcategorias()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
         $id_categoria = Requesting("id_categoria");
@@ -642,14 +652,17 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
     public function get_set_categorias_subcategorias()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP        
 
@@ -674,15 +687,18 @@ class WebServiceController
                 'subcategorias' => $subitems
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
     public function get_equipos_poder_categoria()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP      
         $query = "SELECT id_ep_categoria, nombre FROM equipo_poder_categoria ORDER BY nombre";
@@ -696,7 +712,11 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
 
@@ -704,8 +724,7 @@ class WebServiceController
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
         $query = "SELECT id_instru_categoria, nombre FROM instrumental_categoria ORDER BY nombre";
@@ -719,14 +738,17 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
     public function get_consumible_categoria()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
         $query = "SELECT id_consu_categoria, nombre FROM consumible_categoria ORDER BY nombre";
@@ -740,14 +762,17 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
     public function get_estados()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
         $query = "SELECT id_estado, nombre FROM estado ORDER BY nombre";
@@ -761,14 +786,17 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
     public function get_vendedores()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
         $id_usuario = Requesting("id_usuario");
@@ -794,15 +822,18 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
     public function get_tecnicos()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
         $id_usuario = Requesting("id_usuario");
@@ -838,15 +869,18 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
     public function get_hospitales()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
         $id_almacen = Requesting("id_almacen");
@@ -865,15 +899,18 @@ class WebServiceController
                 'nombre' => $row['nombre'],
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
     public function get_subdistribuidor()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
 
@@ -889,15 +926,18 @@ class WebServiceController
                 'no_registrado' => $row['subdistribuidor'] == "01 NO REGISTRADO" ? 1 : 0
             ];
         }
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
     public function get_medicos_list()
     {
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP
 
@@ -963,15 +1003,18 @@ class WebServiceController
 
         }
 
-        return $data ?: ['result' => 'empty'];
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data'=> $data
+                ] : ['result' => 'empty']);
     }
 
     public function save_profile()
     {
          // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }
         // ELSE USE NEXT MOCKUP    
 
@@ -1005,8 +1048,7 @@ class WebServiceController
     public function guardar_cirugia(){
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
-            $this->sendResponse($this->result);
-            return;
+            return $this->result;
         }        
         // ELSE USE NEXT MOCKUP
 
@@ -1099,8 +1141,8 @@ class WebServiceController
                         'nuevo_cirugia_hospital' 	=> $nuevo_cirugia_hospital,    
                         'nuevo_cirugia_id' 	=> $nuevo_cirugia_id,    
                         'result' 			=> $resultStatus,  
-                        'result_text' 		=> $resultText,
-                        'sql'               => $query
+                        'result_text' 		=> $resultText
+                        //,'sql'               => $query
 	                 );	
         return ($this->result);	
     }

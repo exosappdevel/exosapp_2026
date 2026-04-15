@@ -59,10 +59,10 @@ export default function ProfileScreen() {
 
   const loadAlmacenes = async () => {
     try {
-      const response = await ApiService.get_almacenes_list(user.id_usuario);
-      if (Array.isArray(response)) {
-        setAlmacenes(response);
-        const currentAlmacen = response.find((a: Almacen) => a.id_almacen === user.id_almacen);
+      const response = await ApiService.get_almacenes_list(user.id_usuario);      
+      if (Array.isArray(response.data)) {
+        setAlmacenes(response.data);
+        const currentAlmacen = response.data.find((a: Almacen) => a.id_almacen === user.id_almacen);
         if (currentAlmacen) {
           setSelectedAlmacen(currentAlmacen);
         }

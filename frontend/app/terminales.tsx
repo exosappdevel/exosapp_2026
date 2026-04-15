@@ -42,8 +42,8 @@ export default function TerminalesScreen() {
   const loadTerminales = async () => {
     try {
       const response = await ApiService.get_terminales_list(user.id_usuario, user.id_almacen);
-      if (Array.isArray(response)) {
-        setTerminales(response);
+      if (Array.isArray(response.data)) {
+        setTerminales(response.data);
       }
     } catch (e) {
       console.log('Error loading terminales:', e);

@@ -33,6 +33,8 @@ interface Theme {
   inputBg: string;
   isDark: boolean;
   accent: string;
+  iconColor: string;
+  iconTextColor: string;
 }
 
 interface AppContextType {
@@ -61,7 +63,9 @@ const themes: Record<ThemeType, Theme> = {
     border: "#e2e8f0",
     inputBg: "#edf2f7",
     isDark: false,
-    accent: "#3182ce"
+    accent: "#3182ce",
+    iconColor: "#3182ce",
+    iconTextColor:"#151515"
   },
   dark: {
     bg: "#121212",
@@ -71,7 +75,9 @@ const themes: Record<ThemeType, Theme> = {
     border: "#3d3d3d",
     inputBg: "rgba(255,255,255,0.1)",
     isDark: true,
-    accent: "#63b3ed"
+    accent: "#63b3ed",
+    iconColor: "#2d2d2d",
+    iconTextColor:"#a0aec0"
   },
   blue: {
     bg: "#e3f2fd",
@@ -81,7 +87,9 @@ const themes: Record<ThemeType, Theme> = {
     border: "#90caf9",
     inputBg: "#bbdefb",
     isDark: false,
-    accent: "#1976d2"
+    accent: "#1976d2",
+    iconColor: "#1976d2",
+    iconTextColor:"#1565c0"
   },
   pink: {
     bg: "#fce4ec",
@@ -91,7 +99,9 @@ const themes: Record<ThemeType, Theme> = {
     border: "#f8bbd9",
     inputBg: "#f8bbd9",
     isDark: false,
-    accent: "#e91e63"
+    accent: "#e91e63",
+    iconColor: "#f06292",
+    iconTextColor:"#b1427a"
   }
 };
 
