@@ -12,7 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
-import { _Header, _Footer } from '@/components/elidev_components';
+import { _Header, _Footer,_Background, hexToRGBA } from '@/components/elidev_components';
 
 interface Terminal {
   id_terminal: string;
@@ -64,12 +64,12 @@ export default function TerminalesScreen() {
 
   const renderTerminal = ({ item }: { item: Terminal }) => (
     <TouchableOpacity
-      style={[styles.terminalItem, { backgroundColor: theme.card, borderColor: theme.border }]}
+      style={[styles.terminalItem, { backgroundColor: hexToRGBA(theme.card,0.5), borderColor: hexToRGBA(theme.border,0.5) }]}
       onPress={() => handleTerminalPress(item)}
       activeOpacity={0.7}
     >
-      <View style={[styles.iconContainer, { backgroundColor: theme.accent + '20' }]}>
-        <MaterialCommunityIcons name="desktop-tower-monitor" size={32} color={theme.accent} />
+      <View style={[styles.iconContainer, { backgroundColor: hexToRGBA(theme.accent,0.2) }]}>
+        <MaterialCommunityIcons name="desktop-tower-monitor" size={32} color={hexToRGBA(theme.accent,1)} />
       </View>
       <View style={styles.terminalInfo}>
         <Text style={[styles.terminalName, { color: theme.text }]}>{item.nombre}</Text>
@@ -81,6 +81,7 @@ export default function TerminalesScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
+       <_Background id_almacen={user?.id_almacen}>
       <_Header page_info={pageConfig} />
 
       {/* Content */}
@@ -103,6 +104,7 @@ export default function TerminalesScreen() {
         />
       )}
       <_Footer />
+      </_Background>
     </SafeAreaView>
   );
 }
@@ -114,14 +116,24 @@ const styles = StyleSheet.create({
   terminalInfo: {
     flex: 1,
     marginLeft: 15,
+    textShadowColor: 'rgba(255, 255, 255, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
   },
   terminalName: {
     fontSize: 16,
     fontWeight: '600',
+    textShadowColor: 'rgba(255, 255, 255, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
   },
   terminalDesc: {
     fontSize: 12,
     marginTop: 2,
+    fontWeight:'800',
+    textShadowColor: 'rgba(255, 255, 255, 0.9)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
   },
   loadingContainer: {
     flex: 1,
@@ -131,6 +143,9 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 15,
     fontSize: 14,
+    textShadowColor: 'rgba(255, 255, 255, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
   },
   emptyContainer: {
     flex: 1,

@@ -7,6 +7,14 @@ import CustomModal from '../components/CustomModal';
 import { Href } from 'expo-router';
 import { iMenuItem } from "@/context/AppmenuItems";
 import ApiService from "../services/ApiServices";
+import { PanResponder, Animated } from 'react-native';
+
+export const hexToRGBA = (hex: string, opacity: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 
 // 1. Definición de la Interfaz (en JS es descriptiva, en TS es funcional)
 // Si usas TypeScript, asegúrate de que el archivo termine en .tsx
@@ -52,7 +60,7 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
         }
     };
     return (
-        <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+        <View style={[styles.header, { backgroundColor: hexToRGBA(theme.card, 0.5), borderBottomColor: hexToRGBA(theme.border, 0.5) }]}>
             {/* Lado Izquierdo: Título de la página o Botón Atrás */}
             <View style={styles.headerLeft}>
                 {page_info.previous ? (
@@ -61,7 +69,11 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
                     </TouchableOpacity>
                 ) : null}
 
-                <MaterialCommunityIcons name={page_info?.icon} size={20} color={theme.accent} style={[{ paddingLeft: 5, paddingRight: 5 }]} />
+                <MaterialCommunityIcons name={page_info?.icon} size={20} color={theme.accent} style={[{
+                    paddingLeft: 5, paddingRight: 5, textShadowColor: 'rgba(255,255,255, 0.2)',
+                    textShadowOffset: { width: 1, height: 1 },
+                    textShadowRadius: 2,
+                }]} />
                 <Text style={[styles.pageTitle, { color: theme.text }]}>{page_info.name}</Text>
             </View>
 
@@ -69,7 +81,11 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
             {page_info.show_user && (
                 <TouchableOpacity onPress={() => setShowUserMenu(true)}>
                     <View style={styles.userInfo}>
-                        <MaterialCommunityIcons name="account-circle" size={20} color={theme.accent} />
+                        <MaterialCommunityIcons name="account-circle" size={20} color={theme.accent} style={{
+                            textShadowColor: 'rgba(255, 255, 255, 0.3)',
+                            textShadowOffset: { width: 1, height: 1 },
+                            textShadowRadius: 2,
+                        }} />
                         <Text style={[styles.userName, { color: theme.text }]} numberOfLines={1}>
                             {user?.alias_usuario || 'Usuario'}
                         </Text>
@@ -129,25 +145,66 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
 };
 
 export const _Footer = () => {
-    const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
     const router = useRouter();
+    const { theme, user } = useApp();
+
+    // Configuración del gesto para el Footer
+    const footerPanResponder = PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+            // Detectar si el movimiento es hacia arriba (dy negativo)
+            return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && gestureState.dy < -20;
+        },
+        onPanResponderRelease: (_, gestureState) => {
+            // Si el deslizamiento hacia arriba supera los 50px, navegamos a home
+            if (gestureState.dy < -50) {
+                router.push('/home' as any);
+            }
+        },
+    });
+
     return (
-        /* Footer */
-        <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-            <TouchableOpacity
-                style={styles.userMenuItem}
+        <View 
+            {...footerPanResponder.panHandlers} 
+            style={[
+                styles.footerContainer, 
+                { 
+                    // Restauramos la transparencia usando el color del tema con opacidad
+                    backgroundColor: hexToRGBA(theme.card, 0.3), 
+                    borderTopColor: hexToRGBA(theme.border, 0.3) 
+                }
+            ]}
+        >
+            <TouchableOpacity 
+                style={styles.footerTab} 
+                activeOpacity={0.7}
                 onPress={() => {
-                    router.push('/profile');
+                    router.push('/home' as any);
                 }}
             >
-                <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
-                <Text style={[styles.footerText, { color: theme.text }]}>
-                    {user.almacen_nombre || user.almacen_codigo || 'Sin almacén'}
-                </Text>
+                {/* Indicador visual de gesto (Barra tipo iPhone) */}                
+                <View style={[
+                    styles.homeIndicator, 
+                    { backgroundColor: theme.text, opacity: 0.3 }
+                ]} />
+                 
+                
+                {/* Contenedor en fila para Icono y Texto */}
+                <View style={styles.footerContentRow}>
+                    <MaterialCommunityIcons 
+                        name="warehouse" 
+                        size={22} 
+                        color={hexToRGBA(theme.text,0.8)} 
+                        style={styles.footerIconShadow}
+                    />
+                    <Text style={[styles.footerText, { color: theme.text }]}>
+                        {user?.almacen_nombre || "Almacén"}
+                    </Text>
+                </View>
             </TouchableOpacity>
         </View>
     );
-}
+};
+
 export const _Footer_custom = ({ children }: { children: any }) => {
     const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
     const router = useRouter();
@@ -210,7 +267,12 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
             activeOpacity={0.7}
         >
             <View style={[styles.iconContainer, { backgroundColor: item.color + '20' }]}>
-                <MaterialCommunityIcons name={item.icon as any} size={40} color={item.color} />
+                <MaterialCommunityIcons name={item.icon as any} size={40} color={item.color}
+                    style={{
+                        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                        textShadowOffset: { width: 1, height: 1 },
+                        textShadowRadius: 2
+                    }} />
             </View>
             <Text style={[styles.menuTitle, { color: theme.text }]}>{t(item.titleKey)}</Text>
         </TouchableOpacity>
@@ -228,41 +290,53 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
     );
 }
 
-export const _MenuSection = ({ title, icon, menuItems, defaultOpen = false, onSoon }: { title: string, icon: any, menuItems: any[], defaultOpen?: boolean, onSoon: () => void }) => {
+interface MenuSectionProps {
+    title: string;
+    icon: any;
+    menuItems: iMenuItem[];
+    isOpen: boolean;        // <-- Cambiamos defaultOpen por isOpen
+    onToggle: () => void;   // <-- Agregamos la función de cambio
+    onSoon: () => void;
+}
+
+// 2. Aplicamos los cambios al componente
+export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon }: MenuSectionProps) => {
     const { theme } = useApp();
-    const [isOpen, setIsOpen] = useState(defaultOpen); // Por defecto empieza abierto    
 
     return (
-        <View style={[styles.iconGroup_Container, { backgroundColor: theme.card + '70' }]}>
-            {/* Encabezado Cliqueable */}
+        <View style={styles.iconGroup_Container}>
             <TouchableOpacity
                 style={styles.groupHeader}
-                onPress={() => setIsOpen(!isOpen)}
-                activeOpacity={0.7}
+                onPress={onToggle} // Ahora llama a la función del padre
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                    <MaterialCommunityIcons
-                        name={icon}
-                        size={26}
-                        color={theme.iconColor}
-                        style={{ marginRight: 10 }}
-                    />                    
-                    <Text style={[styles.iconGroup_Title, { color: theme.iconTextColor }]}>{title}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name={icon} size={22} color={theme.iconTextColor} />
+                    <Text style={[styles.iconGroup_Title, { color: theme.iconTextColor, marginLeft: 10 }]}>{title}</Text>
                 </View>
-
-                {/* Icono indicador de estado */}
                 <MaterialCommunityIcons
                     name={isOpen ? "chevron-up" : "chevron-down"}
                     size={24}
                     color="white"
-                    style={{ opacity: 0.5 }}
+                    style={{
+                        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                        textShadowOffset: { width: 1, height: 1 },
+                        textShadowRadius: 2,
+                    }}
                 />
             </TouchableOpacity>
 
-            {/* Contenido Condicional */}
+            {/* Solo mostramos el contenido si isOpen es true */}
             {isOpen && (
-                <View style={styles.listWrapper}>
-                    <_MenuList menuItems={menuItems} onSoon={onSoon} />
+                <View style={styles.itemsWrapper}>
+                    <View style={styles.listWrapper}>
+                        {menuItems.map((item, index) => (
+                            <_MenuListItem
+                                key={index}
+                                item={item}
+                                onSoon={onSoon}
+                            />
+                        ))}
+                    </View>
                 </View>
             )}
         </View>
@@ -333,7 +407,13 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }
             onPress={handlePress}
         >
             <View style={[styles.listIconContainer, { backgroundColor: theme.iconColor + '80' }]}>
-                <MaterialCommunityIcons name={item.icon as any} size={24} color={theme.iconTextColor } />
+                <MaterialCommunityIcons name={item.icon as any} size={24} color={theme.iconTextColor}
+                    style={{
+                        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                        textShadowOffset: { width: 1, height: 1 },
+                        textShadowRadius: 2,
+                    }}
+                />
             </View>
 
             <View style={styles.listTextContainer}>
@@ -345,12 +425,21 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }
                 {isFavorite ? (
                     // Icono para ELIMINAR (Estrella rellena)
                     <TouchableOpacity onPress={removeFavorite} style={{ padding: 10 }}>
-                        <MaterialCommunityIcons name="star" size={22} color={theme.iconColor} />
+                        <MaterialCommunityIcons name="star" size={22} color={theme.iconColor} style={{
+                            textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                            textShadowOffset: { width: 1, height: 1 },
+                            textShadowRadius: 2,
+                        }} />
                     </TouchableOpacity>
                 ) : (
                     // Icono para AGREGAR (Estrella vacía)
                     <TouchableOpacity onPress={addFavorite} style={{ padding: 10 }}>
-                        <MaterialCommunityIcons name="star-outline" size={22} color={theme.textSub} />
+                        <MaterialCommunityIcons name="star-outline" size={22} color={theme.textSub}
+                            style={{
+                                textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                                textShadowOffset: { width: 1, height: 1 },
+                                textShadowRadius: 2,
+                            }} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -368,6 +457,67 @@ export const _MenuList = ({ menuItems, onSoon }: { menuItems: iMenuItem[], onSoo
         </View>
     );
 };
+
+interface MenuLauncherProps {
+    sections: { title: string; icon: string; id: string }[];
+    activeId: string;
+    onSelect: (id: string) => void;
+}
+
+
+export const _MenuLauncher = ({ sections, activeId, onSelect }: MenuLauncherProps) => {
+    const { theme } = useApp();
+
+    return (
+        <View style={styles.launcherContainer}>
+            {sections.map((section) => {
+                const isActive = activeId === section.id;
+
+                // Generamos los colores dinámicos basados en el tema
+                const baseColor = hexToRGBA(theme.iconColor, 0.1); // 20% de opacidad del color de la carta
+                const activeColor = hexToRGBA(theme.iconColor, 0.5); // 40% de opacidad del color de acento
+                const borderColor = hexToRGBA(theme.border, 0.2); // Borde basado en el color del texto
+                const baseIconColor = hexToRGBA(theme.iconTextColor, 0.5); // 40% de opacidad del color de acento
+                const textColor = hexToRGBA(theme.iconTextColor, 0.7); // Borde basado en el color del texto
+
+                return (
+                    <TouchableOpacity
+                        key={section.id}
+                        style={styles.launcherItem}
+                        onPress={() => onSelect(section.id)}
+                    >
+                        <View style={[
+                            styles.launcherIconBox,
+                            {
+                                backgroundColor: baseColor,
+                                borderColor: borderColor
+                            },
+                            isActive && {
+                                backgroundColor: activeColor,
+                                borderWidth: 2,
+                                borderColor: theme.accent // Borde sólido del color de acento
+
+                            }
+                        ]}>
+                            <MaterialCommunityIcons
+                                name={section.icon as any}
+                                size={32}
+                                // El icono cambia según el tema o puedes dejarlo fijo
+                                color={isActive ? theme.iconTextColor : baseIconColor}
+                            />
+                        </View>
+                        <Text style={[styles.launcherText, { color: textColor }]}>
+                            {section.title}
+                        </Text>
+                    </TouchableOpacity>
+                );
+            })}
+        </View>
+    );
+};
+
+
+
 
 interface checkBoxOptions {
     key_id: string;
@@ -439,7 +589,7 @@ export const _Background = ({ id_almacen, children }: BackgroundProps) => {
             source={backgroundSource}
             style={[styles.backgroundImage, { backgroundColor: theme.bg }]} // Fondo por defecto si falla la carga
             resizeMode="cover" // Importante para que cubra todo el celular verticalmente
-        //blurRadius={Platform.OS === 'ios' ? 8 : 4} // Opcional: Desenfoque si los menúes no son legibles
+        //blurRadius={Platform.OS === 'ios' ? 8 :4} // Opcional: Desenfoque si los menúes no son legibles
         >
             {/* Overlay sutil para mejorar legibilidad (Opcional, depende de tus imágenes) */}
             {/* <View style={[styles.backgroundOverlay, { backgroundColor: theme.bg + '50' }]} pointerEvents="none" /> */}
@@ -454,8 +604,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 15,
-        paddingTop: Platform.OS === 'ios' ? 15 : 15, // Ajustado para Notch de iOS
-        paddingBottom: 5,
+        paddingTop: Platform.OS === 'ios' ? 10 : 5, // Ajustado para Notch de iOS
+        paddingBottom: 3,
         borderBottomWidth: 1,
         elevation: 4,
         shadowColor: '#000',
@@ -475,6 +625,9 @@ const styles = StyleSheet.create({
     pageTitle: {
         fontSize: 12,
         fontWeight: 'bold',
+        textShadowColor: 'rgba(255, 255, 255, 0.3)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
     },
     userInfo: {
         flexDirection: 'row',
@@ -486,6 +639,9 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginHorizontal: 8,
         maxWidth: 120, // Evita que nombres largos rompan el diseño
+        textShadowColor: 'rgba(255, 255, 255, 0.3)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
     },
     modalOverlay: {
         flex: 1,
@@ -553,16 +709,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: Platform.OS === 'ios' ? 5 : 5,
-        borderTopWidth: 1,
-        color: "green",
+        paddingVertical: Platform.OS === 'ios' ? 2 : 2,
+
+
         marginBottom: (Platform.OS === 'ios') ? -28 : (Platform.OS === 'android') ? 3 : 0,
     },
-    footerText: {
-        marginLeft: 10,
-        fontSize: 14,
-        fontWeight: '500',
-    },
+    
     menuGrid: {
         padding: 15,
         flexGrow: 1,
@@ -636,6 +788,9 @@ const styles = StyleSheet.create({
     iconGroup_Title: {
         fontSize: 18,
         fontWeight: 'bold',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)', // Sombra negra con 75% opacidad
+        textShadowOffset: { width: 0, height: 1 }, // Desplazamiento mínimo hacia abajo
+        textShadowRadius: 3, // Difuminado de la sombra
     },
     itemsWrapper: {
         paddingTop: 5,
@@ -666,6 +821,10 @@ const styles = StyleSheet.create({
     listTitle: {
         fontSize: 16,
         fontWeight: '500',
+        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+
     },
     // --- Estilos para el nuevo _Background
     backgroundImage: {
@@ -675,5 +834,95 @@ const styles = StyleSheet.create({
     },
     backgroundOverlay: {
         ...StyleSheet.absoluteFillObject, // Ocupa todo el ImageBackground
+    },
+    // ---- _Menu_launcher
+    launcherContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'flex-start', // Alineado a la izquierda para que parezcan apps
+        paddingHorizontal: '3%',
+        marginTop: 15
+    },
+    launcherItem: {
+        width: '25%', // 4 iconos por fila para que se vea más como iOS
+        alignItems: 'center',
+        marginBottom: 40,
+    },
+    launcherIconBox: {
+        width: 62,
+        height: 62,
+        borderRadius: 15,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 5,
+        ...({
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+        } as any),
+    },
+    launcherText: {
+        fontSize: 14,
+        marginTop: 6,
+        textAlign: 'center',
+        fontWeight: '700',
+        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+    },
+
+    //footer
+    // Dentro de StyleSheet.create en elidev_components.tsx
+
+    footerContainer: {
+        height: 40,
+        borderTopWidth: 1,
+        position: 'absolute', // Para que flote sobre el fondo y se note la transparencia
+        bottom: 0,
+        left: 0,
+        right: 0,
+
+        // --- EFECTO CRISTAL (Glassmorphism) ---
+        ...({
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+        } as any),
+    },
+    footerTab: {
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+        paddingBottom: Platform.OS === 'ios' ? 20 : 5,
+    },
+    homeIndicator: {
+        width: 36,
+        height: 3,
+        borderRadius: 2,
+        marginTop: 3,
+        marginBottom: 1,
+    },
+    footerContentRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 1,
+    },
+    footerText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginLeft: 10,
+        // Sombra para legibilidad sobre transparencias
+        textShadowColor: 'rgba(255, 255, 255, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+    },
+    footerIconShadow: {
+        textShadowColor: 'rgba(255, 255, 255, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
 });

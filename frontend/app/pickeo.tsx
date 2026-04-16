@@ -18,6 +18,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useApp } from "../context/AppContext";
 import ApiService from "../services/ApiServices";
 import { calcularPrioridad } from "../utils/PickeoUtils";
+import { _Background, _Footer, hexToRGBA } from "@/components/elidev_components";
 
 interface Producto {
   id: string;
@@ -37,7 +38,7 @@ export default function PickeoScreen() {
   const params = useLocalSearchParams();
   const { user, theme, t, appConfig } = useApp();
   const inputRef = useRef<TextInput>(null);
-  
+
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,151 +185,157 @@ export default function PickeoScreen() {
     });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
-          {user.almacen_codigo} - {terminal_nombre}
-        </Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => inicializarDatos(true)} style={styles.headerBtn}>
-            <MaterialCommunityIcons name="refresh" size={24} color={theme.accent} />
+    <SafeAreaView style={[styles.container]}>
+      <_Background id_almacen={user?.id_almacen}>
+        <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.5) }]}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setSortBy(sortBy === "prioridad" ? "referencia" : "prioridad")}
-          >
-            <MaterialCommunityIcons
-              name={sortBy === "prioridad" ? "sort-numeric-ascending" : "sort-alphabetical-ascending"}
-              size={24}
-              color={theme.accent}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {loading ? (
-        <ActivityIndicator size="large" color={theme.accent} style={{ flex: 1 }} />
-      ) : (
-        <FlatList
-          data={listaRender}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <View
-              style={[
-                styles.itemRow,
-                { backgroundColor: theme.card, borderColor: theme.border },
-              ]}
-            >
-              <View style={[styles.dot, { backgroundColor: item.color }]} />
-              <View style={styles.itemInfo}>
-                <Text style={[styles.textMain, { color: theme.text }]} numberOfLines={2}>
-                  {item.descripcion}
-                </Text>
-                <Text style={styles.textSub}>{item.referencia}</Text>
-                <Text style={[styles.textStatus, { color: item.color }]}>
-                  {item.cantidad_recolectada} / {item.cantidad_solicitada}
-                </Text>
-              </View>
-              <View style={styles.actionsContainer}>
-                <TouchableOpacity
-                  onPress={() => aplicarPick(item, "1", false)}
-                  style={styles.btnQuick}
-                >
-                  <MaterialCommunityIcons name="flash" size={24} color={item.color} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.btnAction, { backgroundColor: item.color }]}
-                  onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: false })}
-                >
-                  <MaterialCommunityIcons name="plus" size={20} color="white" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.btnAction, { backgroundColor: item.color, marginLeft: 8 }]}
-                  onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: true })}
-                >
-                  <MaterialCommunityIcons name="minus" size={20} color="white" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-        />
-      )}
-
-      <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-        <TouchableOpacity
-          style={[styles.footerBtn, { backgroundColor: "#4a5568" }]}
-          onPress={() => setMostrarCompletos(!mostrarCompletos)}
-        >
-          <Text style={styles.footerBtnText}>
-            {mostrarCompletos ? t('pickeo.hideComplete') : t('pickeo.showAll')}
+          <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
+            {user.almacen_codigo} - {terminal_nombre}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.footerBtn, { backgroundColor: "#48bb78" }]}
-          onPress={handleCheckOut}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <View style={styles.checkoutContent}>
-              <MaterialCommunityIcons name="cart-variant" size={20} color="white" style={{ marginRight: 8 }} />
-              <Text style={styles.footerBtnText}>{t('pickeo.checkout')}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <Modal
-        visible={modalCant.visible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalCant({ ...modalCant, visible: false })}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>
-              {t('pickeo.adjustQuantity')}
-            </Text>
-            <TextInput
-              style={[
-                styles.modalInput,
-                {
-                  backgroundColor: theme.bg,
-                  color: theme.text,
-                  borderColor: theme.border,
-                },
-              ]}
-              ref={inputRef}
-              keyboardType="numeric"
-              value={modalCant.cantidad}
-              onChangeText={(t) => setModalCant({ ...modalCant, cantidad: t })}
-              selectTextOnFocus={true}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity onPress={() => setModalCant({ ...modalCant, visible: false })}>
-                <Text style={{ color: theme.textSub, marginRight: 25 }}>
-                  {t('common.cancel')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.btnConfirm,
-                  { backgroundColor: modalCant.item?.color || theme.accent },
-                ]}
-                onPress={() => aplicarPick(modalCant.item, modalCant.cantidad, modalCant.esResta)}
-              >
-                <Text style={{ color: "white", fontWeight: "bold" }}>
-                  {t('common.accept')}
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={() => inicializarDatos(true)} style={styles.headerBtn}>
+              <MaterialCommunityIcons name="refresh" size={24} color={theme.accent} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setSortBy(sortBy === "prioridad" ? "referencia" : "prioridad")}
+            >
+              <MaterialCommunityIcons
+                name={sortBy === "prioridad" ? "sort-numeric-ascending" : "sort-alphabetical-ascending"}
+                size={24}
+                color={theme.accent}
+              />
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+
+        {loading ? (
+          <ActivityIndicator size="large" color={theme.accent} style={{ flex: 1 }} />
+        ) : (
+          <FlatList
+            data={listaRender}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContent}
+            renderItem={({ item }) => (
+              <View
+                style={[
+                  styles.itemRow,
+                  { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border },
+                ]}
+              >
+                <View style={[styles.dot, { backgroundColor: item.color }]} />
+                <View style={styles.actionsContainer}>
+                  <TouchableOpacity
+                    onPress={() => aplicarPick(item, "1", false)}
+                    style={styles.btnQuick}
+                  >
+                    <MaterialCommunityIcons name="flash" size={24} color={item.color} />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.itemInfo}>
+                  <Text style={[styles.textMain, { color: theme.text }]} numberOfLines={2}>
+                    {item.descripcion}
+                  </Text>
+                  <Text style={styles.textSub}>{item.referencia}</Text>
+                  <Text style={[styles.textStatus, { color: item.color }]}>
+                    {item.cantidad_recolectada} / {item.cantidad_solicitada}
+                  </Text>
+                </View>
+                <View style={styles.actionsContainer}>
+                  <TouchableOpacity
+                    style={[styles.btnAction, { backgroundColor: item.color }]}
+                    onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: false })}
+                  >
+                    <MaterialCommunityIcons name="plus" size={20} color="white" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.btnAction, { backgroundColor: item.color, marginLeft: 8 }]}
+                    onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: true })}
+                  >
+                    <MaterialCommunityIcons name="minus" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        )}
+
+        <View style={[styles.footer, { backgroundColor: hexToRGBA(theme.card, 0.3), borderTopColor: theme.border }]}>
+          
+          <TouchableOpacity
+            style={[styles.footerBtn, { backgroundColor: "#4a5568" }]}
+            onPress={() => setMostrarCompletos(!mostrarCompletos)}
+          >
+            <Text style={styles.footerBtnText}>
+              {mostrarCompletos ? t('pickeo.hideComplete') : t('pickeo.showAll')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.footerBtn, { backgroundColor: "#48bb78" }]}
+            onPress={handleCheckOut}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <View style={styles.checkoutContent}>
+                <MaterialCommunityIcons name="cart-variant" size={20} color="white" style={{ marginRight: 8 }} />
+                <Text style={styles.footerBtnText}>{t('pickeo.checkout')}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+        </View>
+
+        <Modal
+          visible={modalCant.visible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setModalCant({ ...modalCant, visible: false })}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>
+                {t('pickeo.adjustQuantity')}
+              </Text>
+              <TextInput
+                style={[
+                  styles.modalInput,
+                  {
+                    backgroundColor: theme.bg,
+                    color: theme.text,
+                    borderColor: theme.border,
+                  },
+                ]}
+                ref={inputRef}
+                keyboardType="numeric"
+                value={modalCant.cantidad}
+                onChangeText={(t) => setModalCant({ ...modalCant, cantidad: t })}
+                selectTextOnFocus={true}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity onPress={() => setModalCant({ ...modalCant, visible: false })}>
+                  <Text style={{ color: theme.textSub, marginRight: 25 }}>
+                    {t('common.cancel')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.btnConfirm,
+                    { backgroundColor: modalCant.item?.color || theme.accent },
+                  ]}
+                  onPress={() => aplicarPick(modalCant.item, modalCant.cantidad, modalCant.esResta)}
+                >
+                  <Text style={{ color: "white", fontWeight: "bold" }}>
+                    {t('common.accept')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </_Background>
     </SafeAreaView>
   );
 }
@@ -339,16 +346,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+    borderBottomWidth: 0,
   },
-  title: { 
-    fontSize: 16, 
+  title: {
+    fontSize: 16,
     fontWeight: "bold",
     flex: 1,
     textAlign: 'center',
     marginHorizontal: 10,
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   headerActions: {
     flexDirection: 'row',
@@ -370,16 +380,29 @@ const styles = StyleSheet.create({
   },
   dot: { width: 12, height: 12, borderRadius: 6, marginRight: 12 },
   itemInfo: { flex: 1 },
-  textMain: { fontWeight: "bold", fontSize: 14 },
-  textSub: { fontSize: 12, color: "#888", marginTop: 2 },
-  textStatus: { fontSize: 13, fontWeight: "bold", marginTop: 4 },
+  textMain: {
+    fontWeight: "bold", fontSize: 14, textShadowColor: 'rgba(255, 255, 255, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  textSub: {
+    fontSize: 12, color: "#888", marginTop: 2,
+    textShadowColor: 'rgba(255, 255, 255, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  textStatus: {
+    fontSize: 13, fontWeight: "bold", marginTop: 4, textShadowColor: 'rgba(255, 255, 255, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
   actionsContainer: { flexDirection: "row", alignItems: "center" },
   btnAction: { padding: 8, borderRadius: 8 },
   btnQuick: { padding: 8, marginRight: 5 },
-  footer: { 
-    flexDirection: "row", 
-    padding: 10,
-    borderTopWidth: 1,
+  footer: {
+    flexDirection: "row",
+    padding: 5,
+    borderTopWidth: 0,
   },
   footerBtn: {
     flex: 1,
@@ -388,10 +411,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  footerBtnText: { color: "white", fontWeight: "bold", fontSize: 12 },
-  checkoutContent: { 
-    flexDirection: "row", 
-    alignItems: "center" 
+  footerBtnText: {
+    color: "white", fontWeight: "bold", fontSize: 13,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  checkoutContent: {
+    flexDirection: "row",
+    alignItems: "center"
   },
   modalOverlay: {
     flex: 1,
@@ -415,4 +443,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   btnConfirm: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
+
 });

@@ -65,7 +65,7 @@ const themes: Record<ThemeType, Theme> = {
     isDark: false,
     accent: "#3182ce",
     iconColor: "#3182ce",
-    iconTextColor:"#151515"
+    iconTextColor:"#ffffff"
   },
   dark: {
     bg: "#121212",
@@ -76,8 +76,8 @@ const themes: Record<ThemeType, Theme> = {
     inputBg: "rgba(255,255,255,0.1)",
     isDark: true,
     accent: "#63b3ed",
-    iconColor: "#2d2d2d",
-    iconTextColor:"#a0aec0"
+    iconColor: "#000000",
+    iconTextColor:"#fbfbfb"
   },
   blue: {
     bg: "#e3f2fd",
@@ -89,7 +89,7 @@ const themes: Record<ThemeType, Theme> = {
     isDark: false,
     accent: "#1976d2",
     iconColor: "#1976d2",
-    iconTextColor:"#1565c0"
+    iconTextColor:"#154883"
   },
   pink: {
     bg: "#fce4ec",
@@ -100,7 +100,7 @@ const themes: Record<ThemeType, Theme> = {
     inputBg: "#f8bbd9",
     isDark: false,
     accent: "#e91e63",
-    iconColor: "#f06292",
+    iconColor: "#f062915e",
     iconTextColor:"#b1427a"
   }
 };
