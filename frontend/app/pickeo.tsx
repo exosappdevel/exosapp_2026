@@ -18,7 +18,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useApp } from "../context/AppContext";
 import ApiService from "../services/ApiServices";
 import { calcularPrioridad } from "../utils/PickeoUtils";
-import { _Background, _Footer, hexToRGBA } from "@/components/elidev_components";
+import { _Background, _Footer, _Footer_custom, hexToRGBA } from "@/components/elidev_components";
 
 interface Producto {
   id: string;
@@ -221,7 +221,7 @@ export default function PickeoScreen() {
               <View
                 style={[
                   styles.itemRow,
-                  { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border },
+                  { backgroundColor: hexToRGBA(theme.card, 0.85), borderColor: theme.border },
                 ]}
               >
                 <View style={[styles.dot, { backgroundColor: item.color }]} />
@@ -261,8 +261,19 @@ export default function PickeoScreen() {
           />
         )}
 
+        <_Footer Show_Almacen={false}>
+          <TouchableOpacity
+            style={[styles.footerBtn, { backgroundColor: "#4a5568" }]}
+            onPress={() => setMostrarCompletos(!mostrarCompletos)}
+          >
+            <Text style={styles.footerBtnText}>
+              {mostrarCompletos ? t('pickeo.hideComplete') : t('pickeo.showAll')}
+            </Text>
+          </TouchableOpacity>
+        </_Footer>
+        {/*
         <View style={[styles.footer, { backgroundColor: hexToRGBA(theme.card, 0.3), borderTopColor: theme.border }]}>
-          
+
           <TouchableOpacity
             style={[styles.footerBtn, { backgroundColor: "#4a5568" }]}
             onPress={() => setMostrarCompletos(!mostrarCompletos)}
@@ -287,6 +298,7 @@ export default function PickeoScreen() {
           </TouchableOpacity>
 
         </View>
+        */}
 
         <Modal
           visible={modalCant.visible}

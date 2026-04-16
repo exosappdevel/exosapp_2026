@@ -144,73 +144,114 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
     );
 };
 
-export const _Footer = () => {
+// elidev_components.tsx
+
+
+// elidev_components.tsx
+// 1. Falta definir esta interfaz arriba de _Footer
+interface FooterProps {
+    Show_Almacen?: boolean;
+    Main_action?: 'home' | 'back';
+    children?: React.ReactNode;
+}
+
+export const _Footer = ({
+    Show_Almacen = true,
+    Main_action = 'home',
+    children
+}: FooterProps) => { // 2. Agregar los props aquí
     const router = useRouter();
     const { theme, user } = useApp();
 
-    // Configuración del gesto para el Footer
+    // 3. Falta la función de navegación segura para evitar el error de null (dispatchEvent)
+    const handleNavigation = () => {
+        setTimeout(() => {
+            try {
+                if (Main_action === 'back') {
+                    if (router.canGoBack()) {
+                        router.back();
+                    } else {
+                        router.replace('/home' as any);
+                    }
+                } else {
+                    router.replace('/home' as any);
+                }
+            } catch (error) {
+                console.error("Error en navegación:", error);
+            }
+        }, 0);
+    };
+
     const footerPanResponder = PanResponder.create({
         onMoveShouldSetPanResponder: (_, gestureState) => {
-            // Detectar si el movimiento es hacia arriba (dy negativo)
             return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && gestureState.dy < -20;
         },
         onPanResponderRelease: (_, gestureState) => {
-            // Si el deslizamiento hacia arriba supera los 50px, navegamos a home
             if (gestureState.dy < -50) {
-                router.push('/home' as any);
+                handleNavigation();
             }
         },
     });
 
     return (
-        <View 
-            {...footerPanResponder.panHandlers} 
+        <View
+            {...footerPanResponder.panHandlers}
             style={[
-                styles.footerContainer, 
-                { 
-                    // Restauramos la transparencia usando el color del tema con opacidad
-                    backgroundColor: hexToRGBA(theme.card, 0.3), 
-                    borderTopColor: hexToRGBA(theme.border, 0.3) 
+                styles.footerContainer,
+                {
+                    backgroundColor: hexToRGBA(theme.card, 0.3),
+                    borderTopColor: hexToRGBA(theme.border, 0.3),
+                    height:Show_Almacen? styles.footerContainer.height : 60
                 }
             ]}
         >
-            <TouchableOpacity 
-                style={styles.footerTab} 
+            <TouchableOpacity
+                style={styles.footerTab}
                 activeOpacity={0.7}
-                onPress={() => {
-                    router.push('/home' as any);
-                }}
+                onPress={handleNavigation}
             >
-                {/* Indicador visual de gesto (Barra tipo iPhone) */}                
                 <View style={[
-                    styles.homeIndicator, 
+                    styles.homeIndicator,
                     { backgroundColor: theme.text, opacity: 0.3 }
                 ]} />
-                 
-                
-                {/* Contenedor en fila para Icono y Texto */}
-                <View style={styles.footerContentRow}>
-                    <MaterialCommunityIcons 
-                        name="warehouse" 
-                        size={22} 
-                        color={hexToRGBA(theme.text,0.8)} 
-                        style={styles.footerIconShadow}
-                    />
-                    <Text style={[styles.footerText, { color: theme.text }]}>
-                        {user?.almacen_nombre || "Almacén"}
-                    </Text>
-                </View>
+
+                {Show_Almacen ? (
+                    <View style={styles.footerContentRow}>
+                        <MaterialCommunityIcons
+                            name="warehouse"
+                            size={22}
+                            color={hexToRGBA(theme.text, 0.8)}
+                        />
+                        <Text style={[styles.footerText, { color: theme.text }]}>
+                            {user?.almacen_nombre || "Almacén"}
+                        </Text>
+                    </View>
+                ) : (
+                    <View style={[styles.footerContentRow] }>
+                        {children}
+                    </View>
+                )}
             </TouchableOpacity>
         </View>
     );
 };
+
 
 export const _Footer_custom = ({ children }: { children: any }) => {
     const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
     const router = useRouter();
     return (
         /* Footer */
-        <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
+        <View
+            style={[
+                styles.footerContainer,
+                {
+                    // Restauramos la transparencia usando el color del tema con opacidad
+                    backgroundColor: hexToRGBA(theme.card, 0.3),
+                    borderTopColor: hexToRGBA(theme.border, 0.3)
+                }
+            ]}
+        >
             {children}
         </View>
     );
@@ -714,7 +755,7 @@ const styles = StyleSheet.create({
 
         marginBottom: (Platform.OS === 'ios') ? -28 : (Platform.OS === 'android') ? 3 : 0,
     },
-    
+
     menuGrid: {
         padding: 15,
         flexGrow: 1,
@@ -903,7 +944,7 @@ const styles = StyleSheet.create({
         height: 3,
         borderRadius: 2,
         marginTop: 3,
-        marginBottom: 1,
+        marginBottom: 3,
     },
     footerContentRow: {
         flexDirection: 'row',

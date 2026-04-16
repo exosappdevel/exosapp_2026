@@ -64,11 +64,11 @@ export default function TerminalesScreen() {
 
   const renderTerminal = ({ item }: { item: Terminal }) => (
     <TouchableOpacity
-      style={[styles.terminalItem, { backgroundColor: hexToRGBA(theme.card,0.5), borderColor: hexToRGBA(theme.border,0.5) }]}
+      style={[styles.terminalItem, { backgroundColor: hexToRGBA(theme.card,0.7), borderColor: hexToRGBA(theme.border,0.5) }]}
       onPress={() => handleTerminalPress(item)}
       activeOpacity={0.7}
     >
-      <View style={[styles.iconContainer, { backgroundColor: hexToRGBA(theme.accent,0.2) }]}>
+      <View style={[styles.iconContainer, { backgroundColor: hexToRGBA(theme.accent,0.4) }]}>
         <MaterialCommunityIcons name="desktop-tower-monitor" size={32} color={hexToRGBA(theme.accent,1)} />
       </View>
       <View style={styles.terminalInfo}>
