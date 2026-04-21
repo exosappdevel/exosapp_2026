@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Children, Dispatch, SetStateAction, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch, TouchableWithoutFeedback, Keyboard, Pressable, ImageBackground } from "react-native";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -27,7 +27,7 @@ interface iPage {
 }
 
 // 2. Componente Header Reutilizable
-export const _Header = ({ page_info }: { page_info: iPage }) => {
+export const _Header = ({ page_info }: { page_info: iPage}) => {
     const router = useRouter();
     const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -93,6 +93,7 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
                     </View>
                 </TouchableOpacity>
             )}
+
 
             {/* User Menu Modal */}
             <Modal

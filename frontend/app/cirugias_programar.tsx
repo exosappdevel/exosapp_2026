@@ -27,7 +27,7 @@ import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _Footer_custom, _MenuGrid, _checkBox } from '../components/elidev_components';
+import { _Header, _Footer, _Footer_custom, _MenuGrid, _checkBox, _Background, hexToRGBA } from '../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
@@ -674,712 +674,713 @@ export default function ProgramaCirugiaScreen() {
   // 2. CUANDO TERMINA LA CARGA (Contenedor Principal)
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      {/* Header */}
-      <_Header page_info={pageConfig} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10} // Ajusta este número según el alto de tu header
-      >
+      <_Background id_almacen={user?.id_almacen}>
+        {/* Header */}
+        <_Header page_info={pageConfig}  />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 40} // Ajusta este número según el alto de tu header
+        >
 
-        <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
-          {/* Form Card */}
-          <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.formHeader}>
-              <MaterialCommunityIcons name="calendar-plus" size={24} color={theme.accent} />
-              <Text style={[styles.formTitle, { color: theme.text }]}>{t('cirugias.new_title')}</Text>
-            </View>
-
-            {/* SECCIÓN 1: PROGRAMACIÓN */}
-            <AccordionSection
-              title={t('cirugias.lugar_fecha')}
-              isOpen={!!expandedSections['lugar']}
-              onPress={() => toggleSection('lugar', 10)}
-              theme={theme}
-            >
-
-              {/* Fecha */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.fecha')} <Text style={styles.required}>*</Text>
-                </Text>
-
-                {Platform.OS === 'web' ? (
-                  /* --- VISTA PARA WEB --- */
-                  <View style={[
-                    styles.selector,
-                    { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                  ]}>
-                    <input
-                      type="date"
-                      // HTML5 requiere YYYY-MM-DD para el valor interno del input
-                      value={date instanceof Date && !isNaN(date.getTime())
-                        ? date.toISOString().split('T')[0]
-                        : ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val) {
-                          const [year, month, day] = val.split('-').map(Number);
-                          const selectedDate = new Date(year, month - 1, day);
-
-                          // Llamamos a tu función para actualizar el estado 'fecha' (texto) y 'date' (objeto)
-                          onDateChange({ type: 'set' } as any, selectedDate);
-                        }
-                      }}
-                      style={{
-                        flex: 1,
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        color: date ? theme.text : theme.textSub,
-                        fontSize: 16,
-                        fontFamily: 'inherit',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                  </View>
-                ) : (
-                  /* --- VISTA PARA MÓVIL (iOS/Android) --- */
-                  <>
-                    <TouchableOpacity
-                      style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                      onPress={showPicker}
-                    >
-                      <Text style={[styles.selectorText, { color: fecha ? theme.text : theme.textSub }]}>
-                        {fecha || 'DD/MM/YYYY'}
-                      </Text>
-                      <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                    </TouchableOpacity>
-
-                    {showDatePicker && (
-                      <DateTimePicker
-                        value={date}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={onDateChange}
-                        minimumDate={new Date()}
-                      />
-                    )}
-                  </>
-                )}
-
+          <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+            {/* Form Card */}
+            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0.85), borderColor: theme.border }]}>
+              <View style={styles.formHeader}>
+                <MaterialCommunityIcons name="calendar-plus" size={24} color={theme.accent} />
+                <Text style={[styles.formTitle, { color: theme.text }]}>{t('cirugias.new_title')}</Text>
               </View>
 
-              {/* Hora */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.hora')} <Text style={styles.required}>*</Text>
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowHoraPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: hora ? theme.text : theme.textSub }]}>
-                    {hora || 'Seleccione hora...'}
-                  </Text>
-                  <MaterialCommunityIcons name="clock-outline" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
+              {/* SECCIÓN 1: PROGRAMACIÓN */}
+              <AccordionSection
+                title={t('cirugias.lugar_fecha')}
+                isOpen={!!expandedSections['lugar']}
+                onPress={() => toggleSection('lugar', 10)}
+                theme={theme}
+              >
 
-              {/* Estado */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.estado')} <Text style={styles.required}>*</Text>
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowEstadoPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
-                    {estado?.nombre || 'Seleccione estado...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Ciudad */}
-              <_TouchableWithoutFeedback>
+                {/* Fecha */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.ciudad')} <Text style={styles.required}>*</Text>
+                    {t('cirugias.fecha')} <Text style={styles.required}>*</Text>
+                  </Text>
+
+                  {Platform.OS === 'web' ? (
+                    /* --- VISTA PARA WEB --- */
+                    <View style={[
+                      styles.selector,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
+                    ]}>
+                      <input
+                        type="date"
+                        // HTML5 requiere YYYY-MM-DD para el valor interno del input
+                        value={date instanceof Date && !isNaN(date.getTime())
+                          ? date.toISOString().split('T')[0]
+                          : ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            const [year, month, day] = val.split('-').map(Number);
+                            const selectedDate = new Date(year, month - 1, day);
+
+                            // Llamamos a tu función para actualizar el estado 'fecha' (texto) y 'date' (objeto)
+                            onDateChange({ type: 'set' } as any, selectedDate);
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          color: date ? theme.text : theme.textSub,
+                          fontSize: 16,
+                          fontFamily: 'inherit',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                    </View>
+                  ) : (
+                    /* --- VISTA PARA MÓVIL (iOS/Android) --- */
+                    <>
+                      <TouchableOpacity
+                        style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                        onPress={showPicker}
+                      >
+                        <Text style={[styles.selectorText, { color: fecha ? theme.text : theme.textSub }]}>
+                          {fecha || 'DD/MM/YYYY'}
+                        </Text>
+                        <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                      </TouchableOpacity>
+
+                      {showDatePicker && (
+                        <DateTimePicker
+                          value={date}
+                          mode="date"
+                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                          onChange={onDateChange}
+                          minimumDate={new Date()}
+                        />
+                      )}
+                    </>
+                  )}
+
+                </View>
+
+                {/* Hora */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.hora')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowHoraPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: hora ? theme.text : theme.textSub }]}>
+                      {hora || 'Seleccione hora...'}
+                    </Text>
+                    <MaterialCommunityIcons name="clock-outline" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Estado */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.estado')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowEstadoPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                      {estado?.nombre || 'Seleccione estado...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Ciudad */}
+                <_TouchableWithoutFeedback>
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t('cirugias.ciudad')} <Text style={styles.required}>*</Text>
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder="Ej. Guadalajara"
+                      placeholderTextColor={theme.textSub}
+                      value={ciudad}
+                      onChangeText={setCiudad}
+                      autoCapitalize='characters'
+
+                    />
+                  </View>
+                </_TouchableWithoutFeedback>
+              </AccordionSection>
+              <AccordionSection
+                title={t('cirugias.participantes')}
+                isOpen={!!expandedSections['programacion']}
+                onPress={() => toggleSection('programacion', 150)}
+                theme={theme}
+              >
+
+                {/* Agente */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.agente')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowVendedorPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                      {vendedor?.nombre || 'Seleccione vendedor...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+                {/* Tecnico1 */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.tecnico')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowTecnico1Picker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                      {tecnico1?.nombre || 'Seleccione técnico...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+                {/* Tecnico2 */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.tecnico')} 2 <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowTecnico2Picker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                      {tecnico2?.nombre || 'Seleccione técnico...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Subdistribuidor */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.subdistribuidor')} <Text style={styles.required}>*</Text>
+                  </Text>
+
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowSubdistribuidorPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                      {subdistribuidor?.subdistribuidor || 'Seleccione subdistribuidor...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+                {/* Subdistribuidor_txt */}
+                {((subdistribuidor?.no_registrado ?? "0") == "1") && (
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t('cirugias.subdistribuidor')} no registrado
+                      <Text style={styles.required}>*</Text>
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder="Ej. Johnson"
+                      placeholderTextColor={theme.textSub}
+                      value={subdistribuidor_otro}
+                      onChangeText={(text) => setSubdistribuidor_otro(text)}
+                      autoCapitalize='characters'
+                    />
+                  </View>
+                )}
+
+                {/* Hospital */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.hospital')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowHospitalPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                      {hospital?.nombre || 'Seleccione hospital...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Médico */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.medico')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowMedicoPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
+                      {medico?.nombre || 'Seleccione medico...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+              </AccordionSection>
+
+              {/* SECCIÓN 2: PACIENTE */}
+              <AccordionSection
+                title={t('cirugias.info_paciente')}
+                isOpen={!!expandedSections['paciente']}
+                onPress={() => toggleSection('paciente', 220)}
+                theme={theme}
+              >
+
+                {/* Paciente */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.paciente_nombre_title')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder="Ej. Guadalajara"
+                    placeholder={t('cirugias.paciente_nombre')}
                     placeholderTextColor={theme.textSub}
-                    value={ciudad}
-                    onChangeText={setCiudad}
+                    value={paciente?.nombre}
                     autoCapitalize='characters'
+                    onChangeText={(text) => {
+                      setPaciente(prev => {
+                        const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
+                        return { ...dataBase, nombre: text };
+                      });
+                    }}
+                  />
+                </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.paciente_materno_title')}
+                  </Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                    placeholder={t('cirugias.paciente_materno')}
+                    placeholderTextColor={theme.textSub}
+                    autoCapitalize='characters'
+                    value={paciente?.materno}
+                    onChangeText={(text) => {
+                      setPaciente(prev => {
+                        const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
+                        return { ...dataBase, materno: text };
+                      });
+                    }}
+                  />
+                </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.paciente_paterno_title')}
+                  </Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                    placeholder={t('cirugias.paciente_paterno')}
+                    placeholderTextColor={theme.textSub}
+                    autoCapitalize='characters'
+                    value={paciente?.paterno}
+                    onChangeText={(text) => {
+                      setPaciente(prev => {
+                        const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
+                        return { ...dataBase, paterno: text };
+                      });
+                    }}
+                  />
+                </View>
 
+              </AccordionSection>
+
+              {/* SECCIÓN: Registro de Pago */}
+              <AccordionSection
+                title={t('cirugias.regitro_pago_title')}
+                isOpen={!!expandedSections['registro_pago']}
+                onPress={() => toggleSection('registro_pago', 290)}
+                theme={theme}
+              >
+
+                {/* Numero de orden */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.numero_de_orden_title')}
+                  </Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                    placeholder={t('cirugias.numero_de_orden')}
+                    placeholderTextColor={theme.textSub}
+                    value={numero_ordenpago}
+                    onChangeText={setNumero_ordenpago}
+                  />
+                </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.subir_comprobantes')}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 15 }}>
+                  <TouchableOpacity onPress={pickDocument} style={styles.actionButton}>
+                    <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
+                    <Text style={{ color: theme.text }}>Galería</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={takePhoto} style={styles.actionButton}>
+                    <MaterialCommunityIcons name="camera" size={24} color={theme.text} />
+                    <Text style={{ color: theme.text }}>Cámara</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Lista de archivos seleccionados */}
+                {archivos.map((file, index) => (
+                  <View key={"file_" + index} style={styles.fileRow}>
+                    <Text style={{ color: theme.text, flex: 1 }} numberOfLines={1}>
+                      {file.name || file.fileName || `Imagen_${index + 1}.jpg`}
+                    </Text>
+                    <TouchableOpacity onPress={() => setArchivos(archivos.filter((_, i) => i !== index))}>
+                      <MaterialCommunityIcons name="delete" size={20} color="red" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </AccordionSection>
+
+
+              {/* SECCIÓN 3: materiales */}
+
+              <AccordionSection
+                title={t('cirugias.materiales')}
+                isOpen={!!expandedSections['materiales']}
+                onPress={() => toggleSection('materiales', 360)}
+                theme={theme}
+              >
+                {Array.isArray(categorias) &&
+                  categorias.map((item: iCategoria, index: number) => {
+                    if (Array.isArray(item.subcategorias)) {
+                      if (item.subcategorias.length == 0) {
+
+                      } else {
+                        // Calculamos cuántos seleccionados hay para ESTA categoría
+                        const seleccionadosEnEstaCat = Array.isArray(item.subcategorias)
+                          ? item.subcategorias.filter(sub => !!selectedSubcats["cat_" + item.id_set_categoria + "/" + sub.id_set_subcategoria]).length
+                          : 0;
+
+                        return (
+
+                          <AccordionSection
+                            key={"cat_" + item.id_set_categoria}
+                            // Si hay seleccionados, mostramos el número junto al nombre
+                            title={seleccionadosEnEstaCat > 0
+                              ? `${item.nombre} (${seleccionadosEnEstaCat})`
+                              : item.nombre
+                            }
+                            isOpen={!!expandedSubsections["cat_" + item.id_set_categoria]}
+                            onPress={() => toggleSubsection("cat_" + item.id_set_categoria, 360 + (index * 68))}
+                            theme={theme}
+                          >
+                            {Array.isArray(item.subcategorias) &&
+                              item.subcategorias.map((sub: iSubCategoria) => {
+                                const key_id = "cat_" + item.id_set_categoria + "/" + sub.id_set_subcategoria;
+                                const isSelected = !!selectedSubcats[key_id];
+
+                                return (
+                                  <_checkBox
+                                    key={key_id}
+                                    key_id={key_id}
+                                    use_switch={true}
+                                    text={sub.nombre}
+                                    value={isSelected}
+                                    setValue={() => toggleSubcategoria(key_id)}
+                                  />
+                                );
+                              })}
+                          </AccordionSection>
+                        );
+                      }
+                    }
+                  })}
+
+              </AccordionSection>
+
+              {/* EQUIPOS DE PODER */}
+              {(() => {
+                // Declaramos la constante exactamente igual que haces con las categorías
+                const seleccionadosEquipos = equipospoder.filter(
+                  (item) => !!selectedSubcats["ep_" + item.id_ep_categoria]
+                ).length;
+
+                return (
+                  <AccordionSection
+                    title={seleccionadosEquipos > 0 ? (t('cirugias.equipospoder') + ' (' + seleccionadosEquipos + ')') : t('cirugias.equipospoder')}
+                    isOpen={!!expandedSections['equipospoder']}
+                    onPress={() => toggleSection('equipospoder', 430)}
+                    theme={theme}
+                  >
+
+                    {Array.isArray(equipospoder) &&
+                      equipospoder.map((item: iEquipoPoder) => {
+                        const key_id = "ep_" + item.id_ep_categoria;
+                        const isSelected = !!selectedSubcats[key_id];
+
+                        return (
+                          <_checkBox
+                            key={key_id}
+                            key_id={key_id}
+                            use_switch={true}
+                            text={item.nombre}
+                            value={isSelected}
+                            setValue={() => toggleSubcategoria(key_id)}
+                          />
+                        );
+
+                      })
+                    }
+                  </AccordionSection>
+                );
+              })()}
+
+              {/* instrumenal */}
+              {(() => {
+                // Declaramos la constante exactamente igual que haces con las categorías
+                const seleccionadosInst = instrumenales.filter(
+                  (item) => !!selectedSubcats["ins_" + item.id_instru_categoria]
+                ).length;
+
+                return (
+                  <AccordionSection
+                    title={seleccionadosInst > 0 ? (t('cirugias.instrumentales') + ' (' + seleccionadosInst + ')') : t('cirugias.instrumentales')}
+                    isOpen={!!expandedSections['instrumentales']}
+                    onPress={() => toggleSection('instrumentales', 500)}
+                    theme={theme}
+                  >
+                    {Array.isArray(equipospoder) &&
+                      instrumenales.map((item: iInstrumental) => {
+
+                        const key_id = "ins_" + item.id_instru_categoria;
+                        const isSelected = !!selectedSubcats[key_id];
+
+                        return (
+                          <_checkBox
+                            key={key_id}
+                            key_id={key_id}
+                            use_switch={true}
+                            text={item.nombre}
+                            value={isSelected}
+                            setValue={() => toggleSubcategoria(key_id)}
+                          />
+                        );
+                      })
+                    }
+                  </AccordionSection>
+                );
+              })()}
+              {/* CONSUMIBLES */}
+              {(() => {
+                // Declaramos la constante exactamente igual que haces con las categorías
+                const seleccionadosCons = consumibles.filter(
+                  (item) => !!selectedSubcats["cons_" + item.id_consu_categoria]
+                ).length;
+
+                return (
+                  <AccordionSection
+                    title={seleccionadosCons > 0 ? (t('cirugias.consumibles') + ' (' + seleccionadosCons + ')') : t('cirugias.consumibles')}
+                    isOpen={!!expandedSections['consumibles']}
+                    onPress={() => toggleSection('consumibles', 570)}
+                    theme={theme}
+                  >
+                    {Array.isArray(consumibles) &&
+                      consumibles.map((item: iConsumible) => {
+                        const key_id = "cons_" + item.id_consu_categoria;
+                        const isSelected = !!selectedSubcats[key_id];
+                        return (
+                          <_checkBox
+                            key={key_id}
+                            key_id={key_id}
+                            use_switch={true}
+                            text={item.nombre}
+                            value={isSelected}
+                            setValue={() => toggleSubcategoria(key_id)}
+                          />
+                        );
+                      })
+                    }
+
+                  </AccordionSection>
+
+                );
+              })()}
+
+              <View style={{
+                height: 1,
+                backgroundColor: theme.border,
+                marginVertical: 10,
+                opacity: 0.5
+              }} />
+              {/* Campo: Solicitar Material Estéril */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
+                <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias.solicita_material_esteril')}</Text>
+                <Switch
+                  value={solicitarEsteril}
+                  onValueChange={setSolicitarEsteril}
+                  trackColor={{ false: '#767577', true: theme.text }}
+                />
+              </View>
+
+              {/* Notas */}
+              <_TouchableWithoutFeedback>
+                <View pointerEvents="box-none" style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>{t('cirugias.notas_title')}<Text style={styles.required}>*</Text></Text>
+                  <TextInput
+                    style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                    placeholder={t('cirugias.notas')}
+                    placeholderTextColor={theme.textSub}
+                    value={notas}
+                    onChangeText={setNotas}
+                    multiline
+                    autoCapitalize='characters'
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                    onFocus={() => {
+                      // Pequeño delay para esperar a que el teclado empiece a subir
+                      setTimeout(() => {
+                        scrollRef.current?.scrollToEnd({ animated: true });
+                      }, 300);
+                    }}
+                    scrollEnabled={false}
                   />
                 </View>
               </_TouchableWithoutFeedback>
-            </AccordionSection>
-            <AccordionSection
-              title={t('cirugias.participantes')}
-              isOpen={!!expandedSections['programacion']}
-              onPress={() => toggleSection('programacion', 150)}
-              theme={theme}
-            >
-
-              {/* Agente */}
+              <View style={{
+                height: 1,
+                backgroundColor: theme.border,
+                marginVertical: 10,
+                opacity: 0.5
+              }} />
               <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.agente')} <Text style={styles.required}>*</Text>
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowVendedorPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
-                    {vendedor?.nombre || 'Seleccione vendedor...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
+                <Text style={styles.required}>* {t("common.requerido")}</Text>
               </View>
-              {/* Tecnico1 */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.tecnico')} <Text style={styles.required}>*</Text>
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowTecnico1Picker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
-                    {tecnico1?.nombre || 'Seleccione técnico...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-              {/* Tecnico2 */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.tecnico')} 2 <Text style={styles.required}>*</Text>
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowTecnico2Picker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
-                    {tecnico2?.nombre || 'Seleccione técnico...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Subdistribuidor */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.subdistribuidor')} <Text style={styles.required}>*</Text>
-                </Text>
-
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowSubdistribuidorPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
-                    {subdistribuidor?.subdistribuidor || 'Seleccione subdistribuidor...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-              {/* Subdistribuidor_txt */}
-              {((subdistribuidor?.no_registrado ?? "0") == "1") && (
-                <View style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.subdistribuidor')} no registrado
-                    <Text style={styles.required}>*</Text>
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder="Ej. Johnson"
-                    placeholderTextColor={theme.textSub}
-                    value={subdistribuidor_otro}
-                    onChangeText={(text) => setSubdistribuidor_otro(text)}
-                    autoCapitalize='characters'
-                  />
-                </View>
-              )}
-
-              {/* Hospital */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.hospital')} <Text style={styles.required}>*</Text>
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowHospitalPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
-                    {hospital?.nombre || 'Seleccione hospital...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Médico */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.medico')} <Text style={styles.required}>*</Text>
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowMedicoPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: estado ? theme.text : theme.textSub }]}>
-                    {medico?.nombre || 'Seleccione medico...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-            </AccordionSection>
-
-            {/* SECCIÓN 2: PACIENTE */}
-            <AccordionSection
-              title={t('cirugias.info_paciente')}
-              isOpen={!!expandedSections['paciente']}
-              onPress={() => toggleSection('paciente', 220)}
-              theme={theme}
-            >
-
-              {/* Paciente */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.paciente_nombre_title')}
-                </Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                  placeholder={t('cirugias.paciente_nombre')}
-                  placeholderTextColor={theme.textSub}
-                  value={paciente?.nombre}
-                  autoCapitalize='characters'
-                  onChangeText={(text) => {
-                    setPaciente(prev => {
-                      const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
-                      return { ...dataBase, nombre: text };
-                    });
-                  }}
-                />
-              </View>
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.paciente_materno_title')}
-                </Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                  placeholder={t('cirugias.paciente_materno')}
-                  placeholderTextColor={theme.textSub}
-                  autoCapitalize='characters'
-                  value={paciente?.materno}
-                  onChangeText={(text) => {
-                    setPaciente(prev => {
-                      const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
-                      return { ...dataBase, materno: text };
-                    });
-                  }}
-                />
-              </View>
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.paciente_paterno_title')}
-                </Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                  placeholder={t('cirugias.paciente_paterno')}
-                  placeholderTextColor={theme.textSub}
-                  autoCapitalize='characters'
-                  value={paciente?.paterno}
-                  onChangeText={(text) => {
-                    setPaciente(prev => {
-                      const dataBase = prev ?? { nombre: '', paterno: '', materno: '' };
-                      return { ...dataBase, paterno: text };
-                    });
-                  }}
-                />
-              </View>
-
-            </AccordionSection>
-
-            {/* SECCIÓN: Registro de Pago */}
-            <AccordionSection
-              title={t('cirugias.regitro_pago_title')}
-              isOpen={!!expandedSections['registro_pago']}
-              onPress={() => toggleSection('registro_pago', 290)}
-              theme={theme}
-            >
-
-              {/* Numero de orden */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.numero_de_orden_title')}
-                </Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                  placeholder={t('cirugias.numero_de_orden')}
-                  placeholderTextColor={theme.textSub}
-                  value={numero_ordenpago}
-                  onChangeText={setNumero_ordenpago}
-                />
-              </View>
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.subir_comprobantes')}
-                </Text>
-              </View>
-
-              <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 15 }}>
-                <TouchableOpacity onPress={pickDocument} style={styles.actionButton}>
-                  <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
-                  <Text style={{ color: theme.text }}>Galería</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={takePhoto} style={styles.actionButton}>
-                  <MaterialCommunityIcons name="camera" size={24} color={theme.text} />
-                  <Text style={{ color: theme.text }}>Cámara</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Lista de archivos seleccionados */}
-              {archivos.map((file, index) => (
-                <View key={"file_" + index} style={styles.fileRow}>
-                  <Text style={{ color: theme.text, flex: 1 }} numberOfLines={1}>
-                    {file.name || file.fileName || `Imagen_${index + 1}.jpg`}
-                  </Text>
-                  <TouchableOpacity onPress={() => setArchivos(archivos.filter((_, i) => i !== index))}>
-                    <MaterialCommunityIcons name="delete" size={20} color="red" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </AccordionSection>
-
-
-            {/* SECCIÓN 3: materiales */}
-
-            <AccordionSection
-              title={t('cirugias.materiales')}
-              isOpen={!!expandedSections['materiales']}
-              onPress={() => toggleSection('materiales', 360)}
-              theme={theme}
-            >
-              {Array.isArray(categorias) &&
-                categorias.map((item: iCategoria, index: number) => {
-                  if (Array.isArray(item.subcategorias)) {
-                    if (item.subcategorias.length == 0) {
-
-                    } else {
-                      // Calculamos cuántos seleccionados hay para ESTA categoría
-                      const seleccionadosEnEstaCat = Array.isArray(item.subcategorias)
-                        ? item.subcategorias.filter(sub => !!selectedSubcats["cat_" + item.id_set_categoria + "/" + sub.id_set_subcategoria]).length
-                        : 0;
-
-                      return (
-
-                        <AccordionSection
-                          key={"cat_" + item.id_set_categoria}
-                          // Si hay seleccionados, mostramos el número junto al nombre
-                          title={seleccionadosEnEstaCat > 0
-                            ? `${item.nombre} (${seleccionadosEnEstaCat})`
-                            : item.nombre
-                          }
-                          isOpen={!!expandedSubsections["cat_" + item.id_set_categoria]}
-                          onPress={() => toggleSubsection("cat_" + item.id_set_categoria, 360 + (index * 68))}
-                          theme={theme}
-                        >
-                          {Array.isArray(item.subcategorias) &&
-                            item.subcategorias.map((sub: iSubCategoria) => {
-                              const key_id = "cat_" + item.id_set_categoria + "/" + sub.id_set_subcategoria;
-                              const isSelected = !!selectedSubcats[key_id];
-
-                              return (
-                                <_checkBox
-                                  key={key_id}
-                                  key_id={key_id}
-                                  use_switch={true}
-                                  text={sub.nombre}
-                                  value={isSelected}
-                                  setValue={() => toggleSubcategoria(key_id)}
-                                />
-                              );
-                            })}
-                        </AccordionSection>
-                      );
-                    }
-                  }
-                })}
-
-            </AccordionSection>
-
-            {/* EQUIPOS DE PODER */}
-            {(() => {
-              // Declaramos la constante exactamente igual que haces con las categorías
-              const seleccionadosEquipos = equipospoder.filter(
-                (item) => !!selectedSubcats["ep_" + item.id_ep_categoria]
-              ).length;
-
-              return (
-                <AccordionSection
-                  title={seleccionadosEquipos > 0 ? (t('cirugias.equipospoder') + ' (' + seleccionadosEquipos + ')') : t('cirugias.equipospoder')}
-                  isOpen={!!expandedSections['equipospoder']}
-                  onPress={() => toggleSection('equipospoder', 430)}
-                  theme={theme}
-                >
-
-                  {Array.isArray(equipospoder) &&
-                    equipospoder.map((item: iEquipoPoder) => {
-                      const key_id = "ep_" + item.id_ep_categoria;
-                      const isSelected = !!selectedSubcats[key_id];
-
-                      return (
-                        <_checkBox
-                          key={key_id}
-                          key_id={key_id}
-                          use_switch={true}
-                          text={item.nombre}
-                          value={isSelected}
-                          setValue={() => toggleSubcategoria(key_id)}
-                        />
-                      );
-
-                    })
-                  }
-                </AccordionSection>
-              );
-            })()}
-
-            {/* instrumenal */}
-            {(() => {
-              // Declaramos la constante exactamente igual que haces con las categorías
-              const seleccionadosInst = instrumenales.filter(
-                (item) => !!selectedSubcats["ins_" + item.id_instru_categoria]
-              ).length;
-
-              return (
-                <AccordionSection
-                  title={seleccionadosInst > 0 ? (t('cirugias.instrumentales') + ' (' + seleccionadosInst + ')') : t('cirugias.instrumentales')}
-                  isOpen={!!expandedSections['instrumentales']}
-                  onPress={() => toggleSection('instrumentales', 500)}
-                  theme={theme}
-                >
-                  {Array.isArray(equipospoder) &&
-                    instrumenales.map((item: iInstrumental) => {
-
-                      const key_id = "ins_" + item.id_instru_categoria;
-                      const isSelected = !!selectedSubcats[key_id];
-
-                      return (
-                        <_checkBox
-                          key={key_id}
-                          key_id={key_id}
-                          use_switch={true}
-                          text={item.nombre}
-                          value={isSelected}
-                          setValue={() => toggleSubcategoria(key_id)}
-                        />
-                      );
-                    })
-                  }
-                </AccordionSection>
-              );
-            })()}
-            {/* CONSUMIBLES */}
-            {(() => {
-              // Declaramos la constante exactamente igual que haces con las categorías
-              const seleccionadosCons = consumibles.filter(
-                (item) => !!selectedSubcats["cons_" + item.id_consu_categoria]
-              ).length;
-
-              return (
-                <AccordionSection
-                  title={seleccionadosCons > 0 ? (t('cirugias.consumibles') + ' (' + seleccionadosCons + ')') : t('cirugias.consumibles')}
-                  isOpen={!!expandedSections['consumibles']}
-                  onPress={() => toggleSection('consumibles', 570)}
-                  theme={theme}
-                >
-                  {Array.isArray(consumibles) &&
-                    consumibles.map((item: iConsumible) => {
-                      const key_id = "cons_" + item.id_consu_categoria;
-                      const isSelected = !!selectedSubcats[key_id];
-                      return (
-                        <_checkBox
-                          key={key_id}
-                          key_id={key_id}
-                          use_switch={true}
-                          text={item.nombre}
-                          value={isSelected}
-                          setValue={() => toggleSubcategoria(key_id)}
-                        />
-                      );
-                    })
-                  }
-
-                </AccordionSection>
-
-              );
-            })()}
-
-            <View style={{
-              height: 1,
-              backgroundColor: theme.border,
-              marginVertical: 10,
-              opacity: 0.5
-            }} />
-            {/* Campo: Solicitar Material Estéril */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
-              <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias.solicita_material_esteril')}</Text>
-              <Switch
-                value={solicitarEsteril}
-                onValueChange={setSolicitarEsteril}
-                trackColor={{ false: '#767577', true: theme.text }}
-              />
             </View>
+          </ScrollView>
 
-            {/* Notas */}
-            <_TouchableWithoutFeedback>
-              <View pointerEvents="box-none" style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>{t('cirugias.notas_title')}<Text style={styles.required}>*</Text></Text>
-                <TextInput
-                  style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                  placeholder={t('cirugias.notas')}
-                  placeholderTextColor={theme.textSub}
-                  value={notas}
-                  onChangeText={setNotas}
-                  multiline
-                  autoCapitalize='characters'
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                  onFocus={() => {
-                    // Pequeño delay para esperar a que el teclado empiece a subir
-                    setTimeout(() => {
-                      scrollRef.current?.scrollToEnd({ animated: true });
-                    }, 300);
-                  }}
-                  scrollEnabled={false}
-                />
-              </View>
-            </_TouchableWithoutFeedback>
-            <View style={{
-              height: 1,
-              backgroundColor: theme.border,
-              marginVertical: 10,
-              opacity: 0.5
-            }} />
-            <View style={styles.fieldContainer}>
-              <Text style={styles.required}>* {t("common.requerido")}</Text>
-            </View>
-          </View>
-        </ScrollView>
+        </KeyboardAvoidingView>
+        <_Footer Show_Almacen={false}>
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[styles.submitButton, { backgroundColor: theme.accent }]}
+            onPress={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="calendar-check" size={24} color="#fff" />
+                <Text style={styles.submitButtonText}>PROGRAMAR CIRUGÍA</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </_Footer>
 
-      </KeyboardAvoidingView>
-      <_Footer_custom>
-        {/* Submit Button */}
-        <TouchableOpacity
-          style={[styles.submitButton, { backgroundColor: theme.accent }]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <MaterialCommunityIcons name="calendar-check" size={24} color="#fff" />
-              <Text style={styles.submitButtonText}>PROGRAMAR CIRUGÍA</Text>
-            </>
+
+
+
+        {/* Picker Modals */}
+        {renderPickerModal(
+          showHoraPicker,
+          () => setShowHoraPicker(false),
+          horasData,
+          "",
+          (item: string) => setHora(item),
+          'Seleccionar Hora'
+        )}
+
+        {
+          renderPickerModal(
+            showEstadoPicker,
+            () => setShowEstadoPicker(false),
+            estados,
+            "id_estado",
+            (item: iEstado) => setEstado(item),
+            'Seleccionar Estado'
           )}
-        </TouchableOpacity>
-      </_Footer_custom>
+        {
+          renderPickerModal(
+            showVendedorPicker,
+            () => setShowVendedorPicker(false),
+            vendedores,
+            "id_vendedor",
+            (item: iVendedor) => setVendedor(item),
+            'Seleccionar Vendedor'
+          )}
+        {
+          renderPickerModal(
+            showTecnico1Picker,
+            () => setShowTecnico1Picker(false),
+            tecnicos,
+            "id_tecnico",
+            (item: iTecnico) => setTecnico1(item),
+            'Seleccionar Técnico'
+          )}
+        {
+          renderPickerModal(
+            showTecnico2Picker,
+            () => setShowTecnico2Picker(false),
+            tecnicos,
+            "id_tecnico",
+            (item: iTecnico) => setTecnico2(item),
+            'Seleccionar Técnico'
+          )}
+        {
+          renderPickerModal(
+            showSubdistribuidorPicker,
+            () => setShowSubdistribuidorPicker(false),
+            subdistribuidores,
+            "id_subdistribuidor",
+            (item: iSubdistribuidor) => setSubdistribuidor(item),
+            'Seleccionar Subdistribuidor'
+          )}
+
+        {
+          renderPickerModal(
+            showHospitalPicker,
+            () => setShowHospitalPicker(false),
+            hospitales,
+            "id_hospital",
+            (item: iHospital) => setHospital(item),
+            'Seleccionar hospital'
+          )}
+        {
+          renderPickerModal(
+            showMedicoPicker,
+            () => setShowMedicoPicker(false),
+            medicos,
+            "id_medico",
+            (item: iMedico) => setMedico(item),
+            'Seleccionar Medico'
+          )}
 
 
 
 
-      {/* Picker Modals */}
-      {renderPickerModal(
-        showHoraPicker,
-        () => setShowHoraPicker(false),
-        horasData,
-        "",
-        (item: string) => setHora(item),
-        'Seleccionar Hora'
-      )}
-
-      {
-        renderPickerModal(
-          showEstadoPicker,
-          () => setShowEstadoPicker(false),
-          estados,
-          "id_estado",
-          (item: iEstado) => setEstado(item),
-          'Seleccionar Estado'
-        )}
-      {
-        renderPickerModal(
-          showVendedorPicker,
-          () => setShowVendedorPicker(false),
-          vendedores,
-          "id_vendedor",
-          (item: iVendedor) => setVendedor(item),
-          'Seleccionar Vendedor'
-        )}
-      {
-        renderPickerModal(
-          showTecnico1Picker,
-          () => setShowTecnico1Picker(false),
-          tecnicos,
-          "id_tecnico",
-          (item: iTecnico) => setTecnico1(item),
-          'Seleccionar Técnico'
-        )}
-      {
-        renderPickerModal(
-          showTecnico2Picker,
-          () => setShowTecnico2Picker(false),
-          tecnicos,
-          "id_tecnico",
-          (item: iTecnico) => setTecnico2(item),
-          'Seleccionar Técnico'
-        )}
-      {
-        renderPickerModal(
-          showSubdistribuidorPicker,
-          () => setShowSubdistribuidorPicker(false),
-          subdistribuidores,
-          "id_subdistribuidor",
-          (item: iSubdistribuidor) => setSubdistribuidor(item),
-          'Seleccionar Subdistribuidor'
-        )}
-
-      {
-        renderPickerModal(
-          showHospitalPicker,
-          () => setShowHospitalPicker(false),
-          hospitales,
-          "id_hospital",
-          (item: iHospital) => setHospital(item),
-          'Seleccionar hospital'
-        )}
-      {
-        renderPickerModal(
-          showMedicoPicker,
-          () => setShowMedicoPicker(false),
-          medicos,
-          "id_medico",
-          (item: iMedico) => setMedico(item),
-          'Seleccionar Medico'
-        )}
-
-
-
-
-      <CustomModal
-        visible={modal.visible}
-        titulo={modal.titulo}
-        mensaje={modal.mensaje}
-        icon={modal.icon}
-        colorIcon={modal.colorIcon}
-        onClose={() => setModal({ ...modal, visible: false })}
-      />
-
+        <CustomModal
+          visible={modal.visible}
+          titulo={modal.titulo}
+          mensaje={modal.mensaje}
+          icon={modal.icon}
+          colorIcon={modal.colorIcon}
+          onClose={() => setModal({ ...modal, visible: false })}
+        />
+      </_Background>
     </SafeAreaView>
   );
 }
@@ -1406,9 +1407,9 @@ const styles = StyleSheet.create({
   },
   formCard: {
     borderRadius: 16,
-    padding: 20,
+    padding: 5,
     borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: 60,
   },
   formHeader: {
     flexDirection: 'row',
@@ -1469,14 +1470,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 5,
     borderRadius: 12,
-    marginTop: 10,
+    marginTop: 5,
     paddingHorizontal: 10
   },
   submitButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: 'bold',
     marginLeft: 10,
   },
@@ -1484,7 +1485,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 15,
+    paddingVertical: 1,
     borderTopWidth: 1,
   },
   footerText: {
