@@ -353,7 +353,9 @@ export default function PickeoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1,
+    marginBottom: Platform.OS === 'ios' ? -15 : -10
+   },
   header: {
     flexDirection: "row",
     alignItems: "center",

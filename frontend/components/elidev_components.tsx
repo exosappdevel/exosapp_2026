@@ -200,7 +200,7 @@ export const _Footer = ({
             style={[
                 styles.footerContainer,
                 {
-                    backgroundColor: hexToRGBA(theme.card, 0.3),
+                    backgroundColor: hexToRGBA(theme.card, 0.6),
                     borderTopColor: hexToRGBA(theme.border, 0.3),
                     height:Show_Almacen? styles.footerContainer.height : 60
                 }
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: Platform.OS === 'ios' ? 2 : 2,
+        paddingVertical: Platform.OS === 'ios' ? 2: 2,
 
 
         marginBottom: (Platform.OS === 'ios') ? -28 : (Platform.OS === 'android') ? 3 : 0,
@@ -927,6 +927,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
+        //marginBottom: (Platform.OS === 'ios') ? 0 : (Platform.OS === 'android') ? 3 : 0,
 
         // --- EFECTO CRISTAL (Glassmorphism) ---
         ...({
@@ -938,7 +939,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '100%',
         height: '100%',
-        paddingBottom: Platform.OS === 'ios' ? 20 : 5,
+        paddingBottom: Platform.OS === 'ios' ? 10 : 5,
     },
     homeIndicator: {
         width: 36,

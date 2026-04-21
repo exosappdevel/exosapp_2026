@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  ScrollView
+  ScrollView, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -148,6 +148,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginBottom: Platform.OS === 'ios' ? -15 : -10
   },
   fixedLauncherContainer: {
     paddingBottom: 10,

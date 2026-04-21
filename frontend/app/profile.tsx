@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
-import { _Footer_custom } from '@/components/elidev_components';
+import { _Footer, _Background, hexToRGBA } from '@/components/elidev_components';
 
 const CODE_ZIP_URL = 'https://exos-credential-qr.preview.emergentagent.com/assets/code.zip';
 
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
 
   const loadAlmacenes = async () => {
     try {
-      const response = await ApiService.get_almacenes_list(user.id_usuario);      
+      const response = await ApiService.get_almacenes_list(user.id_usuario);
       if (Array.isArray(response.data)) {
         setAlmacenes(response.data);
         const currentAlmacen = response.data.find((a: Almacen) => a.id_almacen === user.id_almacen);
@@ -76,7 +76,7 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     setSaving(true);
-    try {      
+    try {
       const updatedUser = {
         ...user,
         tema: selectedTheme as 'light' | 'dark' | 'blue' | 'pink',
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
         almacen_codigo: selectedAlmacen?.codigo || user.almacen_codigo,
       };
 
-      const response = await ApiService.save_profile(updatedUser.id_usuario_app, updatedUser.tema, sel_language, menuFav_str() );
+      const response = await ApiService.save_profile(updatedUser.id_usuario_app, updatedUser.tema, sel_language, menuFav_str());
 
       if (response.result === 'ok') {
         setLanguage(sel_language);
@@ -109,112 +109,115 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.perfil')}</Text>
-        <View style={{ width: 28 }} />
-      </View>
+      <_Background id_almacen={user?.id_almacen}>
 
-      <ScrollView style={styles.content}>
-        {/* User Info */}
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.user')}</Text>
-          <View style={styles.userInfo}>
-            <MaterialCommunityIcons name="account-circle" size={30} color={theme.accent} />
-            <Text style={[styles.userName, { color: theme.text }]}>{user.alias_usuario}</Text>
+
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: hexToRGBA(theme.card, 0.8), borderBottomColor: theme.border }]}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.perfil')}</Text>
+          <View style={{ width: 28 }} />
+        </View>
+
+        <ScrollView style={styles.content}>
+          {/* User Info */}
+          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+            <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.user')}</Text>
+            <View style={styles.userInfo}>
+              <MaterialCommunityIcons name="account-circle" size={30} color={theme.accent} />
+              <Text style={[styles.userName, { color: theme.text }]}>{user.alias_usuario}</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Almacen Selection */}
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.warehouse')}</Text>
-          {loading ? (
-            <ActivityIndicator color={theme.accent} />
-          ) : (
-            <TouchableOpacity
-              style={[styles.almacenSelector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-              onPress={() => setShowAlmacenPicker(true)}
-            >
-              <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
-              <Text style={[styles.almacenText, { color: theme.text }]} numberOfLines={1}>
-                {selectedAlmacen?.nombre || user.almacen_nombre || 'Seleccionar almacén'}
-              </Text>
-              <MaterialCommunityIcons name="chevron-down" size={24} color={theme.textSub} />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Theme Selection */}
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.theme')}</Text>
-          <View style={styles.themeGrid}>
-            {themeOptions.map((themeOpt) => (
+          {/* Almacen Selection */}
+          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+            <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.warehouse')}</Text>
+            {loading ? (
+              <ActivityIndicator color={theme.accent} />
+            ) : (
               <TouchableOpacity
-                key={themeOpt.id}
-                style={[
-                  styles.themeOption,
-                  { backgroundColor: themeOpt.color, borderColor: themeOpt.borderColor },
-                  selectedTheme === themeOpt.id && styles.themeSelected
-                ]}
-                onPress={() => setSelectedTheme(themeOpt.id as any)}
+                style={[styles.almacenSelector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                onPress={() => setShowAlmacenPicker(true)}
               >
-                {selectedTheme === themeOpt.id && (
-                  <MaterialCommunityIcons name="check" size={24} color={themeOpt.id === 'dark' ? '#fff' : '#333'} />
-                )}
-                <Text style={[
-                  styles.themeLabel,
-                  { color: themeOpt.id === 'dark' ? '#fff' : '#333' }
-                ]}>
-                  {t(`profile.themes.${themeOpt.id}`)}
+                <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
+                <Text style={[styles.almacenText, { color: theme.text }]} numberOfLines={1}>
+                  {selectedAlmacen?.nombre || user.almacen_nombre || 'Seleccionar almacén'}
+                </Text>
+                <MaterialCommunityIcons name="chevron-down" size={24} color={theme.textSub} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Theme Selection */}
+          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+            <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.theme')}</Text>
+            <View style={styles.themeGrid}>
+              {themeOptions.map((themeOpt) => (
+                <TouchableOpacity
+                  key={themeOpt.id}
+                  style={[
+                    styles.themeOption,
+                    { backgroundColor: themeOpt.color, borderColor: themeOpt.borderColor },
+                    selectedTheme === themeOpt.id && styles.themeSelected
+                  ]}
+                  onPress={() => setSelectedTheme(themeOpt.id as any)}
+                >
+                  {selectedTheme === themeOpt.id && (
+                    <MaterialCommunityIcons name="check" size={24} color={themeOpt.id === 'dark' ? '#fff' : '#333'} />
+                  )}
+                  <Text style={[
+                    styles.themeLabel,
+                    { color: themeOpt.id === 'dark' ? '#fff' : '#333' }
+                  ]}>
+                    {t(`profile.themes.${themeOpt.id}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Language Selection */}
+          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+            <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.language')}</Text>
+            <View style={styles.languageRow}>
+              <TouchableOpacity
+                style={[
+                  styles.languageOption,
+                  { borderColor: sel_language === 'es' ? theme.accent : theme.border },
+                  sel_language === 'es' && { backgroundColor: theme.accent + '20' }
+                ]}
+                onPress={() => setSel_language('es')}
+              >
+                <Text style={[styles.languageText, { color: sel_language === 'es' ? theme.accent : theme.text }]}>
+                  {t("languages.es")}
                 </Text>
               </TouchableOpacity>
-            ))}
+              <TouchableOpacity
+                style={[
+                  styles.languageOption,
+                  { borderColor: sel_language === 'en' ? theme.accent : theme.border },
+                  sel_language === 'en' && { backgroundColor: theme.accent + '20' }
+                ]}
+                onPress={() => setSel_language('en')}
+              >
+                <Text style={[styles.languageText, { color: language === 'en' ? theme.accent : theme.text }]}>
+                  {t("languages.en")}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-
-        {/* Language Selection */}
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.language')}</Text>
-          <View style={styles.languageRow}>
-            <TouchableOpacity
-              style={[
-                styles.languageOption,
-                { borderColor: sel_language === 'es' ? theme.accent : theme.border },
-                sel_language === 'es' && { backgroundColor: theme.accent + '20' }
-              ]}
-              onPress={() => setSel_language('es')}
-            >
-              <Text style={[styles.languageText, { color: sel_language === 'es' ? theme.accent : theme.text }]}>
-                {t("languages.es")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.languageOption,
-                { borderColor: sel_language === 'en' ? theme.accent : theme.border },
-                sel_language === 'en' && { backgroundColor: theme.accent + '20' }
-              ]}
-              onPress={() => setSel_language('en')}
-            >
-              <Text style={[styles.languageText, { color: language === 'en' ? theme.accent : theme.text }]}>
-                {t("languages.en")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
 
 
-        {/* Save Button */}
+          {/* Save Button */}
 
 
-        
 
-      </ScrollView>
-      <_Footer_custom>
+
+        </ScrollView>
+        <_Footer Show_Almacen={false}>
           <TouchableOpacity
             style={[styles.saveButton, { backgroundColor: theme.accent }]}
             onPress={handleSave}
@@ -226,49 +229,50 @@ export default function ProfileScreen() {
               <Text style={styles.saveButtonText}>{t('common.save')}</Text>
             )}
           </TouchableOpacity>
-        </_Footer_custom>
+        </_Footer>
 
-      {/* Almacen Picker Modal */}
-      {showAlmacenPicker && (
-        <View style={styles.pickerOverlay}>
-          <View style={[styles.pickerContainer, { backgroundColor: theme.card }]}>
-            <View style={styles.pickerHeader}>
-              <Text style={[styles.pickerTitle, { color: theme.text }]}>{t('profile.warehouse')}</Text>
-              <TouchableOpacity onPress={() => setShowAlmacenPicker(false)}>
-                <MaterialCommunityIcons name="close" size={24} color={theme.text} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.pickerList}>
-              {almacenes.map((almacen) => (
-                <TouchableOpacity
-                  key={almacen.id_almacen}
-                  style={[
-                    styles.pickerItem,
-                    { borderBottomColor: theme.border },
-                    selectedAlmacen?.id_almacen === almacen.id_almacen && { backgroundColor: theme.accent + '20' }
-                  ]}
-                  onPress={() => {
-                    setSelectedAlmacen(almacen);
-                    setShowAlmacenPicker(false);
-                  }}
-                >
-                  <Text style={[styles.pickerItemText, { color: theme.text }]}>{almacen.nombre}</Text>
-                  <Text style={[styles.pickerItemCode, { color: theme.textSub }]}>{almacen.codigo}</Text>
+        {/* Almacen Picker Modal */}
+        {showAlmacenPicker && (
+          <View style={styles.pickerOverlay}>
+            <View style={[styles.pickerContainer, { backgroundColor: theme.card }]}>
+              <View style={styles.pickerHeader}>
+                <Text style={[styles.pickerTitle, { color: theme.text }]}>{t('profile.warehouse')}</Text>
+                <TouchableOpacity onPress={() => setShowAlmacenPicker(false)}>
+                  <MaterialCommunityIcons name="close" size={24} color={theme.text} />
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
+              </View>
+              <ScrollView style={styles.pickerList}>
+                {almacenes.map((almacen) => (
+                  <TouchableOpacity
+                    key={almacen.id_almacen}
+                    style={[
+                      styles.pickerItem,
+                      { borderBottomColor: theme.border },
+                      selectedAlmacen?.id_almacen === almacen.id_almacen && { backgroundColor: theme.accent + '20' }
+                    ]}
+                    onPress={() => {
+                      setSelectedAlmacen(almacen);
+                      setShowAlmacenPicker(false);
+                    }}
+                  >
+                    <Text style={[styles.pickerItemText, { color: theme.text }]}>{almacen.nombre}</Text>
+                    <Text style={[styles.pickerItemCode, { color: theme.textSub }]}>{almacen.codigo}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
           </View>
-        </View>
-      )}
+        )}
 
-      <CustomModal
-        visible={modal.visible}
-        titulo={modal.titulo}
-        mensaje={modal.mensaje}
-        icon={modal.icon}
-        colorIcon={modal.colorIcon}
-        onClose={() => setModal({ ...modal, visible: false })}
-      />
+        <CustomModal
+          visible={modal.visible}
+          titulo={modal.titulo}
+          mensaje={modal.mensaje}
+          icon={modal.icon}
+          colorIcon={modal.colorIcon}
+          onClose={() => setModal({ ...modal, visible: false })}
+        />
+      </_Background>
     </SafeAreaView>
   );
 }
@@ -366,17 +370,18 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: 10,
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 15,
+    marginTop: 5,
+    marginBottom: 1,
   },
   saveButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    paddingVertical: 1,
-    paddingHorizontal: 20
+    color: "white", fontWeight: "bold", fontSize: 13,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    paddingHorizontal:15,
+    paddingVertical:1
   },
   codeButton: {
     flexDirection: 'row',

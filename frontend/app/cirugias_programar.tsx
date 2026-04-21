@@ -1388,6 +1388,7 @@ export default function ProgramaCirugiaScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginBottom: Platform.OS === 'ios' ? -15 : -10
   },
   header: {
     flexDirection: 'row',
