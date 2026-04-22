@@ -9,7 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-  Platform,
+  Platform,ScrollView
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -187,6 +187,7 @@ export default function PickeoScreen() {
   return (
     <SafeAreaView style={[styles.container]}>
       <_Background id_almacen={user?.id_almacen}>
+        
         <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.5) }]}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
@@ -208,7 +209,9 @@ export default function PickeoScreen() {
               />
             </TouchableOpacity>
           </View>
+          
         </View>
+        
 
         {loading ? (
           <ActivityIndicator size="large" color={theme.accent} style={{ flex: 1 }} />
@@ -261,44 +264,8 @@ export default function PickeoScreen() {
           />
         )}
 
-        <_Footer Show_Almacen={false}>
-          <TouchableOpacity
-            style={[styles.footerBtn, { backgroundColor: "#4a5568" }]}
-            onPress={() => setMostrarCompletos(!mostrarCompletos)}
-          >
-            <Text style={styles.footerBtnText}>
-              {mostrarCompletos ? t('pickeo.hideComplete') : t('pickeo.showAll')}
-            </Text>
-          </TouchableOpacity>
-        </_Footer>
-        {/*
-        <View style={[styles.footer, { backgroundColor: hexToRGBA(theme.card, 0.3), borderTopColor: theme.border }]}>
-
-          <TouchableOpacity
-            style={[styles.footerBtn, { backgroundColor: "#4a5568" }]}
-            onPress={() => setMostrarCompletos(!mostrarCompletos)}
-          >
-            <Text style={styles.footerBtnText}>
-              {mostrarCompletos ? t('pickeo.hideComplete') : t('pickeo.showAll')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.footerBtn, { backgroundColor: "#48bb78" }]}
-            onPress={handleCheckOut}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <View style={styles.checkoutContent}>
-                <MaterialCommunityIcons name="cart-variant" size={20} color="white" style={{ marginRight: 8 }} />
-                <Text style={styles.footerBtnText}>{t('pickeo.checkout')}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-        </View>
-        */}
+        
+        
 
         <Modal
           visible={modalCant.visible}
@@ -347,6 +314,32 @@ export default function PickeoScreen() {
             </View>
           </View>
         </Modal>
+        <_Footer Show_Almacen={false}>
+          <TouchableOpacity
+            style={[styles.footerBtn, { backgroundColor: "#4a5568" }]}
+            onPress={() => setMostrarCompletos(!mostrarCompletos)}
+          >
+            <Text style={styles.footerBtnText}>
+              {mostrarCompletos ? t('pickeo.hideComplete') : t('pickeo.showAll')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.footerBtn, { backgroundColor: "#48bb78" }]}
+            onPress={handleCheckOut}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <View style={styles.checkoutContent}>
+                <MaterialCommunityIcons name="cart-variant" size={20} color="white" style={{ marginRight: 8 }} />
+                <Text style={styles.footerBtnText}>{t('pickeo.checkout')}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </_Footer>
+        
+
       </_Background>
     </SafeAreaView>
   );
@@ -424,6 +417,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     borderRadius: 12,
     alignItems: "center",
+    width:160
   },
   footerBtnText: {
     color: "white", fontWeight: "bold", fontSize: 13,

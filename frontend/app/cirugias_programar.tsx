@@ -39,7 +39,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 
 const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
-  <View style={[styles.accordionContainer, { borderColor: theme.border }]}>
+  <View style={[styles.accordionContainer, { borderColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.8) }]}>
     {/* Este es el único lugar donde vive el onPress de apertura */}
     <TouchableOpacity
       style={styles.accordionHeader}
@@ -142,8 +142,8 @@ export default function ProgramaCirugiaScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
   const pageConfig = {
-    name: t("screens.cirugias"),
-    icon: "calendar-check",
+    name: t('cirugias.new_title'),
+    icon: "calendar-plus",
     previous: "/home",
     show_user: true,
     show_menu: true
@@ -676,7 +676,7 @@ export default function ProgramaCirugiaScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
       <_Background id_almacen={user?.id_almacen}>
         {/* Header */}
-        <_Header page_info={pageConfig}  />
+        <_Header page_info={pageConfig} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
@@ -685,11 +685,7 @@ export default function ProgramaCirugiaScreen() {
 
           <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
-            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0.85), borderColor: theme.border }]}>
-              <View style={styles.formHeader}>
-                <MaterialCommunityIcons name="calendar-plus" size={24} color={theme.accent} />
-                <Text style={[styles.formTitle, { color: theme.text }]}>{t('cirugias.new_title')}</Text>
-              </View>
+            <View style={[styles.formCard]}>
 
               {/* SECCIÓN 1: PROGRAMACIÓN */}
               <AccordionSection
@@ -820,7 +816,7 @@ export default function ProgramaCirugiaScreen() {
               <AccordionSection
                 title={t('cirugias.participantes')}
                 isOpen={!!expandedSections['programacion']}
-                onPress={() => toggleSection('programacion', 150)}
+                onPress={() => toggleSection('programacion', 60)}
                 theme={theme}
               >
 
@@ -941,7 +937,7 @@ export default function ProgramaCirugiaScreen() {
               <AccordionSection
                 title={t('cirugias.info_paciente')}
                 isOpen={!!expandedSections['paciente']}
-                onPress={() => toggleSection('paciente', 220)}
+                onPress={() => toggleSection('paciente', 120)}
                 theme={theme}
               >
 
@@ -1007,7 +1003,7 @@ export default function ProgramaCirugiaScreen() {
               <AccordionSection
                 title={t('cirugias.regitro_pago_title')}
                 isOpen={!!expandedSections['registro_pago']}
-                onPress={() => toggleSection('registro_pago', 290)}
+                onPress={() => toggleSection('registro_pago', 200)}
                 theme={theme}
               >
 
@@ -1061,7 +1057,7 @@ export default function ProgramaCirugiaScreen() {
               <AccordionSection
                 title={t('cirugias.materiales')}
                 isOpen={!!expandedSections['materiales']}
-                onPress={() => toggleSection('materiales', 360)}
+                onPress={() => toggleSection('materiales', 260)}
                 theme={theme}
               >
                 {Array.isArray(categorias) &&
@@ -1123,7 +1119,7 @@ export default function ProgramaCirugiaScreen() {
                   <AccordionSection
                     title={seleccionadosEquipos > 0 ? (t('cirugias.equipospoder') + ' (' + seleccionadosEquipos + ')') : t('cirugias.equipospoder')}
                     isOpen={!!expandedSections['equipospoder']}
-                    onPress={() => toggleSection('equipospoder', 430)}
+                    onPress={() => toggleSection('equipospoder', 280)}
                     theme={theme}
                   >
 
@@ -1160,7 +1156,7 @@ export default function ProgramaCirugiaScreen() {
                   <AccordionSection
                     title={seleccionadosInst > 0 ? (t('cirugias.instrumentales') + ' (' + seleccionadosInst + ')') : t('cirugias.instrumentales')}
                     isOpen={!!expandedSections['instrumentales']}
-                    onPress={() => toggleSection('instrumentales', 500)}
+                    onPress={() => toggleSection('instrumentales', 400)}
                     theme={theme}
                   >
                     {Array.isArray(equipospoder) &&
@@ -1195,7 +1191,7 @@ export default function ProgramaCirugiaScreen() {
                   <AccordionSection
                     title={seleccionadosCons > 0 ? (t('cirugias.consumibles') + ' (' + seleccionadosCons + ')') : t('cirugias.consumibles')}
                     isOpen={!!expandedSections['consumibles']}
-                    onPress={() => toggleSection('consumibles', 570)}
+                    onPress={() => toggleSection('consumibles', 450)}
                     theme={theme}
                   >
                     {Array.isArray(consumibles) &&
@@ -1220,54 +1216,53 @@ export default function ProgramaCirugiaScreen() {
                 );
               })()}
 
-              <View style={{
-                height: 1,
-                backgroundColor: theme.border,
-                marginVertical: 10,
-                opacity: 0.5
-              }} />
-              {/* Campo: Solicitar Material Estéril */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
-                <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias.solicita_material_esteril')}</Text>
-                <Switch
-                  value={solicitarEsteril}
-                  onValueChange={setSolicitarEsteril}
-                  trackColor={{ false: '#767577', true: theme.text }}
-                />
-              </View>
+              
+              <View style={{ backgroundColor: hexToRGBA(theme.card, 0.8), padding:10, borderRadius: 8, marginBottom:40 }}>
 
-              {/* Notas */}
-              <_TouchableWithoutFeedback>
-                <View pointerEvents="box-none" style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>{t('cirugias.notas_title')}<Text style={styles.required}>*</Text></Text>
-                  <TextInput
-                    style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder={t('cirugias.notas')}
-                    placeholderTextColor={theme.textSub}
-                    value={notas}
-                    onChangeText={setNotas}
-                    multiline
-                    autoCapitalize='characters'
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                    onFocus={() => {
-                      // Pequeño delay para esperar a que el teclado empiece a subir
-                      setTimeout(() => {
-                        scrollRef.current?.scrollToEnd({ animated: true });
-                      }, 300);
-                    }}
-                    scrollEnabled={false}
+
+                {/* Campo: Solicitar Material Estéril */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
+                  <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias.solicita_material_esteril')}</Text>
+                  <Switch
+                    value={solicitarEsteril}
+                    onValueChange={setSolicitarEsteril}
+                    trackColor={{ false: '#767577', true: theme.text }}
                   />
                 </View>
-              </_TouchableWithoutFeedback>
-              <View style={{
-                height: 1,
-                backgroundColor: theme.border,
-                marginVertical: 10,
-                opacity: 0.5
-              }} />
-              <View style={styles.fieldContainer}>
-                <Text style={styles.required}>* {t("common.requerido")}</Text>
+
+                {/* Notas */}
+                <_TouchableWithoutFeedback>
+                  <View pointerEvents="box-none" style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>{t('cirugias.notas_title')}<Text style={styles.required}>*</Text></Text>
+                    <TextInput
+                      style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder={t('cirugias.notas')}
+                      placeholderTextColor={theme.textSub}
+                      value={notas}
+                      onChangeText={setNotas}
+                      multiline
+                      autoCapitalize='characters'
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                      onFocus={() => {
+                        // Pequeño delay para esperar a que el teclado empiece a subir
+                        setTimeout(() => {
+                          scrollRef.current?.scrollToEnd({ animated: true });
+                        }, 300);
+                      }}
+                      scrollEnabled={false}
+                    />
+                  </View>
+                </_TouchableWithoutFeedback>
+                <View style={{
+                  height: 1,
+                  backgroundColor: theme.border,
+                  marginVertical: 10,
+                  opacity: 0.5
+                }} />
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.required}>* {t("common.requerido")}</Text>
+                </View>
               </View>
             </View>
           </ScrollView>
@@ -1408,7 +1403,7 @@ const styles = StyleSheet.create({
   },
   formCard: {
     borderRadius: 16,
-    padding: 5,
+    padding: 0,
     borderWidth: 1,
     marginBottom: 60,
   },
@@ -1473,7 +1468,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 5,
     borderRadius: 12,
-    marginTop: 5,
+    marginTop: -5,
     paddingHorizontal: 10
   },
   submitButtonText: {
@@ -1525,7 +1520,7 @@ const styles = StyleSheet.create({
   accordionContainer: { borderWidth: 1, borderRadius: 8, marginBottom: 12, overflow: 'hidden' },
   accordionHeader: {
     flexDirection: 'row', justifyContent: 'space-between',
-    padding: 15, backgroundColor: '#0f0f0f0', alignItems: 'center'
+    padding: 12, backgroundColor: '#0f0f0f0', alignItems: 'center'
   },
   accordionTitle: { fontSize: 16, fontWeight: 'bold' },
   accordionContent: { padding: 15 },

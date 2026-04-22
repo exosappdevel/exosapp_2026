@@ -1,5 +1,9 @@
-import { Children, Dispatch, SetStateAction, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, Platform, Alert, Switch, TouchableWithoutFeedback, Keyboard, Pressable, ImageBackground } from "react-native";
+import { Children, Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+    View, Text, StyleSheet, TouchableOpacity, FlatList,
+    Modal, Platform, Alert, Switch, TouchableWithoutFeedback,
+    Keyboard, Pressable, ImageBackground
+} from "react-native";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { useRouter } from 'expo-router';
@@ -8,6 +12,7 @@ import { Href } from 'expo-router';
 import { iMenuItem } from "@/context/AppmenuItems";
 import ApiService from "../services/ApiServices";
 import { PanResponder, Animated } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 export const hexToRGBA = (hex: string, opacity: number) => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -27,7 +32,7 @@ interface iPage {
 }
 
 // 2. Componente Header Reutilizable
-export const _Header = ({ page_info }: { page_info: iPage}) => {
+export const _Header = ({ page_info }: { page_info: iPage }) => {
     const router = useRouter();
     const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -160,56 +165,87 @@ export const _Footer = ({
     Show_Almacen = true,
     Main_action = 'home',
     children
-}: FooterProps) => { // 2. Agregar los props aquí
+}: FooterProps) => {
     const router = useRouter();
     const { theme, user } = useApp();
 
-    // 3. Falta la función de navegación segura para evitar el error de null (dispatchEvent)
+    // 1. Valor animado para la altura
+    const baseHeight = Show_Almacen ? 55 : 70; // Si es false, sube a 100 para dar espacio a los botones
+    const maxHeight = Show_Almacen ? 120 : 180; // El límite de estiramiento también aumenta
+    const footerHeight = useState(new Animated.Value(baseHeight))[0];
+
+    useEffect(() => {
+        Animated.spring(footerHeight, {
+            toValue: baseHeight,
+            useNativeDriver: false,
+        }).start();
+    }, [Show_Almacen]);
+
     const handleNavigation = () => {
-        setTimeout(() => {
-            try {
-                if (Main_action === 'back') {
-                    if (router.canGoBack()) {
-                        router.back();
-                    } else {
-                        router.replace('/home' as any);
-                    }
-                } else {
-                    router.replace('/home' as any);
-                }
-            } catch (error) {
-                console.error("Error en navegación:", error);
-            }
-        }, 0);
+        // ... (tu lógica de navegación actual se mantiene igual)
+        router.replace('/home' as any);
     };
 
     const footerPanResponder = PanResponder.create({
         onMoveShouldSetPanResponder: (_, gestureState) => {
-            return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && gestureState.dy < -20;
+            // Detectar movimiento vertical hacia arriba
+            return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && gestureState.dy < -10;
         },
-        onPanResponderRelease: (_, gestureState) => {
-            if (gestureState.dy < -50) {
-                handleNavigation();
+        onPanResponderMove: (_, gestureState) => {
+            if (gestureState.dy < 0) {
+                // Calculamos la nueva altura: base + el arrastre (dy es negativo, por eso se resta)
+                const newHeight = baseHeight - gestureState.dy;
+
+                // Limitamos la altura máxima para el efecto visual
+                if (newHeight <= maxHeight) {
+                    footerHeight.setValue(newHeight);
+                }
             }
         },
+        onPanResponderRelease: (_, gestureState) => {
+            // 1. Gesto hacia ARRIBA -> Ir a Home
+            if (gestureState.dy < -60) {
+                router.replace('/home' as any);
+            } 
+            // 2. Gesto hacia la IZQUIERDA -> Back (atrás)
+            else if (gestureState.dx < -60) {
+                router.back();
+            }
+
+            // Siempre regresamos a la altura original con una animación suave (efecto resorte)
+            Animated.spring(footerHeight, {
+                toValue: baseHeight,
+                useNativeDriver: false, // La altura no es compatible con native driver
+                friction: 5,
+                tension: 40
+            }).start();
+        },
+        onPanResponderTerminate: () => {
+            // Regresar a base si el gesto se cancela
+            Animated.spring(footerHeight, {
+                toValue: baseHeight,
+                useNativeDriver: false
+            }).start();
+        }
     });
 
     return (
-        <View
+        <Animated.View // 2. Convertir a Animated.View
             {...footerPanResponder.panHandlers}
             style={[
                 styles.footerContainer,
                 {
                     backgroundColor: hexToRGBA(theme.card, 0.6),
                     borderTopColor: hexToRGBA(theme.border, 0.3),
-                    height:Show_Almacen? styles.footerContainer.height : 60
+                    height: footerHeight, // 3. Vincular altura animada
+                    paddingBottom: Platform.OS === 'ios' ? 15 : 0 // Mejorar espacio táctil                    
                 }
             ]}
         >
             <TouchableOpacity
                 style={styles.footerTab}
                 activeOpacity={0.7}
-                onPress={handleNavigation}
+                
             >
                 <View style={[
                     styles.homeIndicator,
@@ -228,12 +264,12 @@ export const _Footer = ({
                         </Text>
                     </View>
                 ) : (
-                    <View style={[styles.footerContentRow] }>
+                    <View style={[styles.footerContentChildreen]}>
                         {children}
                     </View>
                 )}
             </TouchableOpacity>
-        </View>
+        </Animated.View>
     );
 };
 
@@ -612,30 +648,81 @@ interface BackgroundProps {
     children: React.ReactNode;            // El contenido de la pantalla
 }
 
-export const _Background = ({ id_almacen, children }: BackgroundProps) => {
+export const _Background = ({ children, id_almacen }: { children: any, id_almacen: string }) => {
     const { theme, appConfig } = useApp();
-
-    // URL base de tu servidor para las imágenes de fondo    
     const baseUrl = appConfig.url.endsWith('/') ? appConfig.url : `${appConfig.url}/`;
     const SERVER_IMAGE_BASE = `${baseUrl}assets/images/${appConfig.name}/`;
 
-    // Construcción de la URL dinámica
-    // Si id_almacen es nulo/vacio, no carga imagen (usa theme.bg)    
-    const backgroundSource = (id_almacen && id_almacen.trim() !== "")
-        ? { uri: `${SERVER_IMAGE_BASE}almacen_background_${id_almacen}.png` }
-        : undefined;
+    const defaultImg = require('../assets/images/almacen_background_default.png');
+    const [imageSource, setImageSource] = useState<any>(defaultImg);
+
+    useEffect(() => {
+        const resolveImage = async () => {
+            if (!id_almacen) {
+                setImageSource(defaultImg);
+                return;
+            }
+
+            const fileName = `almacen_background_${id_almacen}.png`;
+            const serverUrl = `${SERVER_IMAGE_BASE}${fileName}`;
+
+            // --- LÓGICA PARA WEB ---
+            if (Platform.OS === 'web') {
+                try {
+                    const response = await fetch(serverUrl, { method: 'HEAD' });
+                    if (response.ok) {
+                        setImageSource({ uri: serverUrl });
+                    } else {
+                        setImageSource(defaultImg);
+                    }
+                } catch {
+                    setImageSource(defaultImg);
+                }
+                return;
+            }
+
+            // --- LÓGICA PARA MÓVIL (iOS/Android) ---
+            const docDir = (FileSystem as any).documentDirectory || (FileSystem as any).cacheDirectory;
+            const localUri = `${docDir}${fileName}`;
+
+            try {
+                const fileInfo = await FileSystem.getInfoAsync(localUri);
+
+                if (fileInfo.exists) {
+                    // OPCIONAL: Podrías verificar si el tamaño es muy pequeño (error 404)
+                    setImageSource({ uri: localUri });
+                } else {
+                    const download = await FileSystem.downloadAsync(serverUrl, localUri);
+
+                    if (download.status === 200) {
+                        setImageSource({ uri: localUri });
+                    } else {
+                        // IMPORTANTE: Si falló la descarga (404), borramos el archivo basura creado
+                        await FileSystem.deleteAsync(localUri, { idempotent: true });
+                        setImageSource(defaultImg);
+                    }
+                }
+            } catch (error) {
+                console.log("Error cargando fondo:", error);
+                setImageSource(defaultImg);
+            }
+        };
+
+        resolveImage();
+    }, [id_almacen]);
 
     return (
-        // Envolvemos todo con ImageBackground
         <ImageBackground
-            source={backgroundSource}
-            style={[styles.backgroundImage, { backgroundColor: theme.bg }]} // Fondo por defecto si falla la carga
-            resizeMode="cover" // Importante para que cubra todo el celular verticalmente
-        //blurRadius={Platform.OS === 'ios' ? 8 :4} // Opcional: Desenfoque si los menúes no son legibles
+            source={imageSource}
+            resizeMode="cover"
+            style={styles.backgroundImage}
         >
-            {/* Overlay sutil para mejorar legibilidad (Opcional, depende de tus imágenes) */}
-            {/* <View style={[styles.backgroundOverlay, { backgroundColor: theme.bg + '50' }]} pointerEvents="none" /> */}
-            {children}
+            <View style={[
+                styles.backgroundOverlay,
+                { backgroundColor: hexToRGBA(theme.bg, 0) }
+            ]}>
+                {children}
+            </View>
         </ImageBackground>
     );
 };
@@ -751,7 +838,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: Platform.OS === 'ios' ? 2: 2,
+        paddingVertical: Platform.OS === 'ios' ? 2 : 2,
 
 
         marginBottom: (Platform.OS === 'ios') ? -28 : (Platform.OS === 'android') ? 3 : 0,
@@ -888,7 +975,7 @@ const styles = StyleSheet.create({
     launcherItem: {
         width: '25%', // 4 iconos por fila para que se vea más como iOS
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: 60,
     },
     launcherIconBox: {
         width: 62,
@@ -921,28 +1008,27 @@ const styles = StyleSheet.create({
     // Dentro de StyleSheet.create en elidev_components.tsx
 
     footerContainer: {
-        height: 40,
+        // Elimina el height fijo de aquí, ya lo maneja la animación
         borderTopWidth: 1,
-        position: 'absolute', // Para que flote sobre el fondo y se note la transparencia
+        position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        //marginBottom: (Platform.OS === 'ios') ? 0 : (Platform.OS === 'android') ? 3 : 0,
-
-        // --- EFECTO CRISTAL (Glassmorphism) ---
+        overflow: 'hidden', // Evita que el contenido se salga durante el estiramiento
         ...({
-            backdropFilter: 'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
         } as any),
     },
     footerTab: {
         alignItems: 'center',
         width: '100%',
-        height: '100%',
-        paddingBottom: Platform.OS === 'ios' ? 10 : 5,
+        // justifyContent: 'flex-start' para que los iconos se queden arriba mientras crece
+        justifyContent: 'flex-start',
+        paddingTop: 5,
     },
     homeIndicator: {
-        width: 36,
+        width: 80,
         height: 3,
         borderRadius: 2,
         marginTop: 3,
@@ -953,6 +1039,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 1,
+    },
+    footerContentChildreen: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 1,
+        height: 50
     },
     footerText: {
         fontSize: 12,

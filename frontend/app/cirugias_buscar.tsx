@@ -27,10 +27,11 @@ import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _Footer_custom, _MenuGrid, _checkBox } from '../components/elidev_components';
+import { _Header, _Background, hexToRGBA, _Footer, _Footer_custom, _MenuGrid, _checkBox } from '../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
+import { Background } from '@react-navigation/elements';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -42,7 +43,7 @@ const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
   <View style={[styles.accordionContainer, { borderColor: theme.border }]}>
     {/* Este es el único lugar donde vive el onPress de apertura */}
     <TouchableOpacity
-      style={styles.accordionHeader}
+      style={[styles.accordionHeader,{ backgroundColor:hexToRGBA(theme.card,0.8)} ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -56,7 +57,7 @@ const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
 
     {/* Aquí el contenido se renderiza de forma independiente */}
     {isOpen && (
-      <View style={styles.accordionContent}>
+      <View style={[styles.accordionContent,{backgroundColor:hexToRGBA(theme.card,0.8)}]}>
         {children}
       </View>
     )}
@@ -101,8 +102,8 @@ export default function Cirugia_BuscarScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
   const pageConfig = {
-    name: t("screens.cirugias"),
-    icon: "calendar-check",
+    name: t('screens.cirugias_buscar'),
+    icon: "magnify",
     previous: "/home",
     show_user: true,
     show_menu: true
@@ -157,8 +158,8 @@ export default function Cirugia_BuscarScreen() {
       setLoading(false);
     }
   };
-  
-  
+
+
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
   useEffect(() => {
     let isMounted = true;
@@ -187,8 +188,8 @@ export default function Cirugia_BuscarScreen() {
         setTecnicos(Array.isArray(resTecnicos.data) ? resTecnicos.data : []);
         setSubdistribuidores(Array.isArray(resSubdistribuidores.data) ? resSubdistribuidores.data : []);
         setMedicos(Array.isArray(resMedicos.data) ? resMedicos.data : []);
-        
-        const today=new Date();
+
+        const today = new Date();
         const day = today.getDate().toString().padStart(2, '0');
         const month = (today.getMonth() + 1).toString().padStart(2, '0');
         const year = today.getFullYear();
@@ -257,7 +258,7 @@ export default function Cirugia_BuscarScreen() {
   });
 
 
-  const validateForm = () => {    
+  const validateForm = () => {
     return null;
   };
   async function playSuccessSound() {
@@ -338,7 +339,7 @@ export default function Cirugia_BuscarScreen() {
         setModal({
           visible: true,
           titulo: t("cirugias.search_success_title"),
-          mensaje: '0 '+t("cirugias.search_success"),
+          mensaje: '0 ' + t("cirugias.search_success"),
           icon: 'check-circle-outline',
           colorIcon: '#48bb78'
         });
@@ -471,352 +472,350 @@ export default function Cirugia_BuscarScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
       {/* Header */}
-      <_Header page_info={pageConfig} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10} // Ajusta este número según el alto de tu header
-      >
+      <_Background id_almacen={user?.id_almacen}>
+        <_Header page_info={pageConfig} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10} // Ajusta este número según el alto de tu header
+        >
 
-        <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
-          {/* Form Card */}
-          <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.formHeader}>
-              <MaterialCommunityIcons name="magnify" size={24} color={theme.accent} />
-              <Text style={[styles.formTitle, { color: theme.text }]}>{t('screens.cirugias_buscar')}</Text>
-            </View>
+          <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+            {/* Form Card */}
+            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border }]}>
 
-            {/* SECCIÓN 1: parametros */}
-            <AccordionSection
-              title={t('cirugias.parameters_search_title')}
-              isOpen={!!expandedSections['parametros']}
-              onPress={() => toggleSection('parametros', 10)}
-              theme={theme}
-            >
 
-              {/* Fecha ini */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.fecha_ini')}
-                </Text>
-
-                {Platform.OS === 'web' ? (
-                  /* --- VISTA PARA WEB --- */
-                  <View style={[
-                    styles.selector,
-                    { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                  ]}>
-                    <input
-                      type="date"
-                      // HTML5 requiere YYYY-MM-DD para el valor interno del input
-                      value={date instanceof Date && !isNaN(date.getTime())
-                        ? date.toISOString().split('T')[0]
-                        : ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val) {
-                          const [year, month, day] = val.split('-').map(Number);
-                          const selectedDate = new Date(year, month - 1, day);
-
-                          // Llamamos a tu función para actualizar el estado 'fecha' (texto) y 'date' (objeto)
-                          onDateChange_ini({ type: 'set' } as any, selectedDate);
-                        }
-                      }}
-                      style={{
-                        flex: 1,
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        color: date ? theme.text : theme.textSub,
-                        fontSize: 16,
-                        fontFamily: 'inherit',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                  </View>
-                ) : (
-                  /* --- VISTA PARA MÓVIL (iOS/Android) --- */
-                  <>
-                    <TouchableOpacity
-                      style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                      onPress={showPicker}
-                    >
-                      <Text style={[styles.selectorText, { color: fecha_ini ? theme.text : theme.textSub }]}>
-                        {fecha_ini || 'DD/MM/YYYY'}
-                      </Text>
-                      <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                    </TouchableOpacity>
-
-                    {showDatePicker && (
-                      <DateTimePicker
-                        value={date}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={onDateChange_ini}
-                        minimumDate={new Date()}
-                      />
-                    )}
-                  </>
-                )}
-
-              </View>
-              {/* Fecha fin */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  {t('cirugias.fecha_fin')}
-                </Text>
-
-                {Platform.OS === 'web' ? (
-                  /* --- VISTA PARA WEB --- */
-                  <View style={[
-                    styles.selector,
-                    { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                  ]}>
-                    <input
-                      type="date"
-                      // HTML5 requiere YYYY-MM-DD para el valor interno del input
-                      value={date instanceof Date && !isNaN(date.getTime())
-                        ? date.toISOString().split('T')[0]
-                        : ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val) {
-                          const [year, month, day] = val.split('-').map(Number);
-                          const selectedDate = new Date(year, month - 1, day);
-
-                          // Llamamos a tu función para actualizar el estado 'fecha' (texto) y 'date' (objeto)
-                          onDateChange_fin({ type: 'set' } as any, selectedDate);
-                        }
-                      }}
-                      style={{
-                        flex: 1,
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        color: date ? theme.text : theme.textSub,
-                        fontSize: 16,
-                        fontFamily: 'inherit',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                  </View>
-                ) : (
-                  /* --- VISTA PARA MÓVIL (iOS/Android) --- */
-                  <>
-                    <TouchableOpacity
-                      style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                      onPress={showPicker}
-                    >
-                      <Text style={[styles.selectorText, { color: fecha_fin ? theme.text : theme.textSub }]}>
-                        {fecha_fin || 'DD/MM/YYYY'}
-                      </Text>
-                      <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                    </TouchableOpacity>
-
-                    {showDatePicker && (
-                      <DateTimePicker
-                        value={date}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={onDateChange_fin}
-                        minimumDate={new Date()}
-                      />
-                    )}
-                  </>
-                )}
-
-              </View>
-              {/* Agente */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  Agente
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowVendedorPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: vendedor ? theme.text : theme.textSub }]}>
-                    {vendedor?.nombre || 'Seleccione vendedor...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-              {/* Tecnico1 */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  Técnico
-                </Text>
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowTecnicoPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: tecnico ? theme.text : theme.textSub }]}>
-                    {tecnico?.nombre || 'Seleccione técnico...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-              {/* Subdistribuidor */}
-              <View style={styles.fieldContainer}>
-                <Text style={[styles.label, { color: theme.text }]}>
-                  Subdistribuidor
-                </Text>
-
-                <TouchableOpacity
-                  style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowSubdistribuidorPicker(true)}
-                >
-                  <Text style={[styles.selectorText, { color: subdistribuidor ? theme.text : theme.textSub }]}>
-                    {subdistribuidor?.subdistribuidor || 'Seleccione subdistribuidor...'}
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                </TouchableOpacity>
-              </View>
-              <_TouchableWithoutFeedback>
-                <View style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.codigo_cirugia')}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder="Ej. 26CX0000A-GDL"
-                    placeholderTextColor={theme.textSub}
-                    value={codigo_cirugia}
-                    onChangeText={setCodigo_cirugia}
-                    autoCapitalize='characters'
-
-                  />
-                </View>
-              </_TouchableWithoutFeedback>
-              <_TouchableWithoutFeedback>
-                <View style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.limite')}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder="Ej.1"
-                    placeholderTextColor={theme.textSub}
-                    value={limite}
-                    onChangeText={setLimite}
-                    autoCapitalize='characters'
-
-                  />
-                </View>
-              </_TouchableWithoutFeedback>
-
-              {/* Submit Button */}
-              <TouchableOpacity
-                style={[styles.submitButton, { backgroundColor: theme.accent }]}
-                onPress={handleSubmit}
-                disabled={submitting}
+              {/* SECCIÓN 1: parametros */}
+              <AccordionSection
+                title={t('cirugias.parameters_search_title')}
+                isOpen={!!expandedSections['parametros']}
+                onPress={() => toggleSection('parametros', 10)}
+                theme={theme}
               >
-                {submitting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="magnify" size={24} color="#fff" />
-                    <Text style={styles.submitButtonText}>{t('cirugias.search_button')}</Text>
-                  </>
-                )}
-              </TouchableOpacity>
 
-            </AccordionSection>
-            <AccordionSection
-              title={t('cirugias.resultados_programadas')}
-              isOpen={!!expandedSections['programadas']}
-              onPress={() => toggleSection('programadas', 150)}              
-              theme={theme}              
-            >
+                {/* Fecha ini */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.fecha_ini')}
+                  </Text>
 
-              {/* resultados */}
-              <View style={styles.fieldContainer}>
-              </View>
-            </AccordionSection>
-            <AccordionSection
-              title={t('cirugias.resultados_apoyo')}
-              isOpen={!!expandedSections['programadas']}
-              onPress={() => toggleSection('programadas', 150)}
-              theme={theme}
-            >
+                  {Platform.OS === 'web' ? (
+                    /* --- VISTA PARA WEB --- */
+                    <View style={[
+                      styles.selector,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
+                    ]}>
+                      <input
+                        type="date"
+                        // HTML5 requiere YYYY-MM-DD para el valor interno del input
+                        value={date instanceof Date && !isNaN(date.getTime())
+                          ? date.toISOString().split('T')[0]
+                          : ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            const [year, month, day] = val.split('-').map(Number);
+                            const selectedDate = new Date(year, month - 1, day);
 
-              {/* resultados */}
-              <View style={styles.fieldContainer}>
-              </View>
-            </AccordionSection>
-          </View>
-        </ScrollView>
+                            // Llamamos a tu función para actualizar el estado 'fecha' (texto) y 'date' (objeto)
+                            onDateChange_ini({ type: 'set' } as any, selectedDate);
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          color: date ? theme.text : theme.textSub,
+                          fontSize: 16,
+                          fontFamily: 'inherit',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                    </View>
+                  ) : (
+                    /* --- VISTA PARA MÓVIL (iOS/Android) --- */
+                    <>
+                      <TouchableOpacity
+                        style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                        onPress={showPicker}
+                      >
+                        <Text style={[styles.selectorText, { color: fecha_ini ? theme.text : theme.textSub }]}>
+                          {fecha_ini || 'DD/MM/YYYY'}
+                        </Text>
+                        <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                      </TouchableOpacity>
 
-      </KeyboardAvoidingView>
+                      {showDatePicker && (
+                        <DateTimePicker
+                          value={date}
+                          mode="date"
+                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                          onChange={onDateChange_ini}
+                          minimumDate={new Date()}
+                        />
+                      )}
+                    </>
+                  )}
+
+                </View>
+                {/* Fecha fin */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias.fecha_fin')}
+                  </Text>
+
+                  {Platform.OS === 'web' ? (
+                    /* --- VISTA PARA WEB --- */
+                    <View style={[
+                      styles.selector,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
+                    ]}>
+                      <input
+                        type="date"
+                        // HTML5 requiere YYYY-MM-DD para el valor interno del input
+                        value={date instanceof Date && !isNaN(date.getTime())
+                          ? date.toISOString().split('T')[0]
+                          : ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            const [year, month, day] = val.split('-').map(Number);
+                            const selectedDate = new Date(year, month - 1, day);
+
+                            // Llamamos a tu función para actualizar el estado 'fecha' (texto) y 'date' (objeto)
+                            onDateChange_fin({ type: 'set' } as any, selectedDate);
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          color: date ? theme.text : theme.textSub,
+                          fontSize: 16,
+                          fontFamily: 'inherit',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                    </View>
+                  ) : (
+                    /* --- VISTA PARA MÓVIL (iOS/Android) --- */
+                    <>
+                      <TouchableOpacity
+                        style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                        onPress={showPicker}
+                      >
+                        <Text style={[styles.selectorText, { color: fecha_fin ? theme.text : theme.textSub }]}>
+                          {fecha_fin || 'DD/MM/YYYY'}
+                        </Text>
+                        <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                      </TouchableOpacity>
+
+                      {showDatePicker && (
+                        <DateTimePicker
+                          value={date}
+                          mode="date"
+                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                          onChange={onDateChange_fin}
+                          minimumDate={new Date()}
+                        />
+                      )}
+                    </>
+                  )}
+
+                </View>
+                {/* Agente */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    Agente
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowVendedorPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: vendedor ? theme.text : theme.textSub }]}>
+                      {vendedor?.nombre || 'Seleccione vendedor...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+                {/* Tecnico1 */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    Técnico
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowTecnicoPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: tecnico ? theme.text : theme.textSub }]}>
+                      {tecnico?.nombre || 'Seleccione técnico...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+                {/* Subdistribuidor */}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    Subdistribuidor
+                  </Text>
+
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowSubdistribuidorPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: subdistribuidor ? theme.text : theme.textSub }]}>
+                      {subdistribuidor?.subdistribuidor || 'Seleccione subdistribuidor...'}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
+                <_TouchableWithoutFeedback>
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t('cirugias.codigo_cirugia')}
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder="Ej. 26CX0000A-GDL"
+                      placeholderTextColor={theme.textSub}
+                      value={codigo_cirugia}
+                      onChangeText={setCodigo_cirugia}
+                      autoCapitalize='characters'
+
+                    />
+                  </View>
+                </_TouchableWithoutFeedback>
+                <_TouchableWithoutFeedback>
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t('cirugias.limite')}
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder="Ej.1"
+                      placeholderTextColor={theme.textSub}
+                      value={limite}
+                      onChangeText={setLimite}
+                      autoCapitalize='characters'
+
+                    />
+                  </View>
+                </_TouchableWithoutFeedback>
+
+                {/* Submit Button */}
+                <TouchableOpacity
+                  style={[styles.submitButton, { backgroundColor: theme.accent }]}
+                  onPress={handleSubmit}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <>
+                      <MaterialCommunityIcons name="magnify" size={24} color="#fff" />
+                      <Text style={styles.submitButtonText}>{t('cirugias.search_button')}</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+              </AccordionSection>
+              <AccordionSection
+                title={t('cirugias.resultados_programadas')}
+                isOpen={!!expandedSections['programadas']}
+                onPress={() => toggleSection('programadas', 150)}
+                theme={theme}
+              >
+
+                {/* resultados */}
+                <View style={styles.fieldContainer}>
+                </View>
+              </AccordionSection>
+              <AccordionSection
+                title={t('cirugias.resultados_apoyo')}
+                isOpen={!!expandedSections['apoyo']}
+                onPress={() => toggleSection('apoyo', 150)}
+                theme={theme}
+              >
+
+                {/* resultados */}
+                <View style={styles.fieldContainer}>
+                </View>
+              </AccordionSection>
+            </View>
+          </ScrollView>
+
+        </KeyboardAvoidingView>
 
 
 
 
 
-      {/* Picker Modals */}
+        {/* Picker Modals */}
 
-      {
-        renderPickerModal(
-          showVendedorPicker,
-          () => setShowVendedorPicker(false),
-          vendedores,
-          "id_vendedor",
-          (item: iVendedor) => setVendedor(item),
-          'Seleccionar Vendedor'
-        )}
-      {
-        renderPickerModal(
-          showTecnicoPicker,
-          () => setShowTecnicoPicker(false),
-          tecnicos,
-          "id_tecnico",
-          (item: iTecnico) => setTecnico(item),
-          'Seleccionar Técnico'
-        )}
+        {
+          renderPickerModal(
+            showVendedorPicker,
+            () => setShowVendedorPicker(false),
+            vendedores,
+            "id_vendedor",
+            (item: iVendedor) => setVendedor(item),
+            'Seleccionar Vendedor'
+          )}
+        {
+          renderPickerModal(
+            showTecnicoPicker,
+            () => setShowTecnicoPicker(false),
+            tecnicos,
+            "id_tecnico",
+            (item: iTecnico) => setTecnico(item),
+            'Seleccionar Técnico'
+          )}
 
-      {
-        renderPickerModal(
-          showSubdistribuidorPicker,
-          () => setShowSubdistribuidorPicker(false),
-          subdistribuidores,
-          "id_subdistribuidor",
-          (item: iSubdistribuidor) => setSubdistribuidor(item),
-          'Seleccionar Subdistribuidor'
-        )}
+        {
+          renderPickerModal(
+            showSubdistribuidorPicker,
+            () => setShowSubdistribuidorPicker(false),
+            subdistribuidores,
+            "id_subdistribuidor",
+            (item: iSubdistribuidor) => setSubdistribuidor(item),
+            'Seleccionar Subdistribuidor'
+          )}
 
-      {
-        renderPickerModal(
-          showHospitalPicker,
-          () => setShowHospitalPicker(false),
-          hospitales,
-          "id_hospital",
-          (item: iHospital) => setHospital(item),
-          'Seleccionar hospital'
-        )}
-      {
-        renderPickerModal(
-          showMedicoPicker,
-          () => setShowMedicoPicker(false),
-          medicos,
-          "id_medico",
-          (item: iMedico) => setMedico(item),
-          'Seleccionar Medico'
-        )}
-
-
+        {
+          renderPickerModal(
+            showHospitalPicker,
+            () => setShowHospitalPicker(false),
+            hospitales,
+            "id_hospital",
+            (item: iHospital) => setHospital(item),
+            'Seleccionar hospital'
+          )}
+        {
+          renderPickerModal(
+            showMedicoPicker,
+            () => setShowMedicoPicker(false),
+            medicos,
+            "id_medico",
+            (item: iMedico) => setMedico(item),
+            'Seleccionar Medico'
+          )}
 
 
-      <CustomModal
-        visible={modal.visible}
-        titulo={modal.titulo}
-        mensaje={modal.mensaje}
-        icon={modal.icon}
-        colorIcon={modal.colorIcon}
-        onClose={() => setModal({ ...modal, visible: false })}
-      />
 
+
+        <CustomModal
+          visible={modal.visible}
+          titulo={modal.titulo}
+          mensaje={modal.mensaje}
+          icon={modal.icon}
+          colorIcon={modal.colorIcon}
+          onClose={() => setModal({ ...modal, visible: false })}
+        />
+      </_Background>
     </SafeAreaView>
   );
 }
@@ -842,10 +841,10 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   formCard: {
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    marginBottom: 20,
+    borderRadius: 0,
+    padding: 0,
+    borderWidth: 0,
+    marginBottom: 40,
   },
   formHeader: {
     flexDirection: 'row',

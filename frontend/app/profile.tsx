@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   section: {
     borderRadius: 16,
-    padding: 20,
+    padding: 10,
     marginBottom: 15,
     borderWidth: 1,
   },

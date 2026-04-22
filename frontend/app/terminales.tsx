@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import { _Header, _Footer, _Background, hexToRGBA } from '@/components/elidev_components';
+import { Background } from '@react-navigation/elements';
 
 interface Terminal {
   id_terminal: string;
@@ -92,9 +93,9 @@ export default function TerminalesScreen() {
             <Text style={[styles.loadingText, { color: theme.textSub }]}>{t('terminales.loading')}</Text>
           </View>
         ) : terminales.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="desktop-tower-monitor" size={60} color={theme.textSub} />
-            <Text style={[styles.emptyText, { color: theme.textSub }]}>{t('terminales.noTerminals')}</Text>
+          <View style={[styles.emptyContainer, {backgroundColor:hexToRGBA(theme.card,0.0)}]}>
+            <MaterialCommunityIcons name="desktop-tower-monitor" size={60} color={theme.card} />
+            <Text style={[styles.emptyText, { color: theme.card }]}>{t('terminales.noTerminals')}</Text>
           </View>
         ) : (
           <FlatList
@@ -113,7 +114,7 @@ export default function TerminalesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginBottom: Platform.OS === 'ios' ? -15 : -20
+    marginBottom: Platform.OS === 'ios' ? -15 : -10
   },
   terminalInfo: {
     flex: 1,
@@ -153,10 +154,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
   },
   emptyText: {
     marginTop: 15,
     fontSize: 16,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
   },
   listContent: {
     padding: 15,
