@@ -21,8 +21,6 @@ export const hexToRGBA = (hex: string, opacity: number) => {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-// 1. Definición de la Interfaz (en JS es descriptiva, en TS es funcional)
-// Si usas TypeScript, asegúrate de que el archivo termine en .tsx
 interface iPage {
     name: string;
     icon: any;
@@ -31,7 +29,7 @@ interface iPage {
     show_menu: boolean;
 }
 
-// 2. Componente Header Reutilizable
+
 export const _Header = ({ page_info }: { page_info: iPage }) => {
     const router = useRouter();
     const { theme, user, t, logout } = useApp(); // Obtenemos el contexto
@@ -150,8 +148,6 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
     );
 };
 
-// elidev_components.tsx
-
 
 // elidev_components.tsx
 // 1. Falta definir esta interfaz arriba de _Footer
@@ -206,7 +202,7 @@ export const _Footer = ({
             // 1. Gesto hacia ARRIBA -> Ir a Home
             if (gestureState.dy < -60) {
                 router.replace('/home' as any);
-            } 
+            }
             // 2. Gesto hacia la IZQUIERDA -> Back (atrás)
             else if (gestureState.dx < -60) {
                 router.back();
@@ -245,7 +241,7 @@ export const _Footer = ({
             <TouchableOpacity
                 style={styles.footerTab}
                 activeOpacity={0.7}
-                
+
             >
                 <View style={[
                     styles.homeIndicator,

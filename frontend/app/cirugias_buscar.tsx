@@ -13,10 +13,7 @@ import {
   LayoutAnimation,
   UIManager,
   Image,
-  Switch,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -24,14 +21,11 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
-import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
-import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Background, hexToRGBA, _Footer, _Footer_custom, _MenuGrid, _checkBox } from '../components/elidev_components';
-import * as DocumentPicker from 'expo-document-picker';
+import CustomModal from '../components/CustomModal';
+import { _Header, _Background, hexToRGBA, _Footer, _MenuGrid, _checkBox } from '../components/elidev_components';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
-import { Background } from '@react-navigation/elements';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {

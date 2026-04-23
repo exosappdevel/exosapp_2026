@@ -9,7 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-  Platform,ScrollView
+  Platform
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -18,7 +18,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useApp } from "../context/AppContext";
 import ApiService from "../services/ApiServices";
 import { calcularPrioridad } from "../utils/PickeoUtils";
-import { _Background, _Footer, _Footer_custom, hexToRGBA } from "@/components/elidev_components";
+import { _Background, _Footer, hexToRGBA, playSuccessSound, playErrorSound } from "@/components/elidev_components";
 
 interface Producto {
   id: string;
@@ -150,12 +150,17 @@ export default function PickeoScreen() {
         const esExito = response?.result === "ok";
 
         if (Platform.OS === "web") {
+          playSuccessSound();
           alert(esExito ? `${t('common.success')}: ${mensaje}` : `${t('common.notice')}: ${mensaje}`);
           if (esExito) {
             await AsyncStorage.removeItem(STORAGE_KEY);
             inicializarDatos(false);
           }
+          else{
+            playErrorSound();
+          }
         } else {
+          playSuccessSound();
           Alert.alert(esExito ? t('common.success') : t('common.notice'), mensaje, [
             { text: "OK", onPress: () => esExito && inicializarDatos(false) },
           ]);
@@ -224,7 +229,7 @@ export default function PickeoScreen() {
               <View
                 style={[
                   styles.itemRow,
-                  { backgroundColor: hexToRGBA(theme.card, 0.85), borderColor: theme.border },
+                  { backgroundColor: hexToRGBA(theme.card, 0.7), borderColor: theme.border },
                 ]}
               >
                 <View style={[styles.dot, { backgroundColor: item.color }]} />
@@ -384,6 +389,10 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 12,
     borderWidth: 1,
+    ...({
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+        } as any),
   },
   dot: { width: 12, height: 12, borderRadius: 6, marginRight: 12 },
   itemInfo: { flex: 1 },
@@ -413,7 +422,7 @@ const styles = StyleSheet.create({
   },
   footerBtn: {
     flex: 1,
-    padding: 12,
+    padding: 8,
     marginHorizontal: 5,
     borderRadius: 12,
     alignItems: "center",

@@ -14,7 +14,6 @@ import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import { _Header, _Footer, _Background, hexToRGBA } from '@/components/elidev_components';
-import { Background } from '@react-navigation/elements';
 
 interface Terminal {
   id_terminal: string;
@@ -175,6 +174,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 10,
+    ...({
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+        } as any),
   },
   iconContainer: {
     width: 50,

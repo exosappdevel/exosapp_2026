@@ -6,8 +6,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
-  Linking,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,8 +15,6 @@ import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
 import { _Footer, _Background, hexToRGBA } from '@/components/elidev_components';
-
-const CODE_ZIP_URL = 'https://exos-credential-qr.preview.emergentagent.com/assets/code.zip';
 
 const themeOptions = [
   { id: 'light', color: '#f5f5f5', borderColor: '#e2e8f0' },

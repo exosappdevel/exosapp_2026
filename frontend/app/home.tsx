@@ -1,25 +1,19 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TouchableOpacity,
   StyleSheet,
-  FlatList,
   ScrollView, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
-import CustomModal, { Soon_Modal } from '../components/CustomModal';
+import  { Soon_Modal } from '../components/CustomModal';
 import { _Header, _Footer, _MenuGrid, _MenuSection, _Background, _MenuLauncher } from '../components/elidev_components';
 import { iMenuItem, AddMenuItem } from '@/context/AppmenuItems';
 import { AppmenuItems } from '@/context/AppmenuItems';
 import { PanResponder, Dimensions } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-
-
-
 
 export default function HomeScreen() {
   const router = useRouter();
