@@ -11,16 +11,25 @@ interface BackgroundProps {
     id_almacen: string | undefined | null; // Acepta nulos del user context
     children: React.ReactNode;            // El contenido de la pantalla
 }
+const localBackgrounds: { [key: string]: any } = {
+    'default': require('../../assets/images/background/almacen_background_default.png'),    
+    '1': require('../../assets/images/background/almacen_background_1.png'),
+    '2': require('../../assets/images/background/almacen_background_2.png')    
+    // Agrega aquí los IDs de almacén que necesites
+};
 
 export const _Background = ({ children, id_almacen }: { children: any, id_almacen: string }) => {
     const { theme, appConfig } = useApp();
     const baseUrl = appConfig.url.endsWith('/') ? appConfig.url : `${appConfig.url}/`;
     const SERVER_IMAGE_BASE = `${baseUrl}assets/images/${appConfig.name}/`;
 
-    const defaultImg = require('../../assets/images/almacen_background_default.png');
+    const defaultImg = require('../../assets/images/background/almacen_background_default.png');
     const [imageSource, setImageSource] = useState<any>(defaultImg);
 
-    useEffect(() => {
+    const source = localBackgrounds[id_almacen] || localBackgrounds['default'];
+
+    
+    /*useEffect(() => {
         const resolveImage = async () => {
             if (!id_almacen) {
                 setImageSource(defaultImg);
@@ -30,6 +39,7 @@ export const _Background = ({ children, id_almacen }: { children: any, id_almace
             const fileName = `almacen_background_${id_almacen}.png`;
             const serverUrl = `${SERVER_IMAGE_BASE}${fileName}`;
 
+            
             // --- LÓGICA PARA WEB ---
             if (Platform.OS === 'web') {
                 try {
@@ -73,11 +83,11 @@ export const _Background = ({ children, id_almacen }: { children: any, id_almace
         };
 
         resolveImage();
-    }, [id_almacen]);
+    }, [id_almacen]);*/
 
     return (
         <ImageBackground
-            source={imageSource}
+            source={source}
             resizeMode="cover"
             style={styles.backgroundImage}
         >
