@@ -22,7 +22,7 @@ interface AccordionProps {
     isOpen: boolean;
     onPress: () => void;    
     scrollRef?: React.RefObject<ScrollView | null>; // Acepta null para evitar errores de tipo
-    index?: number;
+    yoff?: number;
 }
 
 export const _AccordionSection = ({ 
@@ -31,7 +31,7 @@ export const _AccordionSection = ({
     isOpen, 
     onPress, 
     scrollRef, 
-    index 
+    yoff 
 }: AccordionProps) => {
     
     const { theme } = useApp();
@@ -41,13 +41,10 @@ export const _AccordionSection = ({
         onPress();        
 
         // Lógica de Scroll automático al abrir
-        if (!isOpen && scrollRef?.current && index !== undefined) {
-            // Ajustamos el scroll para que la sección suba
-            
-            const scrollY = (index<3)? index*30 : ((index>1000)? /*((index/1000)*5) + ((index % 1000)*10)*/0 : 30 + (index * 40));             
-            setTimeout(() => {
+        if (!isOpen && scrollRef?.current && yoff !== undefined) {
+            setTimeout(() => {                
                 scrollRef.current?.scrollTo({
-                    y: scrollY,
+                    y: yoff,
                     animated: true,
                 });
             }, 0);

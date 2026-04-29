@@ -17,7 +17,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, theme, t } = useApp();
+  const { user, theme, t, isLoggedIn } = useApp();  
   const pageConfig = {
     name: t("app.name"),
     icon: "home",
@@ -35,7 +35,7 @@ export default function HomeScreen() {
   const Show_soonModal = () => {
     setShow_soon(true);
   }
-
+  
 
   // Almacen
   AddMenuItem(menuItems_Almacen, "screens.pickeo");
@@ -88,8 +88,7 @@ export default function HomeScreen() {
         }
       }
     },
-  });
-
+  });  
 
   return (
     <SafeAreaView style={[styles.container]}>

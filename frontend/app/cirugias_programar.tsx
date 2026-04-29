@@ -486,6 +486,19 @@ export default function ProgramaCirugiaScreen() {
   const [expandedSection, setExpandedSection] = useState<string | null>('lugar');
 
   const toggleSection = (section: string) => {
+    if (expandedSection === section){
+      
+      setExpandedSection(null);
+      if(section.indexOf("materiales_")>-1)
+        setTimeout(() => {
+          setExpandedSection("materiales");          
+        }, 50);
+        
+    }
+    else{
+      setExpandedSection(section);
+    }
+
     setExpandedSection(expandedSection === section ? null : section);
   };
   const [expandedSubsections, setExpandedSubsections] = useState<Record<string, boolean>>({});
@@ -610,7 +623,7 @@ export default function ProgramaCirugiaScreen() {
               <_AccordionSection
                 title={t('cirugias.lugar_fecha')}
                 isOpen={expandedSection === 'lugar'}
-                index={0}
+                yoff={0}
                 scrollRef={scrollRef}
                 onPress={() => toggleSection('lugar')}
               >
@@ -735,10 +748,10 @@ export default function ProgramaCirugiaScreen() {
               </_AccordionSection>
               <_AccordionSection
                 title={t('cirugias.participantes')}
-                isOpen={expandedSection === 'programacion'}
-                index={1}
+                isOpen={expandedSection === 'participantes'}
+                yoff={70}
                 scrollRef={scrollRef}
-                onPress={() => toggleSection('programacion')}
+                onPress={() => toggleSection('participantes')}
               >
 
                 {/* Agente */}
@@ -858,7 +871,7 @@ export default function ProgramaCirugiaScreen() {
               <_AccordionSection
                 title={t('cirugias.info_paciente')}
                 isOpen={expandedSection === 'paciente'}
-                index={4}
+                yoff={130}
                 scrollRef={scrollRef}
                 onPress={() => toggleSection('paciente')}
               >
@@ -925,7 +938,7 @@ export default function ProgramaCirugiaScreen() {
               <_AccordionSection
                 title={t('cirugias.regitro_pago_title')}
                 isOpen={expandedSection === 'registro_pago'}
-                index={5}
+                yoff={200}
                 scrollRef={scrollRef}
                 onPress={() => toggleSection('registro_pago')}
               >
@@ -979,8 +992,8 @@ export default function ProgramaCirugiaScreen() {
 
               <_AccordionSection
                 title={t('cirugias.materiales')}
-                isOpen={expandedSection === 'materiales'}
-                index={6}
+                isOpen={(expandedSection === 'materiales') ||(expandedSection?.indexOf('materiales_')==0)}
+                yoff={270}
                 scrollRef={scrollRef}
                 onPress={() => toggleSection('materiales')}
               >
@@ -1003,15 +1016,15 @@ export default function ProgramaCirugiaScreen() {
                             title={seleccionadosEnEstaCat > 0
                               ? `${item.nombre} (${seleccionadosEnEstaCat})`
                               : item.nombre
-                            }
-                            index={6000 + index}
+                            }            
+                            isOpen={expandedSection === `materiales_${item.id_set_categoria}`}
+                            yoff={270+(index*68)}
                             scrollRef={scrollRef}
-                            isOpen={!!expandedSubsections["cat_" + item.id_set_categoria]}
-                            onPress={() => toggleSubsection("cat_" + item.id_set_categoria, 360 + (index * 68))}
+                            onPress={() => { toggleSection(`materiales_${item.id_set_categoria}`);}}   
                           >
                             {Array.isArray(item.subcategorias) &&
                               item.subcategorias.map((sub: iSubCategoria) => {
-                                const key_id = "cat_" + item.id_set_categoria + "/" + sub.id_set_subcategoria;
+                                const key_id = "materiales_" + item.id_set_categoria + "/" + sub.id_set_subcategoria;
                                 const isSelected = !!selectedSubcats[key_id];
 
                                 return (
@@ -1044,7 +1057,7 @@ export default function ProgramaCirugiaScreen() {
                   <_AccordionSection
                     title={seleccionadosEquipos > 0 ? (t('cirugias.equipospoder') + ' (' + seleccionadosEquipos + ')') : t('cirugias.equipospoder')}
                     isOpen={expandedSection === 'equipospoder'}
-                    index={7}
+                    yoff={340}
                     scrollRef={scrollRef}
                     onPress={() => toggleSection('equipospoder')}
                   >
@@ -1082,7 +1095,7 @@ export default function ProgramaCirugiaScreen() {
                   <_AccordionSection
                     title={seleccionadosInst > 0 ? (t('cirugias.instrumentales') + ' (' + seleccionadosInst + ')') : t('cirugias.instrumentales')}
                     isOpen={expandedSection === 'instrumentales'}
-                    index={8}
+                    yoff={410}
                     scrollRef={scrollRef}
                     onPress={() => toggleSection('instrumentales')}
                   >
@@ -1118,7 +1131,7 @@ export default function ProgramaCirugiaScreen() {
                   <_AccordionSection
                     title={seleccionadosCons > 0 ? (t('cirugias.consumibles') + ' (' + seleccionadosCons + ')') : t('cirugias.consumibles')}
                     isOpen={expandedSection === 'consumibles'}
-                    index={9}
+                    yoff={480}
                     scrollRef={scrollRef}
                     onPress={() => toggleSection('consumibles')}
                   >

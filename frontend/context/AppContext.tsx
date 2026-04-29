@@ -206,7 +206,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tema: "light",
       menu_favorites: []
     });
-    await setIsLoggedIn(false); // Añade el await aquí
+    await setIsLoggedIn(false); // Añade el await aquí    
     try {
       await AsyncStorage.removeItem('@exosapp_user');
     } catch (e) {

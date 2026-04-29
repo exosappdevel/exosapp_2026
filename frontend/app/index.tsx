@@ -15,7 +15,7 @@ export default function Index() {
     
     const checkSessionAndNavigate = async () => {
       const FIVE_MINUTES = 5 * 60 * 1000; // 300,000 milisegundos
-      const now = Date.now();
+      const now = Date.now();      
 
       if (isLoggedIn) {
         try {
@@ -43,7 +43,7 @@ export default function Index() {
         } else {
           router.replace('/login');
         }
-      }, 500);
+      }, 1000);
     };
 
     checkSessionAndNavigate();
