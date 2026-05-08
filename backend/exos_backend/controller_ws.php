@@ -411,6 +411,8 @@ class WebServiceController
         }
 
         try {
+            $id_tipo_usuario = GetValueSQL("select id_tipo_usuario from usuario where id_usuario=" .$id_usuario ,'id_tipo_usuario');
+
             $query = "SELECT count(id_usuario_app) as existe, u.* 
                 FROM user_profile u
                 WHERE id_usuario = " . $id_usuario;
@@ -423,10 +425,38 @@ class WebServiceController
                 }
             }
 
-            $id_usuario_app = GetValueSQL_WS($query, "id_usuario_app");
+            $id_usuario_app = GetValueSQL_WS($query, "id_usuario_app");            
             $tema = GetValueSQL_WS($query, "tema");
             $app_language = GetValueSQL_WS($query, "app_language"); 
             $menu_favorites = GetValueSQL_WS($query, "menu_favorites"); 
+
+            // --- menus
+            $sSQL_menus_usuario = 'select * from tipo_usuario_menus where id_tipo_usuario=' .  $id_tipo_usuario;   
+            $records_menu_usuario = DatasetSQL_WS($sSQL_menus_usuario);
+            
+            while ($row_menu_usuario = mysqli_fetch_array($records_menu_usuario)) {
+                $sSQL_menus = "SELECT * FROM app_menus order by menu";
+                $records_menus = DatasetSQL_WS($sSQL_menus);                
+
+                $this->result["menu_count"] = $records_menus->num_rows;    
+                $menus_text = "";
+
+                while ($row = mysqli_fetch_array($records_menus)) {
+                    $menu_field = $row['menu'];
+                    $menus_text =  $menus_text . (($menus_text=="" ? "":";") . $menu_field);
+                    $menu_items_all =$row['items_all'];
+                    $menu_items_default =$row['items_default'];
+                    if ($row_menu_usuario[$menu_field] == "")
+                       $this->result["menu_" . $menu_field] = $menu_items_default;
+                    else if ($row_menu_usuario[$menu_field] == "ALL")
+                        $this->result["menu_" . $menu_field] = $menu_items_all;
+                    else
+                        $this->result["menu_" . $menu_field] =$row_menu_usuario[$menu_field];
+                }
+                $this->result["menus"] = $menus_text;    
+            }
+            
+
         } catch (Exception $e) {
             $id_usuario_app = 0;
             $tema = "light";
@@ -434,6 +464,7 @@ class WebServiceController
             $this->result["exception"] = 'Excepción recibida: ' . $e->getMessage();
         }
 
+        $this->result["id_tipo_usuario"] = $id_tipo_usuario;
         $this->result["id_usuario_app"] = $id_usuario_app;
         $this->result["tema"] = $tema;
         $this->result["app_language"] = $app_language;

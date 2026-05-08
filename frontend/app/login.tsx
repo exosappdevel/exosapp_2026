@@ -11,14 +11,14 @@ import {
   ScrollView,
   Switch,
 } from 'react-native';
-import { Image } from 'react-native'; 
+import { Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useApp } from '../context/AppContext';
+import { useApp, Menu_item } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
 import Constants from 'expo-constants';
@@ -26,8 +26,8 @@ import Constants from 'expo-constants';
 export default function LoginScreen() {
   const ImageCustom = Image as any;
   const router = useRouter();
-  const { appConfig, setUser, theme, t, setIsLoggedIn, menuFav_str, menuFav_set} = useApp();
-  
+  const { appConfig, setUser, theme, t, setIsLoggedIn, menuFav_str, menuFav_set } = useApp();
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ export default function LoginScreen() {
   const [enableFaceId, setEnableFaceId] = useState(false);
   const [hasBiometrics, setHasBiometrics] = useState(false);
   const [hasStoredCredentials, setHasStoredCredentials] = useState(false);
-  
+
   const [modal, setModal] = useState({
     visible: false,
     titulo: '',
@@ -98,7 +98,7 @@ export default function LoginScreen() {
           storedUser = await SecureStore.getItemAsync('exosapp_username');
           storedPass = await SecureStore.getItemAsync('exosapp_password');
         }
-        
+
         if (storedUser && storedPass) {
           setUsername(storedUser);
           setPassword(storedPass);
@@ -134,7 +134,7 @@ export default function LoginScreen() {
   const handleLogin = async (user?: string, pass?: string) => {
     const loginUser = user || username;
     const loginPass = pass || password;
-    
+
     if (!loginUser || !loginPass) {
       setModal({
         visible: true,
@@ -149,30 +149,42 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const response = await ApiService.inicia_sesion(loginUser, loginPass);
-      
-      if (response.result === 'ok') {        
+
+      if (response.result === 'ok') {
+        alert(response.menus);
+        const menuNames = (response.menus || '').split(';') || [];
+        const menuItems: Menu_item[] = menuNames.map((mName: string) => {
+          // Construimos la clave dinámica, por ejemplo: 'menu_almacen'
+          const fieldKey = `menu_${mName}`;
+          return {
+            menu: fieldKey,
+            items: response[fieldKey] || '' // Extraemos el contenido del campo dinámico
+          };
+        });
         const userData = {
           id_usuario_app: response.id_usuario_app || '',
           id_usuario: response.id_usuario || '',
           id_almacen: response.id_almacen || '',
-          almacen_nombre: response.almacen_nombre || '',
+          almacen_nombre: response.almacen_nombre?.textContent || '',
           almacen_codigo: response.almacen_codigo || '',
-          alias_usuario: response.alias_usuario.toUpperCase() || '',
-          tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light'   ,
-          menu_favorites : (response.menu_favorites || '').split(';').filter((item:String) => item !== "")
-        };        
-        setUser(userData);        
+          alias_usuario: (response.alias_usuario?.textContent || '').toUpperCase() || '',
+          tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light',
+          menu_favorites: (response.menu_favorites?.textContent || '').split(';').filter((item: String) => item !== ""),
+          menu_items: menuItems
+        };
+        alert(JSON.stringify(userData));
+        setUser(userData);
         menuFav_set(response.menu_favorites);
-        setIsLoggedIn(true);                
-        
+        setIsLoggedIn(true);
+
         // Save user to AsyncStorage
         await AsyncStorage.setItem('@exosapp_user', JSON.stringify(userData));
-        
+
         // Save credentials if FaceID is enabled
         if (enableFaceId) {
           await saveCredentials(loginUser, loginPass);
         }
-        
+
         router.replace('/home');
       } else {
         setModal({
@@ -197,25 +209,25 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor:"#003857"  }]}>
-      <KeyboardAvoidingView 
+    <SafeAreaView style={[styles.container, { backgroundColor: "#003857" }]}>
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.logoContainer}>           
+          <View style={styles.logoContainer}>
             <ImageCustom
-                source={require("../assets/images/logo_login.png")}
-                style={styles.logo}
-                resizeMode="contain"
-              />
+              source={require("../assets/images/logo_login.png")}
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={[styles.appName]}>{t("app.name")}</Text>
           </View>
 
-          <View style={[styles.formContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>                      
+          <View style={[styles.formContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={[styles.inputContainer, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
               <MaterialCommunityIcons name="account" size={24} color={theme.textSub} />
               <TextInput
@@ -241,10 +253,10 @@ export default function LoginScreen() {
                 autoCapitalize="none"
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <MaterialCommunityIcons 
-                  name={showPassword ? "eye-off" : "eye"} 
-                  size={24} 
-                  color={theme.textSub} 
+                <MaterialCommunityIcons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color={theme.textSub}
                 />
               </TouchableOpacity>
             </View>
@@ -264,11 +276,11 @@ export default function LoginScreen() {
                   thumbColor={enableFaceId ? '#fff' : '#f4f3f4'}
                   style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                 />
-                
+
               </View>
             )}
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.loginButton, { backgroundColor: theme.accent }]}
               onPress={() => handleLogin()}
               disabled={loading}
@@ -281,21 +293,21 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             {hasBiometrics && hasStoredCredentials && enableFaceId && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.faceIdButton, { borderColor: theme.accent }]}
-                onPress={authenticateWithBiometrics}                
-              >                
+                onPress={authenticateWithBiometrics}
+              >
                 <MaterialCommunityIcons name="face-recognition" size={24} color={theme.accent} />
                 <Text style={[styles.faceIdButtonText, { color: theme.accent }]}>
                   {t('login.useFaceId')}
                 </Text>
               </TouchableOpacity>
             )}
-            
+
           </View>
           <Text style={styles.versionText} >
-              Versión de la App: {Constants.expoConfig?.version || "1.0.0"}
-            </Text>
+            Versión de la App: {Constants.expoConfig?.version || "1.0.0"}
+          </Text>
 
           <ImageCustom
             source={require("../assets/images/logo_Elidev.png")}
@@ -329,7 +341,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor:"#003857" 
+    backgroundColor: "#003857"
   },
   logoContainer: {
     alignItems: 'center',
@@ -339,7 +351,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 10,
-    color:"white"
+    color: "white"
   },
   formContainer: {
     borderRadius: 20,

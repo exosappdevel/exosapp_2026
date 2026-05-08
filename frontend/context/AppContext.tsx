@@ -5,6 +5,10 @@ import translations from '../languages.json';
 type Language = 'es' | 'en';
 type ThemeType = 'light' | 'dark' | 'blue' | 'pink';
 
+export interface Menu_item{
+  menu : string;
+  items : string;
+}
 interface User {
   id_usuario_app: string;
   id_usuario: string;
@@ -14,6 +18,7 @@ interface User {
   alias_usuario: string;
   tema: ThemeType;
   menu_favorites: string[];
+  menu_items : Menu_item[];
 }
 
 interface AppConfig {
@@ -122,7 +127,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     almacen_codigo: "",
     alias_usuario: "",
     tema: "light",
-    menu_favorites: []
+    menu_favorites: [],
+    menu_items:[]
   });
 
   const setIsLoggedIn = async (value: boolean) => {
@@ -204,7 +210,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       almacen_codigo: "",
       alias_usuario: "",
       tema: "light",
-      menu_favorites: []
+      menu_favorites: [],
+      menu_items : []
     });
     await setIsLoggedIn(false); // Añade el await aquí    
     try {

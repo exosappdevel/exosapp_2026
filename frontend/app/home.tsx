@@ -7,7 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
-import  { Soon_Modal } from '../components/CustomModal';
+import { Soon_Modal } from '../components/CustomModal';
 import { _Header, _Footer, _MenuGrid, _MenuSection, _Background, _MenuLauncher } from '../components/elidev_components';
 import { iMenuItem, AddMenuItem } from '@/context/AppmenuItems';
 import { AppmenuItems } from '@/context/AppmenuItems';
@@ -17,7 +17,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, theme, t, isLoggedIn } = useApp();  
+  const { user, theme, t, isLoggedIn } = useApp();
   const pageConfig = {
     name: t("app.name"),
     icon: "home",
@@ -35,35 +35,45 @@ export default function HomeScreen() {
   const Show_soonModal = () => {
     setShow_soon(true);
   }
-  
+  // Función para verificar si un item está permitido en un menú específico
+  const isAllowed = (menuName: string, itemName: string): boolean => {
+    // Buscamos el menú en el arreglo de items del usuario
+    const userMenu = user.menu_items.find(m => m.menu === menuName);
+    if (!userMenu) return false;
 
-  // Almacen
-  AddMenuItem(menuItems_Almacen, "screens.pickeo");
-  AddMenuItem(menuItems_Almacen, "screens.inventario");
-  AddMenuItem(menuItems_Almacen, "screens.recepcion");
-  AddMenuItem(menuItems_Almacen, "screens.entradas");
+    // Los items vienen separados por ; según tu lógica de login
+    const allowedItems = userMenu.items.split(';');
+    return allowedItems.includes(itemName);
+  };
 
-  // --- Cirugias
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar");
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar");
-  AddMenuItem(menuItems_Cirugias, "screens.cirugias_vista_diario");
+  // --- Almacen ---
+  if (isAllowed('menu_almacen', 'pickeo')) AddMenuItem(menuItems_Almacen, "screens.pickeo");
+  if (isAllowed('menu_almacen', 'inventario')) AddMenuItem(menuItems_Almacen, "screens.inventario");
+  if (isAllowed('menu_almacen', 'recepcion')) AddMenuItem(menuItems_Almacen, "screens.recepcion");
+  if (isAllowed('menu_almacen', 'entradas')) AddMenuItem(menuItems_Almacen, "screens.entradas");
 
-  // --- Logistica
-  AddMenuItem(menuItems_Logistica, "screens.activos");
-  AddMenuItem(menuItems_Logistica, "screens.carpetas");
-  AddMenuItem(menuItems_Logistica, "screens.socios");
+  // --- Cirugias ---
+  if (isAllowed('menu_cirugias', 'cirugias_programar')) AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar");
+  if (isAllowed('menu_cirugias', 'cirugias_buscar')) AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar");
+  if (isAllowed('menu_cirugias', 'cirugias_vista_diario')) AddMenuItem(menuItems_Cirugias, "screens.cirugias_vista_diario");
+
+  // --- Logistica ---
+  if (isAllowed('menu_logistica', 'activos')) AddMenuItem(menuItems_Logistica, "screens.activos");
+  if (isAllowed('menu_logistica', 'carpetas')) AddMenuItem(menuItems_Logistica, "screens.carpetas");
+  if (isAllowed('menu_logistica', 'socios')) AddMenuItem(menuItems_Logistica, "screens.socios");
 
   // 1. Estado para la sección activa (por defecto Favoritos)
   const [activeSection, setActiveSection] = useState('favoritos');
 
   // 2. Definición de las secciones para el lanzador
   const favoriteItems = AppmenuItems.filter(item => user.menu_favorites?.includes(item.id));
+  // Solo agregamos a la visualización las secciones que terminaron con al menos un item
   const allSections = [
-    { id: 'favoritos', title: 'Favoritos', icon: 'star', data: favoriteItems },
-    { id: 'almacen', title: 'Almacén', icon: 'warehouse', data: menuItems_Almacen },
-    { id: 'cirugias', title: 'Cirugías', icon: 'stethoscope', data: menuItems_Cirugias },
-    { id: 'logistica', title: 'Logística', icon: 'truck-delivery', data: menuItems_Logistica },
-  ];
+    { id: 'favorites', title: t('menu.favorites'), icon: 'star', data: menuItems_Favorites },
+    { id: 'almacen', title: t('menu.almacen'), icon: 'warehouse', data: menuItems_Almacen },
+    { id: 'cirugias', title: t('menu.cirugias'), icon: 'medical-bag', data: menuItems_Cirugias },
+    { id: 'logistica', title: t('menu.logistica'), icon: 'truck-delivery', data: menuItems_Logistica },
+  ].filter(section => section.data.length > 0); // <-- FILTRO CRUCIAL
 
   // 4. Obtener la sección que se debe renderizar en el "Widget"
   const currentSection = allSections.find(s => s.id === activeSection) || allSections[0];
@@ -88,7 +98,7 @@ export default function HomeScreen() {
         }
       }
     },
-  });  
+  });
 
   return (
     <SafeAreaView style={[styles.container]}>

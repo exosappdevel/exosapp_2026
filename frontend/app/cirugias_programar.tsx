@@ -114,7 +114,7 @@ export default function ProgramaCirugiaScreen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
   const pageConfig = {
-    name: t('cirugias.new_title'),
+    name: t('cirugias_programar.new_title'),
     icon: "calendar-plus",
     previous: "/home",
     show_user: true,
@@ -621,7 +621,7 @@ export default function ProgramaCirugiaScreen() {
 
               {/* SECCIÓN 1: PROGRAMACIÓN */}
               <_AccordionSection
-                title={t('cirugias.lugar_fecha')}
+                title={t('cirugias_programar.lugar_fecha')}
                 isOpen={expandedSection === 'lugar'}
                 yoff={0}
                 scrollRef={scrollRef}
@@ -631,7 +631,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Fecha */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.fecha')} <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.fecha')} <Text style={styles.required}>*</Text>
                   </Text>
 
                   {Platform.OS === 'web' ? (
@@ -699,7 +699,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Hora */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.hora')} <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.hora')} <Text style={styles.required}>*</Text>
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -715,7 +715,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Estado */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.estado')} <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.estado')} <Text style={styles.required}>*</Text>
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -732,7 +732,7 @@ export default function ProgramaCirugiaScreen() {
                 <_TouchableWithoutFeedback>
                   <View style={styles.fieldContainer}>
                     <Text style={[styles.label, { color: theme.text }]}>
-                      {t('cirugias.ciudad')} <Text style={styles.required}>*</Text>
+                      {t('cirugias_programar.ciudad')} <Text style={styles.required}>*</Text>
                     </Text>
                     <TextInput
                       style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
@@ -747,7 +747,7 @@ export default function ProgramaCirugiaScreen() {
                 </_TouchableWithoutFeedback>
               </_AccordionSection>
               <_AccordionSection
-                title={t('cirugias.participantes')}
+                title={t('cirugias_programar.participantes')}
                 isOpen={expandedSection === 'participantes'}
                 yoff={70}
                 scrollRef={scrollRef}
@@ -757,7 +757,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Agente */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.agente')} <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.agente')} <Text style={styles.required}>*</Text>
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -772,7 +772,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Tecnico1 */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.tecnico')} <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.tecnico')} <Text style={styles.required}>*</Text>
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -787,7 +787,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Tecnico2 */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.tecnico')} 2 <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.tecnico')} 2 <Text style={styles.required}>*</Text>
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -803,7 +803,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Subdistribuidor */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.subdistribuidor')} <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.subdistribuidor')} <Text style={styles.required}>*</Text>
                   </Text>
 
                   <TouchableOpacity
@@ -820,7 +820,7 @@ export default function ProgramaCirugiaScreen() {
                 {((subdistribuidor?.no_registrado ?? "0") == "1") && (
                   <View style={styles.fieldContainer}>
                     <Text style={[styles.label, { color: theme.text }]}>
-                      {t('cirugias.subdistribuidor')} no registrado
+                      {t('cirugias_programar.subdistribuidor')} no registrado
                       <Text style={styles.required}>*</Text>
                     </Text>
                     <TextInput
@@ -837,7 +837,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Hospital */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.hospital')} <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.hospital')} <Text style={styles.required}>*</Text>
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -853,7 +853,7 @@ export default function ProgramaCirugiaScreen() {
                 {/* Médico */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.medico')} <Text style={styles.required}>*</Text>
+                    {t('cirugias_programar.medico')} <Text style={styles.required}>*</Text>
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -869,7 +869,7 @@ export default function ProgramaCirugiaScreen() {
 
               {/* SECCIÓN 2: PACIENTE */}
               <_AccordionSection
-                title={t('cirugias.info_paciente')}
+                title={t('cirugias_programar.info_paciente')}
                 isOpen={expandedSection === 'paciente'}
                 yoff={130}
                 scrollRef={scrollRef}
@@ -879,11 +879,11 @@ export default function ProgramaCirugiaScreen() {
                 {/* Paciente */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.paciente_nombre_title')}
+                    {t('cirugias_programar.paciente_nombre_title')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder={t('cirugias.paciente_nombre')}
+                    placeholder={t('cirugias_programar.paciente_nombre')}
                     placeholderTextColor={theme.textSub}
                     value={paciente?.nombre}
                     autoCapitalize='characters'
@@ -897,11 +897,11 @@ export default function ProgramaCirugiaScreen() {
                 </View>
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.paciente_materno_title')}
+                    {t('cirugias_programar.paciente_materno_title')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder={t('cirugias.paciente_materno')}
+                    placeholder={t('cirugias_programar.paciente_materno')}
                     placeholderTextColor={theme.textSub}
                     autoCapitalize='characters'
                     value={paciente?.materno}
@@ -915,11 +915,11 @@ export default function ProgramaCirugiaScreen() {
                 </View>
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.paciente_paterno_title')}
+                    {t('cirugias_programar.paciente_paterno_title')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder={t('cirugias.paciente_paterno')}
+                    placeholder={t('cirugias_programar.paciente_paterno')}
                     placeholderTextColor={theme.textSub}
                     autoCapitalize='characters'
                     value={paciente?.paterno}
@@ -936,7 +936,7 @@ export default function ProgramaCirugiaScreen() {
 
               {/* SECCIÓN: Registro de Pago */}
               <_AccordionSection
-                title={t('cirugias.regitro_pago_title')}
+                title={t('cirugias_programar.regitro_pago_title')}
                 isOpen={expandedSection === 'registro_pago'}
                 yoff={200}
                 scrollRef={scrollRef}
@@ -946,11 +946,11 @@ export default function ProgramaCirugiaScreen() {
                 {/* Numero de orden */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.numero_de_orden_title')}
+                    {t('cirugias_programar.numero_de_orden_title')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                    placeholder={t('cirugias.numero_de_orden')}
+                    placeholder={t('cirugias_programar.numero_de_orden')}
                     placeholderTextColor={theme.textSub}
                     value={numero_ordenpago}
                     onChangeText={setNumero_ordenpago}
@@ -958,7 +958,7 @@ export default function ProgramaCirugiaScreen() {
                 </View>
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.subir_comprobantes')}
+                    {t('cirugias_programar.subir_comprobantes')}
                   </Text>
                 </View>
 
@@ -988,10 +988,10 @@ export default function ProgramaCirugiaScreen() {
               </_AccordionSection>
 
 
-              {/* SECCIÓN 3: materiales */}
+              {/* SECCIÓN 3: materiales */}             
 
               <_AccordionSection
-                title={t('cirugias.materiales')}
+                title={t('cirugias_programar.materiales')}
                 isOpen={(expandedSection === 'materiales') ||(expandedSection?.indexOf('materiales_')==0)}
                 yoff={270}
                 scrollRef={scrollRef}
@@ -1005,7 +1005,7 @@ export default function ProgramaCirugiaScreen() {
                       } else {
                         // Calculamos cuántos seleccionados hay para ESTA categoría
                         const seleccionadosEnEstaCat = Array.isArray(item.subcategorias)
-                          ? item.subcategorias.filter(sub => !!selectedSubcats["cat_" + item.id_set_categoria + "/" + sub.id_set_subcategoria]).length
+                          ? item.subcategorias.filter(sub => !!selectedSubcats["materiales_" + item.id_set_categoria + "/" + sub.id_set_subcategoria]).length
                           : 0;
 
                         return (
@@ -1055,7 +1055,7 @@ export default function ProgramaCirugiaScreen() {
 
                 return (
                   <_AccordionSection
-                    title={seleccionadosEquipos > 0 ? (t('cirugias.equipospoder') + ' (' + seleccionadosEquipos + ')') : t('cirugias.equipospoder')}
+                    title={seleccionadosEquipos > 0 ? (t('cirugias_programar.equipospoder') + ' (' + seleccionadosEquipos + ')') : t('cirugias_programar.equipospoder')}
                     isOpen={expandedSection === 'equipospoder'}
                     yoff={340}
                     scrollRef={scrollRef}
@@ -1093,7 +1093,7 @@ export default function ProgramaCirugiaScreen() {
 
                 return (
                   <_AccordionSection
-                    title={seleccionadosInst > 0 ? (t('cirugias.instrumentales') + ' (' + seleccionadosInst + ')') : t('cirugias.instrumentales')}
+                    title={seleccionadosInst > 0 ? (t('cirugias_programar.instrumentales') + ' (' + seleccionadosInst + ')') : t('cirugias_programar.instrumentales')}
                     isOpen={expandedSection === 'instrumentales'}
                     yoff={410}
                     scrollRef={scrollRef}
@@ -1129,7 +1129,7 @@ export default function ProgramaCirugiaScreen() {
 
                 return (
                   <_AccordionSection
-                    title={seleccionadosCons > 0 ? (t('cirugias.consumibles') + ' (' + seleccionadosCons + ')') : t('cirugias.consumibles')}
+                    title={seleccionadosCons > 0 ? (t('cirugias_programar.consumibles') + ' (' + seleccionadosCons + ')') : t('cirugias_programar.consumibles')}
                     isOpen={expandedSection === 'consumibles'}
                     yoff={480}
                     scrollRef={scrollRef}
@@ -1163,7 +1163,7 @@ export default function ProgramaCirugiaScreen() {
 
                 {/* Campo: Solicitar Material Estéril */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
-                  <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias.solicita_material_esteril')}</Text>
+                  <Text style={{ color: theme.text, fontSize: 15 }}>{t('cirugias_programar.solicita_material_esteril')}</Text>
                   <Switch
                     value={solicitarEsteril}
                     onValueChange={setSolicitarEsteril}
@@ -1174,10 +1174,10 @@ export default function ProgramaCirugiaScreen() {
                 {/* Notas */}
                 <_TouchableWithoutFeedback>
                   <View pointerEvents="box-none" style={styles.fieldContainer}>
-                    <Text style={[styles.label, { color: theme.text }]}>{t('cirugias.notas_title')}<Text style={styles.required}>*</Text></Text>
+                    <Text style={[styles.label, { color: theme.text }]}>{t('cirugias_programar.notas_title')}<Text style={styles.required}>*</Text></Text>
                     <TextInput
                       style={[styles.textArea, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                      placeholder={t('cirugias.notas')}
+                      placeholder={t('cirugias_programar.notas')}
                       placeholderTextColor={theme.textSub}
                       value={notas}
                       onChangeText={setNotas}

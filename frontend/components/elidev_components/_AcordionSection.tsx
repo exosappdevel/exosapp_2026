@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
+import { hexToRGBA } from './_Functions';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -23,6 +24,7 @@ interface AccordionProps {
     onPress: () => void;    
     scrollRef?: React.RefObject<ScrollView | null>; // Acepta null para evitar errores de tipo
     yoff?: number;
+    visible?:boolean;
 }
 
 export const _AccordionSection = ({ 
@@ -31,10 +33,13 @@ export const _AccordionSection = ({
     isOpen, 
     onPress, 
     scrollRef, 
-    yoff 
+    yoff,
+    visible = true
 }: AccordionProps) => {
     
     const { theme } = useApp();
+    
+    if (!visible) return null;
 
     const handlePress = () => {                
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -54,7 +59,7 @@ export const _AccordionSection = ({
     return (
         <View style={[
             styles.accordionContainer, 
-            { borderColor: theme.border, backgroundColor: theme.card }
+            { borderColor: theme.border, backgroundColor: hexToRGBA(theme.card,0.5) }
         ]}>
             <TouchableOpacity
                 style={[
@@ -89,6 +94,10 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 12,
         overflow: 'hidden',
+        ...({
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+        } as any),
     },
     accordionHeader: {
         flexDirection: 'row',

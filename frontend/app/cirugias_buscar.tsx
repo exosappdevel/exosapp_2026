@@ -23,41 +23,12 @@ import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Background, hexToRGBA, _Footer, _MenuGrid, _checkBox } from '../components/elidev_components';
-import { Audio } from 'expo-av';
-import * as Haptics from 'expo-haptics';
+import { _Header, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, } from '../components/elidev_components';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-
-const AccordionSection = ({ title, children, isOpen, onPress, theme }: any) => (
-  <View style={[styles.accordionContainer, { borderColor: theme.border }]}>
-    {/* Este es el único lugar donde vive el onPress de apertura */}
-    <TouchableOpacity
-      style={[styles.accordionHeader,{ backgroundColor:hexToRGBA(theme.card,0.8)} ]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Text style={[styles.accordionTitle, { color: theme.text }]}>{title}</Text>
-      <MaterialCommunityIcons
-        name={isOpen ? 'chevron-up' : 'chevron-down'}
-        size={24}
-        color={theme.textSub}
-      />
-    </TouchableOpacity>
-
-    {/* Aquí el contenido se renderiza de forma independiente */}
-    {isOpen && (
-      <View style={[styles.accordionContent,{backgroundColor:hexToRGBA(theme.card,0.8)}]}>
-        {children}
-      </View>
-    )}
-  </View>
-);
-
 
 
 interface PickerOption {
@@ -116,7 +87,7 @@ export default function Cirugia_BuscarScreen() {
   const [tecnico, setTecnico] = useState<iTecnico | null>(null);
   const [subdistribuidor, setSubdistribuidor] = useState<iSubdistribuidor | null>(null);
   const [codigo_cirugia, setCodigo_cirugia] = useState('');
-  const [limite, setLimite] = useState("1");
+  const [limite, setLimite] = useState("10");
 
 
   // listas  
@@ -135,10 +106,10 @@ export default function Cirugia_BuscarScreen() {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-
   const scrollRef = React.useRef<ScrollView>(null);
 
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [section_resultados_visible, setSection_resultados_visible] = useState(false);
+  const [resultados_count, setResultados_count] = useState(0);
 
   const validaData = async (response: any) => {
     try {
@@ -255,32 +226,11 @@ export default function Cirugia_BuscarScreen() {
   const validateForm = () => {
     return null;
   };
-  async function playSuccessSound() {
-    const { sound } = await Audio.Sound.createAsync(
-      require('../assets/sounds/success.mp3') // Asegúrate de que la ruta sea correcta
-    );
-    setSound(sound);
-    await sound.playAsync();
-  }
-  async function playErrorSound() {
-    const { sound } = await Audio.Sound.createAsync(
-      require('../assets/sounds/success.mp3') // Asegúrate de que la ruta sea correcta
-    );
-    setSound(sound);
-    await sound.playAsync();
-  }
-  useEffect(() => {
-    return sound
-      ? () => { sound.unloadAsync(); }
-      : undefined;
-  }, [sound]);
+
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
       playErrorSound();
-      Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Error
-      );
 
       setModal({
         visible: true,
@@ -324,25 +274,31 @@ export default function Cirugia_BuscarScreen() {
       numero_ordenpago,
       stringArchivos);*/
 
+
       if (true /* response.result === 'ok'*/) {
         setSubmitting(false);
-        playSuccessSound();
-        Haptics.notificationAsync(
-          Haptics.NotificationFeedbackType.Success
-        );
-        setModal({
-          visible: true,
-          titulo: t("cirugias.search_success_title"),
-          mensaje: '0 ' + t("cirugias.search_success"),
-          icon: 'check-circle-outline',
-          colorIcon: '#48bb78'
-        });
+        const resultados_count = 0;
+        setResultados_count(resultados_count);
+        if (resultados_count == 0) {
+          setSection_resultados_visible(false);
+          playErrorSound();
+          setModal({
+            visible: true,
+            titulo: t("cirugias_programar.search_success_title"),
+            mensaje: '0 ' + t("cirugias_programar.search_success"),
+            icon: 'alert-circle-outline',
+            colorIcon: '#48bb78'
+          });
+        }
+        else {
+          setSection_resultados_visible(true);
+          setExpandedSection('resultados');
+          playSuccessSound();
+        }
       }
       else {
+        setSection_resultados_visible(false);
         playErrorSound();
-        Haptics.notificationAsync(
-          Haptics.NotificationFeedbackType.Error
-        );
         setModal({
           visible: true,
           titulo: t('common.error'),
@@ -416,31 +372,18 @@ export default function Cirugia_BuscarScreen() {
     </Modal>
   );
 
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ parametros: true });
 
-  const toggleSection = (sectionId: string, yOffset: number = 0) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    const isOpening = !expandedSections[sectionId];
+  const [expandedSection, setExpandedSection] = useState<string | null>('parametros');
 
-    setExpandedSections((prev) => {
-      // Si la sección que clickeamos ya está abierta, la cerramos (devolvemos objeto vacío)
-      if (prev[sectionId]) {
-        return {};
-      }
-      // Si está cerrada, abrimos SOLO esa (creamos un objeto nuevo solo con esa llave)
-      return { [sectionId]: true };
-    })
-    if (isOpening) {
-      // El delay es vital para que la animación de LayoutAnimation 
-      // termine de expandir el contenido antes de calcular el scroll.
-      setTimeout(() => {
-        // Ejecutar el scroll        
-        scrollRef.current?.scrollTo({
-          y: yOffset,
-          animated: true,
-        });
-      }, 100); // 400ms es el tiempo ideal para esperar la animación de Expo/RN
+  const toggleSection = (section: string) => {
+    if (expandedSection === section) {
+      setExpandedSection(null);
     }
+    else {
+      setExpandedSection(section);
+    }
+
+    setExpandedSection(expandedSection === section ? null : section);
   };
 
   // 1. MIENTRAS CARGA (Splash Screen)
@@ -480,17 +423,18 @@ export default function Cirugia_BuscarScreen() {
 
 
               {/* SECCIÓN 1: parametros */}
-              <AccordionSection
-                title={t('cirugias.parameters_search_title')}
-                isOpen={!!expandedSections['parametros']}
-                onPress={() => toggleSection('parametros', 10)}
-                theme={theme}
+              <_AccordionSection
+                title={t('cirugias_programar.parameters_search_title')}
+                isOpen={(expandedSection === 'parametros')}
+                yoff={0}
+                scrollRef={scrollRef}
+                onPress={() => toggleSection('parametros')}
               >
 
                 {/* Fecha ini */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.fecha_ini')}
+                    {t('cirugias_programar.fecha_ini')}
                   </Text>
 
                   {Platform.OS === 'web' ? (
@@ -557,7 +501,7 @@ export default function Cirugia_BuscarScreen() {
                 {/* Fecha fin */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias.fecha_fin')}
+                    {t('cirugias_programar.fecha_fin')}
                   </Text>
 
                   {Platform.OS === 'web' ? (
@@ -624,7 +568,7 @@ export default function Cirugia_BuscarScreen() {
                 {/* Agente */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    Agente
+                    {t('cirugias_programar.agente')}
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -639,7 +583,7 @@ export default function Cirugia_BuscarScreen() {
                 {/* Tecnico1 */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    Técnico
+                    {t('cirugias_programar.tecnico')}
                   </Text>
                   <TouchableOpacity
                     style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
@@ -654,7 +598,7 @@ export default function Cirugia_BuscarScreen() {
                 {/* Subdistribuidor */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
-                    Subdistribuidor
+                    {t('cirugias_programar.subdistribuidor')}
                   </Text>
 
                   <TouchableOpacity
@@ -670,7 +614,7 @@ export default function Cirugia_BuscarScreen() {
                 <_TouchableWithoutFeedback>
                   <View style={styles.fieldContainer}>
                     <Text style={[styles.label, { color: theme.text }]}>
-                      {t('cirugias.codigo_cirugia')}
+                      {t('cirugias_programar.codigo_cirugia')}
                     </Text>
                     <TextInput
                       style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
@@ -686,7 +630,7 @@ export default function Cirugia_BuscarScreen() {
                 <_TouchableWithoutFeedback>
                   <View style={styles.fieldContainer}>
                     <Text style={[styles.label, { color: theme.text }]}>
-                      {t('cirugias.limite')}
+                      {t('cirugias_programar.limite')}
                     </Text>
                     <TextInput
                       style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
@@ -711,34 +655,30 @@ export default function Cirugia_BuscarScreen() {
                   ) : (
                     <>
                       <MaterialCommunityIcons name="magnify" size={24} color="#fff" />
-                      <Text style={styles.submitButtonText}>{t('cirugias.search_button')}</Text>
+                      <Text style={styles.submitButtonText}>{t('cirugias_programar.search_button')}</Text>
                     </>
                   )}
                 </TouchableOpacity>
 
-              </AccordionSection>
-              <AccordionSection
-                title={t('cirugias.resultados_programadas')}
-                isOpen={!!expandedSections['programadas']}
-                onPress={() => toggleSection('programadas', 150)}
-                theme={theme}
+              </_AccordionSection>
+              <_AccordionSection
+
+                title={`${resultados_count || 0} ${(Number(resultados_count) === 1)
+                    ? t("cirugias_programar.search_success_singular")
+                    : t("cirugias_programar.search_success")
+                  }`}
+                isOpen={(expandedSection === 'resultados')}
+                yoff={0}
+                scrollRef={scrollRef}
+                visible={section_resultados_visible}
+                onPress={() => toggleSection('resultados')}
               >
+
 
                 {/* resultados */}
                 <View style={styles.fieldContainer}>
                 </View>
-              </AccordionSection>
-              <AccordionSection
-                title={t('cirugias.resultados_apoyo')}
-                isOpen={!!expandedSections['apoyo']}
-                onPress={() => toggleSection('apoyo', 150)}
-                theme={theme}
-              >
-
-                {/* resultados */}
-                <View style={styles.fieldContainer}>
-                </View>
-              </AccordionSection>
+              </_AccordionSection>
             </View>
           </ScrollView>
 

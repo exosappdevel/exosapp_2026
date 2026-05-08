@@ -4,6 +4,7 @@ import {
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Href } from 'expo-router';
 import { iMenuItem } from "@/context/AppmenuItems";
@@ -56,10 +57,13 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }
         try {
             // 3. Sincronización con servidor usando la misma lógica de ApiService
             // Se envía el objeto usuario con el string de favoritos actualizado
-            await ApiService.request('save_profile', {
-                ...user,
-                menu_favorites: favString
-            });
+            //const response = await ApiService.save_profile(updatedUser.id_usuario_app, updatedUser.tema, sel_language, menuFav_str());
+            
+            const response = await ApiService.save_profile(user.id_usuario_app, user.tema, language, favString);
+
+            if (response.result === 'ok') {
+                
+            }
         } catch (error) {
             console.error("Error al sincronizar favoritos:", error);
         }
