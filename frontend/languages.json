@@ -7,6 +7,12 @@
     "app":{
       "name":"ExosApp 2026"
     },
+    "home":{
+      "menu_favorites" : "Favoritos",
+      "menu_almacen" :"Almacén",
+      "menu_cirugias" : "Cirugías",
+      "menu_logistica" : "Logística"      
+    },
     "screens":{
       "home":"Inicio",
       "almacen":"Almacén",

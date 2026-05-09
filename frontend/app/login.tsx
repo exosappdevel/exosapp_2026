@@ -151,16 +151,17 @@ export default function LoginScreen() {
       const response = await ApiService.inicia_sesion(loginUser, loginPass);
 
       if (response.result === 'ok') {
-        alert(response.menus);
-        const menuNames = (response.menus || '').split(';') || [];
+        
+        const menuNames = (typeof response.menus == 'object') ? [] : response.menus.split(';') || [];
         const menuItems: Menu_item[] = menuNames.map((mName: string) => {
           // Construimos la clave dinámica, por ejemplo: 'menu_almacen'
           const fieldKey = `menu_${mName}`;
           return {
             menu: fieldKey,
-            items: response[fieldKey] || '' // Extraemos el contenido del campo dinámico
+            items: (typeof response[fieldKey] == 'object')? '': response[fieldKey] 
           };
         });
+        const fav = (typeof response.menu_favorites =='object')? '' : response.menu_favorites;
         const userData = {
           id_usuario_app: response.id_usuario_app || '',
           id_usuario: response.id_usuario || '',
@@ -169,10 +170,10 @@ export default function LoginScreen() {
           almacen_codigo: response.almacen_codigo || '',
           alias_usuario: (response.alias_usuario?.textContent || '').toUpperCase() || '',
           tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light',
-          menu_favorites: (response.menu_favorites?.textContent || '').split(';').filter((item: String) => item !== ""),
+          menu_favorites: fav.split(';').filter((item: String) => item !== ""),
           menu_items: menuItems
         };
-        alert(JSON.stringify(userData));
+        //alert(JSON.stringify(fav.split(';').filter((item: String) => item !== "")));
         setUser(userData);
         menuFav_set(response.menu_favorites);
         setIsLoggedIn(true);

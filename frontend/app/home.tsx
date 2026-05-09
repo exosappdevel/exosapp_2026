@@ -38,10 +38,10 @@ export default function HomeScreen() {
   // Función para verificar si un item está permitido en un menú específico
   const isAllowed = (menuName: string, itemName: string): boolean => {
     // Buscamos el menú en el arreglo de items del usuario
-    const userMenu = user.menu_items.find(m => m.menu === menuName);
+    const userMenu = user.menu_items?.find(m => m.menu === menuName) || false;
     if (!userMenu) return false;
 
-    // Los items vienen separados por ; según tu lógica de login
+    // Los items vienen separados por ; según tu lógica de login    
     const allowedItems = userMenu.items.split(';');
     return allowedItems.includes(itemName);
   };
@@ -67,13 +67,14 @@ export default function HomeScreen() {
 
   // 2. Definición de las secciones para el lanzador
   const favoriteItems = AppmenuItems.filter(item => user.menu_favorites?.includes(item.id));
+  
   // Solo agregamos a la visualización las secciones que terminaron con al menos un item
   const allSections = [
-    { id: 'favorites', title: t('menu.favorites'), icon: 'star', data: menuItems_Favorites },
-    { id: 'almacen', title: t('menu.almacen'), icon: 'warehouse', data: menuItems_Almacen },
-    { id: 'cirugias', title: t('menu.cirugias'), icon: 'medical-bag', data: menuItems_Cirugias },
-    { id: 'logistica', title: t('menu.logistica'), icon: 'truck-delivery', data: menuItems_Logistica },
-  ].filter(section => section.data.length > 0); // <-- FILTRO CRUCIAL
+    { id: 'favorites', title: t('home.menu_favorites'), icon: 'star', data: favoriteItems },
+    { id: 'almacen', title: t('home.menu_almacen'), icon: 'warehouse', data: menuItems_Almacen },
+    { id: 'cirugias', title: t('home.menu_cirugias'), icon: 'medical-bag', data: menuItems_Cirugias },
+    { id: 'logistica', title: t('home.menu_logistica'), icon: 'truck-delivery', data: menuItems_Logistica },
+  ].filter(section => (section.data.length > 0) || (section.id=='favorites')); // <-- FILTRO CRUCIAL
 
   // 4. Obtener la sección que se debe renderizar en el "Widget"
   const currentSection = allSections.find(s => s.id === activeSection) || allSections[0];
