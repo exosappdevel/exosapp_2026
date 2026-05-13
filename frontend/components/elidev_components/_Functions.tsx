@@ -18,7 +18,7 @@ export const playSuccessSound = async () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         
         const { sound } = await Audio.Sound.createAsync(
-            require('../assets/sounds/success.mp3') // Asegúrate de tener este archivo
+            require('../../assets/sounds/success.mp3') // Asegúrate de tener este archivo
         );
         await sound.playAsync();
         
@@ -42,7 +42,7 @@ export const playErrorSound = async () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         
         const { sound } = await Audio.Sound.createAsync(
-            require('../assets/sounds/error.mp3') // Asegúrate de tener este archivo
+            require('../../assets/sounds/error.mp3') // Asegúrate de tener este archivo
         );
         await sound.playAsync();
 

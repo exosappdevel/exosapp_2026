@@ -61,3 +61,27 @@ const [activeSection, setActiveSection] = useState<string | null>(null);
 sectionId="almacen"           // unique ID
 activeSection={activeSection} // shared state
 onToggleSection={setActiveSection} // shared setter
+
+
+
+              <_AccordionSection
+
+                title={`${resultados_count || 0} ${(Number(resultados_count) === 1)
+                  ? t("cirugias_programar.search_success_singular")
+                  : t("cirugias_programar.search_success")
+                  }`}
+                isOpen={(expandedSection === 'resultados')}
+                yoff={0}
+                scrollRef={scrollRef}
+                visible={section_resultados_visible}
+                onPress={() => toggleSection('resultados')}
+              >
+
+
+                {/* resultados */}
+                <View style={styles.fieldContainer}>
+                </View>
+                <View style={{ marginTop: 0, marginBottom: 0 }}>
+                  
+                </View>
+              </_AccordionSection>

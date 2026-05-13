@@ -219,6 +219,28 @@ class ApiService {
       nuevo_cirugia_file_name
     });
   }
+  static async buscar_cirugia(
+    id_usuario: string,
+    estatus: string,
+    fecha_inicial: string,
+    fecha_final: string,
+    vendedor: string,
+    tecnico: string,
+    subdistribuidor: string,
+    codigo_cirugia: string,
+    limite: string){
+    return await this.request("buscar_cirugia", { id_usuario, 
+      estatus,
+      fecha_inicial,
+      fecha_final,
+      vendedor,
+      tecnico,
+      subdistribuidor,
+      codigo_cirugia,
+      limite,
+    });
+  }
+
   // En ApiService.ts
 
   // En ApiServices.ts

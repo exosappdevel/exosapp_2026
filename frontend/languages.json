@@ -150,8 +150,16 @@
       "search_button":"Buscar cirugias",
       "search_success_title":"Resultado",
       "search_success":"cirugias encontradas",
-      "search_success_singular":"cirugia encontrada"
-    }
+      "search_success_singular":"cirugia encontrada",
+      "estatus_title":"Estatus",
+      "estatus_text_All" : "Todas",
+      "estatus_text_0" : "Cancelada",
+      "estatus_text_1" : "Programada",
+      "estatus_text_2" : "Surtida",
+      "estatus_text_3" : "Finalizada",
+      "estatus_text_4" : "Material entregado",
+      "estatus_text_5" : "Solicitada"
+}
   },
   "en": {
     "languages" :{

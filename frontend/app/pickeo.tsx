@@ -22,6 +22,7 @@ import { _Background, _Footer, hexToRGBA, playSuccessSound, playErrorSound } fro
 
 interface Producto {
   id: string;
+  id_fragmento : string;
   descripcion: string;
   referencia: string;
   marca: string;

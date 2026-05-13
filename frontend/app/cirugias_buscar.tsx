@@ -24,6 +24,7 @@ import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
 import { _Header, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, } from '../components/elidev_components';
+import { Background } from '@react-navigation/elements';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -35,7 +36,10 @@ interface PickerOption {
   id: string;
   nombre: string;
 }
-
+interface iEstatusList {
+  estatus: number;
+  text: string;
+}
 
 interface iHospital {
   id_hospital: string;
@@ -81,6 +85,7 @@ export default function Cirugia_BuscarScreen() {
   // Form fields
   const [fecha_ini, setFecha_ini] = useState('');
   const [fecha_fin, setFecha_fin] = useState('');
+  const [estatus, setEstatus] = useState<iEstatusList | null>(null);
   const [hospital, setHospital] = useState<iHospital | null>(null);
   const [medico, setMedico] = useState<iMedico | null>(null);
   const [vendedor, setVendedor] = useState<iVendedor | null>(null);
@@ -91,12 +96,22 @@ export default function Cirugia_BuscarScreen() {
 
 
   // listas  
+  const [Estatus_list, setEstatusList] = useState<iEstatusList[]>([
+    { estatus: -1, text: t('cirugias_programar.estatus_text_All') },
+    { estatus: 0, text: t('cirugias_programar.estatus_text_0') },
+    { estatus: 1, text: t('cirugias_programar.estatus_text_1') },
+    { estatus: 2, text: t('cirugias_programar.estatus_text_2') },
+    { estatus: 3, text: t('cirugias_programar.estatus_text_3') },
+    { estatus: 4, text: t('cirugias_programar.estatus_text_4') },
+    { estatus: 5, text: t('cirugias_programar.estatus_text_5') }
+  ]);
   const [hospitales, setHospitales] = useState<iHospital[]>([]);
   const [vendedores, setVendedores] = useState<iVendedor[]>([]);
   const [tecnicos, setTecnicos] = useState<iTecnico[]>([]);
   const [subdistribuidores, setSubdistribuidores] = useState<iSubdistribuidor[]>([]);
   const [medicos, setMedicos] = useState<iMedico[]>([]);
 
+  const [showEstatusPicker, setShowEstatusPicker] = useState(false);
   const [showHospitalPicker, setShowHospitalPicker] = useState(false);
   const [showMedicoPicker, setShowMedicoPicker] = useState(false);
   const [showVendedorPicker, setShowVendedorPicker] = useState(false);
@@ -104,25 +119,14 @@ export default function Cirugia_BuscarScreen() {
   const [showSubdistribuidorPicker, setShowSubdistribuidorPicker] = useState(false);
 
   const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState<string | null>(null);
 
   const scrollRef = React.useRef<ScrollView>(null);
 
   const [section_resultados_visible, setSection_resultados_visible] = useState(false);
+  const [resultados, setResultados] = useState([]);
   const [resultados_count, setResultados_count] = useState(0);
 
-  const validaData = async (response: any) => {
-    try {
-      if (Array.isArray(response)) {
-        return response;
-      }
-      else return []
-    } catch (e) {
-      console.log('Error loading service:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
 
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
@@ -186,11 +190,11 @@ export default function Cirugia_BuscarScreen() {
     onDateChange(event, selectedDate, setFecha_ini)
   }
   const onDateChange_fin = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    onDateChange(event, selectedDate, setFecha_ini)
+    onDateChange(event, selectedDate, setFecha_fin)
   }
   const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date, set_target?: any) => {
     // En iOS, el picker puede quedarse abierto, en Android se cierra solo
-    setShowDatePicker(false);
+    setShowDatePicker(null);
 
     if (event.type === 'set' && selectedDate) {
       // 1. Actualizamos el objeto Date para el componente interno
@@ -206,12 +210,8 @@ export default function Cirugia_BuscarScreen() {
       set_target(formattedDate);
     } else {
       // Si el usuario cancela, cerramos el picker
-      setShowDatePicker(false);
     }
-  };
-
-  const showPicker = () => {
-    setShowDatePicker(true);
+    setShowDatePicker(null);
   };
 
   const [modal, setModal] = useState({
@@ -226,6 +226,74 @@ export default function Cirugia_BuscarScreen() {
   const validateForm = () => {
     return null;
   };
+
+
+  const renderResultados = () => {
+    if (loading) return <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 20 }} />;
+    if (resultados.length === 0) return null;
+
+    alert(JSON.stringify(resultados));
+
+    return resultados.map((item: any, index: number) => {
+      //alert(JSON.stringify(item));
+      const tituloGrupo = `${item.codigo} - ${item.estatus_text} - ${item.vendedor}`;
+
+      return (
+        <View>
+          <Text>{item.codigo}</Text>
+          <Text>{item.estatus_text}</Text>
+          <Text>{item.vendedor}</Text>
+        </View>
+
+        /*<_AccordionSection
+          key={item.id_cirugia || index}
+          title={tituloGrupo}
+          isOpen={expandedSection === `res_${index}`}
+          onPress={() => setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)}
+        >
+          <View style={styles.detalleContainer}>
+            <DetalleLinea label="Técnico 1" value={item.tecnico} />
+            <DetalleLinea label="Técnico 2" value={item.tecnico2} />
+            <DetalleLinea label="Tiempo de Surtido" value={item.tiempo_surtido} />
+            <DetalleLinea label="Tiempo de Entrega a Técnico" value={item.tiempo_entrega_tecnico} />
+            <DetalleLinea label="Fecha de Programación" value={item.fecha_programacion} />
+            <DetalleLinea label="Fecha de Reprogramación" value={item.fecha_reprogramacion} />
+            <DetalleLinea label="Fecha de Cirugía" value={item.fecha_cirugia} />
+            <DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
+            <DetalleLinea label="Médico" value={item.medico} />
+            <DetalleLinea label="Hospital" value={item.hospital} />
+            <DetalleLinea label="Estado/municipio" value={`${item.estado || ''} ${item.municipio || ''}`} />
+
+            <View style={styles.divisor} />
+
+            <DetalleLinea label="Material" value={item.material} />
+            <DetalleLinea label="Equipo Poder" value={item.ep} />
+            <DetalleLinea label="Adicionales" value={item.adicionales} />
+            <DetalleLinea label="Consumibles" value={item.consumibles} />
+            <DetalleLinea label="Solicita Estéril" value={item.item_esteril} />
+
+            <View style={styles.divisor} />
+
+            <DetalleLinea label="Notas" value={item.notas} />
+            <DetalleLinea label="Remisión" value={item.remision} />
+            <DetalleLinea
+              label="Última Modificación"
+              value={`${item.last_update || ''} / ${item.last_updater || ''}`}
+            />
+          </View>
+        </_AccordionSection>*/
+
+      );
+    });
+  };
+
+  // Componente pequeño para las líneas de detalle
+  const DetalleLinea = ({ label, value }: { label: string, value: any }) => (
+    <View style={styles.rowDetalle}>
+      <Text style={[styles.labelDetalle, { color: theme.textSub }]}>{label}:</Text>
+      <Text style={[styles.valueDetalle, { color: theme.text }]}>{value || '---'}</Text>
+    </View>
+  );
 
   const handleSubmit = async () => {
     const error = validateForm();
@@ -245,40 +313,36 @@ export default function Cirugia_BuscarScreen() {
     setSubmitting(true);
 
     try {
-      /*const response =
-    await ApiService.guarda_cirugia(
-      user.id_usuario,
-      user.id_almacen,
-      "nuevo",
-      "0",
-      fecha_ini,
-      hora,
-      estado?.id_estado ?? "0",
-      ciudad.toUpperCase(),
-      vendedor?.id_vendedor ?? "0",
-      tecnico1?.id_tecnico ?? "0",
-      tecnico2?.id_tecnico ?? "0",
-      subdistribuidor?.id_subdistribuidor ?? "0",
-      subdistribuidor_otro.toUpperCase(),
-      hospital?.id_hospital ?? "0",
-      medico?.id_medico ?? "0",
-      materiales_sel,
-      ep_sel,
-      adi_sel,
-      cons_sel,
-      notas.toUpperCase(),
-      paciente?.nombre.toUpperCase() ?? "",
-      paciente?.paterno.toUpperCase() ?? "",
-      paciente?.materno.toUpperCase() ?? "",
-      solicitarEsteril ? '1' : '0',
-      numero_ordenpago,
-      stringArchivos);*/
+      alert(JSON.stringify(
+        {
+          "estatus" : estatus?.estatus,
+          "fecha_ini" : fecha_ini,
+          "fecha_fin" : fecha_fin,
+          "vendedor" : vendedor? vendedor.id_vendedor : 0,
+          "tecnico" : tecnico? tecnico.id_tecnico : 0,
+          "subdistribuidor" : subdistribuidor ? subdistribuidor.id_subdistribuidor : 0,
+          "codigo_cirugia" : codigo_cirugia ? codigo_cirugia : "",
+          "limite" : limite? limite : "-1"
+        }
+      ));
+      const response =
+        await ApiService.buscar_cirugia(
+          user.id_usuario,
+          (estatus ? estatus.estatus.toString() : '-1'),
+          fecha_ini,
+          fecha_fin,
+          (vendedor ? vendedor.id_vendedor : '0'),
+          (tecnico ? tecnico.id_tecnico : '0'),
+          (subdistribuidor ? subdistribuidor.id_subdistribuidor : '0'),
+          (codigo_cirugia ? codigo_cirugia : ""),
+          (limite ? limite : "-1"));
 
-
-      if (true /* response.result === 'ok'*/) {
+      if (response.result === 'ok') {
         setSubmitting(false);
-        const resultados_count = 0;
-        setResultados_count(resultados_count);
+        const resultados_count = response.data_count;
+        setResultados_count(resultados_count);        
+        alert(JSON.stringify(response));
+        setResultados(response);
         if (resultados_count == 0) {
           setSection_resultados_visible(false);
           playErrorSound();
@@ -292,8 +356,11 @@ export default function Cirugia_BuscarScreen() {
         }
         else {
           setSection_resultados_visible(true);
-          setExpandedSection('resultados');
+          //setExpandedSection('resultados');
           playSuccessSound();
+          // render respose.data
+
+          //alert(JSON.stringify(response));
         }
       }
       else {
@@ -308,10 +375,11 @@ export default function Cirugia_BuscarScreen() {
         });
       }
     } catch (e) {
+      alert((e instanceof Error) ? e.message : String(e));
       setModal({
         visible: true,
         titulo: t('common.error'),
-        mensaje: 'Error al guardar los cambios',
+        mensaje: (e instanceof Error) ? e.message : String(e),
         icon: 'alert-circle-outline',
         colorIcon: '#f56565'
       });
@@ -324,7 +392,7 @@ export default function Cirugia_BuscarScreen() {
   const renderPickerModal = (
     visible: boolean,
     onClose: () => void,
-    data: string[] | PickerOption[] | iVendedor[] | iTecnico[] | iHospital[] | iMedico[] | iSubdistribuidor[],
+    data: string[] | iEstatusList[] | PickerOption[] | iVendedor[] | iTecnico[] | iHospital[] | iMedico[] | iSubdistribuidor[],
     key_name: string = "id",
     onSelect: (item: any) => void,
     title: string
@@ -362,7 +430,7 @@ export default function Cirugia_BuscarScreen() {
                 <Text style={[styles.pickerItemText, { color: theme.text }]}>
                   {typeof item === 'string'
                     ? item
-                    : (item.nombre || item.subdistribuidor || 'Sin nombre')}
+                    : (item.text || item.nombre || item.subdistribuidor || 'Sin nombre')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -402,6 +470,15 @@ export default function Cirugia_BuscarScreen() {
     );
   }
 
+  const parseDate = (dateStr: string): Date => {
+    try {
+      const [day, month, year] = dateStr.split('/').map(Number);
+      const date = new Date(year, month - 1, day);
+      return isNaN(date.getTime()) ? new Date() : date;
+    } catch {
+      return new Date();
+    }
+  };
 
 
 
@@ -431,6 +508,21 @@ export default function Cirugia_BuscarScreen() {
                 onPress={() => toggleSection('parametros')}
               >
 
+                {/*Status: 0-cancelada 1-programada 2-surtida 3-finalizada 4-material entregado 5-solicitada*/}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('cirugias_programar.estatus_title')}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowEstatusPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: theme.text }]}>
+                      {estatus?.text || t("cirugias_programar.estatus_text_All")}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
                 {/* Fecha ini */}
                 <View style={styles.fieldContainer}>
                   <Text style={[styles.label, { color: theme.text }]}>
@@ -446,9 +538,14 @@ export default function Cirugia_BuscarScreen() {
                       <input
                         type="date"
                         // HTML5 requiere YYYY-MM-DD para el valor interno del input
-                        value={date instanceof Date && !isNaN(date.getTime())
-                          ? date.toISOString().split('T')[0]
-                          : ""}
+                        value={(() => {
+                          // Convertimos tu string "dd/mm/yyyy" a "yyyy-mm-dd" para el input HTML
+                          const partes = fecha_ini.split('/');
+                          if (partes.length === 3) {
+                            return `${partes[2]}-${partes[1]}-${partes[0]}`;
+                          }
+                          return "";
+                        })()}
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val) {
@@ -477,7 +574,7 @@ export default function Cirugia_BuscarScreen() {
                     <>
                       <TouchableOpacity
                         style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                        onPress={showPicker}
+                        onPress={() => setShowDatePicker('inicio')}
                       >
                         <Text style={[styles.selectorText, { color: fecha_ini ? theme.text : theme.textSub }]}>
                           {fecha_ini || 'DD/MM/YYYY'}
@@ -485,14 +582,16 @@ export default function Cirugia_BuscarScreen() {
                         <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
                       </TouchableOpacity>
 
-                      {showDatePicker && (
-                        <DateTimePicker
-                          value={date}
-                          mode="date"
-                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                          onChange={onDateChange_ini}
-                          minimumDate={new Date()}
-                        />
+                      {showDatePicker === 'inicio' && (
+                        <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
+                          <DateTimePicker
+                            value={parseDate(fecha_ini)}
+                            key="dtFechaIni"
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={onDateChange_ini}
+                          />
+                        </View>
                       )}
                     </>
                   )}
@@ -513,9 +612,14 @@ export default function Cirugia_BuscarScreen() {
                       <input
                         type="date"
                         // HTML5 requiere YYYY-MM-DD para el valor interno del input
-                        value={date instanceof Date && !isNaN(date.getTime())
-                          ? date.toISOString().split('T')[0]
-                          : ""}
+                        value={(() => {
+                          // Convertimos tu string "dd/mm/yyyy" a "yyyy-mm-dd" para el input HTML
+                          const partes = fecha_fin.split('/');
+                          if (partes.length === 3) {
+                            return `${partes[2]}-${partes[1]}-${partes[0]}`;
+                          }
+                          return "";
+                        })()}
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val) {
@@ -544,7 +648,7 @@ export default function Cirugia_BuscarScreen() {
                     <>
                       <TouchableOpacity
                         style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                        onPress={showPicker}
+                        onPress={() => setShowDatePicker('fin')}
                       >
                         <Text style={[styles.selectorText, { color: fecha_fin ? theme.text : theme.textSub }]}>
                           {fecha_fin || 'DD/MM/YYYY'}
@@ -552,14 +656,16 @@ export default function Cirugia_BuscarScreen() {
                         <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
                       </TouchableOpacity>
 
-                      {showDatePicker && (
-                        <DateTimePicker
-                          value={date}
-                          mode="date"
-                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                          onChange={onDateChange_fin}
-                          minimumDate={new Date()}
-                        />
+                      {showDatePicker === 'fin' && (
+                        <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
+                          <DateTimePicker
+                            value={parseDate(fecha_fin)}
+                            key="dtFechaFin"
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={onDateChange_fin}
+                          />
+                        </View>
                       )}
                     </>
                   )}
@@ -661,24 +767,10 @@ export default function Cirugia_BuscarScreen() {
                 </TouchableOpacity>
 
               </_AccordionSection>
-              <_AccordionSection
-
-                title={`${resultados_count || 0} ${(Number(resultados_count) === 1)
-                    ? t("cirugias_programar.search_success_singular")
-                    : t("cirugias_programar.search_success")
-                  }`}
-                isOpen={(expandedSection === 'resultados')}
-                yoff={0}
-                scrollRef={scrollRef}
-                visible={section_resultados_visible}
-                onPress={() => toggleSection('resultados')}
-              >
 
 
-                {/* resultados */}
-                <View style={styles.fieldContainer}>
-                </View>
-              </_AccordionSection>
+
+              {renderResultados()}
             </View>
           </ScrollView>
 
@@ -689,7 +781,15 @@ export default function Cirugia_BuscarScreen() {
 
 
         {/* Picker Modals */}
-
+        {
+          renderPickerModal(
+            showEstatusPicker,
+            () => setShowEstatusPicker(false),
+            Estatus_list,
+            "estatus",
+            (item: iEstatusList) => setEstatus(item),
+            'Estatus'
+          )}
         {
           renderPickerModal(
             showVendedorPicker,
@@ -943,5 +1043,30 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#ccc'
-  }
+  },
+  detalleContainer: {
+    paddingVertical: 5,
+  },
+  rowDetalle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  labelDetalle: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  valueDetalle: {
+    fontSize: 13,
+    flex: 2,
+    textAlign: 'right',
+  },
+  divisor: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 8,
+  },
 });

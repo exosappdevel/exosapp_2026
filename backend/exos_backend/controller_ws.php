@@ -142,6 +142,20 @@ class WebServiceController
                 'nuevo_cirugia_orden_pago',
                 'nuevo_cirugia_file_name'
             ]
+        ],
+        "buscar_cirugia" => [
+            'descripcion' =>'Buscar cirugias de acuerdo a los parametros',
+            'parameters' => [
+                'id_usuario',
+                "estatus",
+                'fecha_inicial',
+                'fecha_final',
+                'vendedor',
+                'tecnico',
+                'subdistribuidor',
+                'codigo_cirugia',
+                'limite'
+            ]
         ]
     ];
 
@@ -349,8 +363,14 @@ class WebServiceController
             'sql' => $sqlData,
             'value' => $value
         ];
-        return ($data);
-
+        return ($data);        
+    }
+    private function SQLDate($dateStr) {
+        if (!$dateStr) return "";
+        // Creamos el objeto desde el formato específico dd/mm/yyyy
+        $dateObj = DateTime::createFromFormat('d/m/Y', $dateStr);
+        // Retornamos en formato yyyy-mm-dd para el SQL
+        return $dateObj ? $dateObj->format('Y-m-d') : $dateStr;
     }
     //****************************************************************************************** */
     // -------------------------- IMPLEMENTACION DE LOS WEB SERVICES MOCKUP --------------------
@@ -1177,7 +1197,118 @@ class WebServiceController
 	                 );	
         return ($this->result);	
     }
+    public function buscar_cirugia(){
+        // if IMPLEMENTED
+        if ($this->implemented && $this->result != null) {
+            return $this->result;
+        }        
+        // ELSE USE NEXT MOCKUP
 
+        $id_usuario  = Requesting("id_usuario"); 
+        $estatus  = Requesting("estatus");
+        $fecha_inicial  = $this->SQLDate(Requesting('fecha_inicial'));
+        $fecha_final  = $this->SQLDate(Requesting('fecha_final'));
+        $vendedor  = Requesting('vendedor');
+        $tecnico  = Requesting('tecnico');
+        $subdistribuidor  = Requesting('subdistribuidor');
+        $codigo_cirugia   = Requesting('codigo_cirugia');
+        $limite  = Requesting('limite');
+
+        if (!$id_usuario) {
+            return $this->DatosIncorrectos();
+        }         
+
+        $query = "SELECT c.id_cirugia, c.codigo, c.fecha_cirugia, c.estatus,c.fecha_programacion, 
+                        case when c.esteril=0 then 'NO' else 'SI' end as esteril, c.notas,
+                        upper(v.nombre) as vendedor, 
+                        upper(t1.nombre) as tecnico, 
+                        upper(t2.nombre) as tecnico2, 
+                        upper(sub.subdistribuidor) as subdistribuidor ,                
+                        upper(trim(concat(m.nombre, ' ', m.paterno,' ',m.materno))) as medico,
+                        upper(h.nombre) as hospital ,
+                        upper(e.nombre) as estado,
+                        upper(c.municipio) as municipio
+                FROM `cirugia` c 
+                    LEFT join vendedor v on c.id_vendedor = v.id_vendedor 
+                    LEFT join tecnico t1 on c.id_tecnico = t1.id_tecnico 
+                    LEFT join tecnico t2 on c.id_tecnico2 = t2.id_tecnico 
+                    LEFT join subdistribuidor sub on c.id_subdistribuidor=sub.id_subdistribuidor 
+                    LEFT join medico m on c.id_medico = m.id_medico
+                    LEFT join hospital h on c.id_hospital = h.id_hospital
+                    LEFT join estado e on c.id_estado = e.id_estado
+                WHERE 1=1" 
+                . " and fecha_cirugia >= '$fecha_inicial'" 
+                . " and fecha_cirugia <= '$fecha_final'"
+                . ($vendedor ? " and id_vendedor=" . $vendedor : "")
+                . ($tecnico ? " and (id_tecnico1=$tecnico or id_tecnico2=$tecnico)":"")
+                . ($subdistribuidor ? " and id_subdistribuidor=" . $subdistribuidor : "")
+                . ($codigo_cirugia ? " and codigo=" . $codigo_cirugia : "")                
+                ." LIMIT " . ($limite ? $limite : "10");
+
+         
+         $qresult = DatasetSQL($query);
+         $data_count = 0;
+            while ($row = mysqli_fetch_array($qresult)) {
+                $estatus = $row['estatus'];
+                switch($estatus){
+                    case 0: $estatus_text = "CANCELADA"; break;
+                    case 1: $estatus_text = "PROGRAMADA"; break;
+                    case 2: $estatus_text = "SURITDA"; break;
+                    case 3: $estatus_text = "FINALIZADA"; break;
+                    case 4: $estatus_text = "MATERIAL ENTREGADO"; break;
+                    case 5: $estatus_text = "SOLICITADA"; break;
+                }
+                $data_count ++;
+                
+                $material = "";
+                $ep ="";
+                $adicionales ="";
+                $consumibles = "";
+                
+                $tiempo_surtido = "";
+                $tiempo_entrega_tecnico = "";
+
+                $remision = "";
+                $last_update ="";
+                $last_updater ="";
+
+                $data['item_' . $row['id_cirugia']] = [
+                    "id_cirugia" => $row['id_cirugia'],                    
+                    "codigo" => $row['codigo'],                    
+                    "fecha_cirugia" => $row['fecha_cirugia'],                    
+                    "estatus" => $row['estatus'],                    
+                    "estatus_text" => $estatus_text,
+                    "vendedor" => $row['vendedor'],                    
+                    "tecnico" => $row['tecnico'],                    
+                    "tecnico2" => $row['tecnico2'],
+                    "subdistribuidor" => $row['subdistribuidor'],
+                    "tiempo_surtido"  => $tiempo_surtido,
+                    "tiempo_entrega_tecnico"  => $tiempo_entrega_tecnico,
+                    "fecha_programacion"  => $row['fecha_programacion'],                    
+                    "medico"  => $row['medico'],
+                    "hospital"  => $row['hospital'],
+                    "estado"  => $row['estado'],
+                    "municipio"  => $row['municipio'],
+                    "Material"  => $material,
+                    "ep"  => $ep,
+                    "adicionales"  => $adicionales,
+                    "consumibles"  => $consumibles,
+                    "item_esteril"  => $row['esteril'],
+                    "notas"  => $row['notas'],
+                    "remision"  => $remision,
+                    "last_update"  => $last_update,
+                    "last_updater"  => $last_updater
+                ];
+            }            
+
+        return ( $data ? [
+                'result' => 'ok',
+                'result_text' => '',
+                'data_count' => $data_count,
+                'data'=> $data,
+                'sql' => $query
+                ] : ['result' => 'empty']);
+    }                
 }
 
     
