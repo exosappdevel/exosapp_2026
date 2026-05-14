@@ -6,6 +6,7 @@ class ApiService {
   static URL_CONTROLLER = "";
   static PASSKEY = "";
   static URL_FILES_CIRUGIAS = "";
+  //static fields_as_arrays ={  } 
 
 
   static init(config: { url: string; passkey: string }) {
@@ -68,8 +69,8 @@ class ApiService {
         let itemsArray: any[] = [];
         let propertiesObj: any = {};
         let isList = false;
-        if (children.length === 0) {
-          return []; // O puedes devolver [] si sabes que siempre debería ser lista
+        if (children.length === 0) {          
+          return node.nodeName.toLowerCase() == "data" ? [] : ""; // O puedes devolver [] si sabes que siempre debería ser lista
         }
         for (let i = 0; i < children.length; i++) {
           const child = children[i] as any;
@@ -100,6 +101,9 @@ class ApiService {
     }
   }
 
+  static async audit_ws_log(limit: string, page:string, search: string ) {
+    return await this.request("audit_ws_log", { limit: limit, page:page, search:search });
+  }
   static async inicia_sesion(usuario: string, password: string) {
     return await this.request("inicia_sesion", { login_usuario: usuario, login_password: password });
   }

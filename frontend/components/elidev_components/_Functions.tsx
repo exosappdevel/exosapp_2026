@@ -8,6 +8,15 @@ export const hexToRGBA = (hex: string, opacity: number) => {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
+export const formatDate=(fecha : Date) =>{
+    const day = fecha.getDate().toString().padStart(2, '0');
+    const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const year = fecha.getFullYear();
+
+    const formattedDate = `${day}/${month}/${year}`;
+    return formattedDate;
+}
+
 
 /**
  * Ejecuta un sonido de éxito y una vibración ligera (haptic feedback)

@@ -23,8 +23,8 @@ import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, } from '../components/elidev_components';
-import { Background } from '@react-navigation/elements';
+import { _Header, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, formatDate } from '../components/elidev_components';
+import { addMonths } from 'date-fns';
 
 // Habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -159,13 +159,10 @@ export default function Cirugia_BuscarScreen() {
         setMedicos(Array.isArray(resMedicos.data) ? resMedicos.data : []);
 
         const today = new Date();
-        const day = today.getDate().toString().padStart(2, '0');
-        const month = (today.getMonth() + 1).toString().padStart(2, '0');
-        const year = today.getFullYear();
+        const nextMonth = addMonths(new Date(), 1);        
 
-        const formattedDate = `${day}/${month}/${year}`;
-        setFecha_ini(formattedDate);
-        setFecha_fin(formattedDate);
+        setFecha_ini(formatDate(today));
+        setFecha_fin(formatDate(nextMonth));
 
       } catch (error) {
         console.error("Error crítico en loadData:", error);
@@ -232,24 +229,57 @@ export default function Cirugia_BuscarScreen() {
     if (loading) return <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 20 }} />;
     if (resultados.length === 0) return null;
 
-    alert(JSON.stringify(resultados));
+    //alert(JSON.stringify(resultados));
 
     return resultados.map((item: any, index: number) => {
       //alert(JSON.stringify(item));
-      const tituloGrupo = `${item.codigo} - ${item.estatus_text} - ${item.vendedor}`;
+      const tituloGrupo = `<View><Text>${item.codigo}</Text><Text>${item.estatus_text}</Text><Text>${item.vendedor}</Text></View>`;
 
       return (
-        <View>
+        /*<View>
           <Text>{item.codigo}</Text>
           <Text>{item.estatus_text}</Text>
           <Text>{item.vendedor}</Text>
-        </View>
+        </View>*/
 
-        /*<_AccordionSection
+        <_AccordionSection
           key={item.id_cirugia || index}
-          title={tituloGrupo}
+          scrollRef={scrollRef}
+          backgroundColor={hexToRGBA(theme.card, 1)}
+          title={
+            <View style={{ flex: 1, paddingRight: 5 }}>
+              {/* Primer Renglón */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{
+                  color: theme.text,
+                  fontWeight: 'bold',
+                  fontSize: 16
+                }}>
+                  {item.codigo}
+                </Text>
+                <Text style={{
+                  color: theme.accent,
+                  fontSize: 12,
+                  fontStyle: 'italic'
+                }}>
+                  {item.estatus_text}
+                </Text>
+              </View>
+
+              {/* Segundo Renglón */}
+              <View style={{ marginTop: 2 }}>
+                <Text style={{
+                  color: theme.textSub,
+                  fontSize: 14
+                }}>
+                  {item.vendedor}
+                </Text>
+              </View>
+            </View>
+          }
           isOpen={expandedSection === `res_${index}`}
           onPress={() => setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)}
+          yoff={85+(index*80)}
         >
           <View style={styles.detalleContainer}>
             <DetalleLinea label="Técnico 1" value={item.tecnico} />
@@ -262,11 +292,11 @@ export default function Cirugia_BuscarScreen() {
             <DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
             <DetalleLinea label="Médico" value={item.medico} />
             <DetalleLinea label="Hospital" value={item.hospital} />
-            <DetalleLinea label="Estado/municipio" value={`${item.estado || ''} ${item.municipio || ''}`} />
+            <DetalleLinea label="Municipio" value={`${item.municipio || ''}, ${item.estado || ''}`} />
 
             <View style={styles.divisor} />
-
-            <DetalleLinea label="Material" value={item.material} />
+            
+            <DetalleMultiLinea label="Material" value={item.minialmacen}/>            
             <DetalleLinea label="Equipo Poder" value={item.ep} />
             <DetalleLinea label="Adicionales" value={item.adicionales} />
             <DetalleLinea label="Consumibles" value={item.consumibles} />
@@ -281,7 +311,7 @@ export default function Cirugia_BuscarScreen() {
               value={`${item.last_update || ''} / ${item.last_updater || ''}`}
             />
           </View>
-        </_AccordionSection>*/
+        </_AccordionSection>
 
       );
     });
@@ -294,7 +324,36 @@ export default function Cirugia_BuscarScreen() {
       <Text style={[styles.valueDetalle, { color: theme.text }]}>{value || '---'}</Text>
     </View>
   );
+  
+  const DetalleMultiLinea = ({ label, value }: { label: string, value: any }) => {
+    // Convertimos a string y separamos por saltos de línea
+    const lineas = value && typeof value === 'string' 
+      ? value.split('\n').filter(linea => linea.trim() !== '') 
+      : [];
 
+    return (
+      <View style={[styles.rowDetalleMulti,{paddingBottom:4}]}>
+        <Text style={[styles.labelDetalleMulti, { color: theme.textSub }]}>{label}:</Text>      
+        
+        <View style={{ flex: 2 }}> 
+          {lineas.length > 0 ? (
+            lineas.map((linea, index) => (
+              <Text 
+                key={index} 
+                style={[styles.valueDetalleMulti, { color: theme.text, textAlign: 'left', paddingVertical:4, paddingLeft:5 }]}
+              >
+                  {linea}
+              </Text>
+            ))
+          ) : (
+            <Text style={[styles.valueDetalleMulti, { color: theme.text, textAlign: 'left' }]}>
+              ---
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  };
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
@@ -313,7 +372,7 @@ export default function Cirugia_BuscarScreen() {
     setSubmitting(true);
 
     try {
-      alert(JSON.stringify(
+      /*alert(JSON.stringify(
         {
           "estatus" : estatus?.estatus,
           "fecha_ini" : fecha_ini,
@@ -324,7 +383,7 @@ export default function Cirugia_BuscarScreen() {
           "codigo_cirugia" : codigo_cirugia ? codigo_cirugia : "",
           "limite" : limite? limite : "-1"
         }
-      ));
+      ));*/
       const response =
         await ApiService.buscar_cirugia(
           user.id_usuario,
@@ -339,10 +398,10 @@ export default function Cirugia_BuscarScreen() {
 
       if (response.result === 'ok') {
         setSubmitting(false);
+        //alert(JSON.stringify(response));
         const resultados_count = response.data_count;
-        setResultados_count(resultados_count);        
-        alert(JSON.stringify(response));
-        setResultados(response);
+        setResultados_count(resultados_count);
+        setResultados(response.data);
         if (resultados_count == 0) {
           setSection_resultados_visible(false);
           playErrorSound();
@@ -355,6 +414,7 @@ export default function Cirugia_BuscarScreen() {
           });
         }
         else {
+          setExpandedSection(null);
           setSection_resultados_visible(true);
           //setExpandedSection('resultados');
           playSuccessSound();
@@ -1052,17 +1112,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 4,
     borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(100,100,100,0.05)',
   },
+  
   labelDetalle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    flex: 1,
+    flex: 2,
   },
   valueDetalle: {
-    fontSize: 13,
+    fontSize: 12,
     flex: 2,
     textAlign: 'right',
+  },
+  rowDetalleMulti: {    
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(100,100,100,0.05)',
+  },
+  labelDetalleMulti: {
+    fontSize: 12,
+    fontWeight: '600',    
+  },
+  valueDetalleMulti: {
+    fontSize: 11,    
+    textAlign: 'left',            
   },
   divisor: {
     height: 1,

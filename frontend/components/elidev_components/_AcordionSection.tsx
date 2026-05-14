@@ -18,13 +18,14 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 interface AccordionProps {
-    title: string;
+    title: React.ReactNode;    
     children: React.ReactNode;
     isOpen: boolean;
     onPress: () => void;    
     scrollRef?: React.RefObject<ScrollView | null>; // Acepta null para evitar errores de tipo
     yoff?: number;
     visible?:boolean;
+    backgroundColor?:string;
 }
 
 export const _AccordionSection = ({ 
@@ -34,12 +35,14 @@ export const _AccordionSection = ({
     onPress, 
     scrollRef, 
     yoff,
-    visible = true
+    visible = true,
+    backgroundColor
 }: AccordionProps) => {
     
     const { theme } = useApp();
     
     if (!visible) return null;
+    const containerBg = backgroundColor || hexToRGBA(theme.card, 0.5);
 
     const handlePress = () => {                
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -59,7 +62,7 @@ export const _AccordionSection = ({
     return (
         <View style={[
             styles.accordionContainer, 
-            { borderColor: theme.border, backgroundColor: hexToRGBA(theme.card,0.5) }
+            { borderColor: theme.border, backgroundColor: containerBg }
         ]}>
             <TouchableOpacity
                 style={[
@@ -69,9 +72,16 @@ export const _AccordionSection = ({
                 onPress={handlePress}
                 activeOpacity={0.7}
             >
-                <Text style={[styles.accordionTitle, { color: theme.text }]}>
-                    {title}
-                </Text>
+                {/* LÓGICA DE TÍTULO CUSTOM */}
+                <View style={{ flex: 1 }}>
+                    {typeof title === 'string' ? (
+                        <Text style={[styles.accordionTitle, { color: theme.text }]}>
+                            {title}
+                        </Text>
+                    ) : (
+                        title // Si es un componente (View, Text custom, etc), se renderiza tal cual
+                    )}
+                </View>
                 <MaterialCommunityIcons
                     name={isOpen ? 'chevron-up' : 'chevron-down'}
                     size={24}

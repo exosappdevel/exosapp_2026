@@ -1197,6 +1197,36 @@ class WebServiceController
 	                 );	
         return ($this->result);	
     }
+    public function getMaterialList($list, $cat_table, $cat_id, $cat_name, $sub_table, $sub_id, $sub_name, $sep = " : ",$line_sep="\n") {
+        if (empty($list)) return "";
+
+        $pares = explode(',', $list);
+        $items = []; // Usamos un array para manejar mejor los resultados
+
+        foreach ($pares as $par) {
+            // Validamos que el par tenga el formato correcto para evitar errores
+            if (strpos($par, '/') !== false) {
+                [$cat_value, $sub_value] = explode('/', $par);
+
+                // 1. Usamos comillas simples para el separador en SQL: '$sep'
+                // 2. Corregimos los alias: 'c' para categoría, 's' para subcategoría
+                $sQuery = "SELECT concat(upper(c.$cat_name), '$sep', upper(s.$sub_name)) as item 
+                        FROM $sub_table s
+                        INNER JOIN $cat_table c  ON s.$cat_id = c.$cat_id
+                        WHERE c.$cat_id = $cat_value 
+                        AND s.$sub_id = $sub_value";
+
+                $val = getValueSQL($sQuery, "item");
+                
+                if ($val) {
+                    $items[] = $val . $line_sep;
+                }
+            }
+        }
+
+        // Unimos los resultados con un salto de línea (PHP_EOL) o una coma
+        return implode($line_sep, $items);
+    }
     public function buscar_cirugia(){
         // if IMPLEMENTED
         if ($this->implemented && $this->result != null) {
@@ -1220,6 +1250,7 @@ class WebServiceController
 
         $query = "SELECT c.id_cirugia, c.codigo, c.fecha_cirugia, c.estatus,c.fecha_programacion, 
                         case when c.esteril=0 then 'NO' else 'SI' end as esteril, c.notas,
+                        c.minialmacen,
                         upper(v.nombre) as vendedor, 
                         upper(t1.nombre) as tecnico, 
                         upper(t2.nombre) as tecnico2, 
@@ -1243,71 +1274,73 @@ class WebServiceController
                 . ($tecnico ? " and (id_tecnico1=$tecnico or id_tecnico2=$tecnico)":"")
                 . ($subdistribuidor ? " and id_subdistribuidor=" . $subdistribuidor : "")
                 . ($codigo_cirugia ? " and codigo=" . $codigo_cirugia : "")                
+                . ($estatus >=0 ? " and estatus=" .  $estatus : "")
                 ." LIMIT " . ($limite ? $limite : "10");
 
          
          $qresult = DatasetSQL($query);
          $data_count = 0;
-            while ($row = mysqli_fetch_array($qresult)) {
-                $estatus = $row['estatus'];
-                switch($estatus){
-                    case 0: $estatus_text = "CANCELADA"; break;
-                    case 1: $estatus_text = "PROGRAMADA"; break;
-                    case 2: $estatus_text = "SURITDA"; break;
-                    case 3: $estatus_text = "FINALIZADA"; break;
-                    case 4: $estatus_text = "MATERIAL ENTREGADO"; break;
-                    case 5: $estatus_text = "SOLICITADA"; break;
-                }
-                $data_count ++;
-                
-                $material = "";
-                $ep ="";
-                $adicionales ="";
-                $consumibles = "";
-                
-                $tiempo_surtido = "";
-                $tiempo_entrega_tecnico = "";
+         $data = [];
+        while ($row = mysqli_fetch_array($qresult)) {
+            $estatus = $row['estatus'];
+            switch($estatus){
+                case 0: $estatus_text = "CANCELADA"; break;
+                case 1: $estatus_text = "PROGRAMADA"; break;
+                case 2: $estatus_text = "SURITDA"; break;
+                case 3: $estatus_text = "FINALIZADA"; break;
+                case 4: $estatus_text = "MATERIAL ENTREGADO"; break;
+                case 5: $estatus_text = "SOLICITADA"; break;
+            }
+            $data_count ++;
+            
+            $minialmacen = $this->getMaterialList($row['minialmacen'],"set_categoria","id_set_categoria","nombre","set_subcategoria","id_set_subcategoria","nombre",":");
+            $ep ="";
+            $adicionales ="";
+            $consumibles = "";
+            
+            $tiempo_surtido = "";
+            $tiempo_entrega_tecnico = "";
 
-                $remision = "";
-                $last_update ="";
-                $last_updater ="";
+            $remision = "";
+            $last_update ="";
+            $last_updater ="";
+            
 
-                $data['item_' . $row['id_cirugia']] = [
-                    "id_cirugia" => $row['id_cirugia'],                    
-                    "codigo" => $row['codigo'],                    
-                    "fecha_cirugia" => $row['fecha_cirugia'],                    
-                    "estatus" => $row['estatus'],                    
-                    "estatus_text" => $estatus_text,
-                    "vendedor" => $row['vendedor'],                    
-                    "tecnico" => $row['tecnico'],                    
-                    "tecnico2" => $row['tecnico2'],
-                    "subdistribuidor" => $row['subdistribuidor'],
-                    "tiempo_surtido"  => $tiempo_surtido,
-                    "tiempo_entrega_tecnico"  => $tiempo_entrega_tecnico,
-                    "fecha_programacion"  => $row['fecha_programacion'],                    
-                    "medico"  => $row['medico'],
-                    "hospital"  => $row['hospital'],
-                    "estado"  => $row['estado'],
-                    "municipio"  => $row['municipio'],
-                    "Material"  => $material,
-                    "ep"  => $ep,
-                    "adicionales"  => $adicionales,
-                    "consumibles"  => $consumibles,
-                    "item_esteril"  => $row['esteril'],
-                    "notas"  => $row['notas'],
-                    "remision"  => $remision,
-                    "last_update"  => $last_update,
-                    "last_updater"  => $last_updater
-                ];
-            }            
+            $data['item_' . $row['id_cirugia']] = [
+                "id_cirugia" => $row['id_cirugia'],                    
+                "codigo" => $row['codigo'],                    
+                "fecha_cirugia" => $row['fecha_cirugia'],                    
+                "estatus" => $row['estatus'],                    
+                "estatus_text" => $estatus_text,
+                "vendedor" => $row['vendedor'],                    
+                "tecnico" => $row['tecnico'],                    
+                "tecnico2" => $row['tecnico2'],
+                "subdistribuidor" => $row['subdistribuidor'],
+                "tiempo_surtido"  => $tiempo_surtido,
+                "tiempo_entrega_tecnico"  => $tiempo_entrega_tecnico,
+                "fecha_programacion"  => $row['fecha_programacion'],                    
+                "medico"  => $row['medico'],
+                "hospital"  => $row['hospital'],
+                "estado"  => $row['estado'],
+                "municipio"  => $row['municipio'],
+                "minialmacen"  => $minialmacen,
+                "ep"  => $ep,
+                "adicionales"  => $adicionales,
+                "consumibles"  => $consumibles,
+                "esteril"  => $row['esteril'],
+                "notas"  => $row['notas'],
+                "remision"  => $remision,
+                "last_update"  => $last_update,
+                "last_updater"  => $last_updater
+            ];
+        }            
 
-        return ( $data ? [
-                'result' => 'ok',
+        return ( ['result' => 'ok',
                 'result_text' => '',
                 'data_count' => $data_count,
                 'data'=> $data,
                 'sql' => $query
-                ] : ['result' => 'empty']);
+                ] );
     }                
 }
 

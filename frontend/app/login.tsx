@@ -149,6 +149,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const response = await ApiService.inicia_sesion(loginUser, loginPass);
+      
 
       if (response.result === 'ok') {
         
