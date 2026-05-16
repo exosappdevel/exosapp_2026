@@ -158,7 +158,8 @@
       "estatus_text_2" : "Surtida",
       "estatus_text_3" : "Finalizada",
       "estatus_text_4" : "Material entregado",
-      "estatus_text_5" : "Solicitada"
+      "estatus_text_5" : "Solicitada",
+      "title_use_dates" :"Filtrar por rango de fechas"
 }
   },
   "en": {

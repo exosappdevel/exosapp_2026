@@ -149,6 +149,7 @@ class WebServiceController
             'parameters' => [
                 'id_usuario',
                 "estatus",
+                "filtrar_fecha",
                 'fecha_inicial',
                 'fecha_final',
                 'vendedor',
@@ -1355,6 +1356,7 @@ class WebServiceController
 
         $id_usuario  = Requesting("id_usuario"); 
         $estatus  = Requesting("estatus");
+        $filtrar_fecha = Requesting("filtrar_fecha");
         $fecha_inicial  = $this->SQLDate(Requesting('fecha_inicial'));
         $fecha_final  = $this->SQLDate(Requesting('fecha_final'));
         $vendedor  = Requesting('vendedor');
@@ -1371,16 +1373,16 @@ class WebServiceController
         $query = "SELECT c.id_cirugia
                 FROM `cirugia` c                     
                 WHERE 1=1" 
-                . " and fecha_cirugia >= '$fecha_inicial'" 
-                . " and fecha_cirugia <= '$fecha_final'"
+                . ( $filtrar_fecha=="1" ? 
+                     " and fecha_cirugia >= '$fecha_inicial' and fecha_cirugia <= '$fecha_final'"
+                    : "")                
                 . ($vendedor ? " and id_vendedor=" . $vendedor : "")
                 . ($tecnico ? " and (id_tecnico1=$tecnico or id_tecnico2=$tecnico)":"")
                 . ($subdistribuidor ? " and id_subdistribuidor=" . $subdistribuidor : "")
                 . ($codigo_cirugia ? " and c.codigo='" . $codigo_cirugia ."'" : "")                
                 . ($estatus >=0 ? " and estatus=" .  $estatus : "")
                 ." LIMIT " . ($limite ? $limite : "10");
-
-         
+        
         $qresult = DatasetSQL($query);
         
         $data = [];

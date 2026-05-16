@@ -226,6 +226,7 @@ class ApiService {
   static async buscar_cirugia(
     id_usuario: string,
     estatus: string,
+    filtrar_fecha:string,
     fecha_inicial: string,
     fecha_final: string,
     vendedor: string,
@@ -235,6 +236,7 @@ class ApiService {
     limite: string){
     return await this.request("buscar_cirugia", { id_usuario, 
       estatus,
+      filtrar_fecha,
       fecha_inicial,
       fecha_final,
       vendedor,
