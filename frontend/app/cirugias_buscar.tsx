@@ -227,7 +227,7 @@ export default function Cirugia_BuscarScreen() {
 
   const renderResultados = () => {
     if (loading) return <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 20 }} />;
-    if (resultados.length === 0) return null;
+    if (resultados.length === 0) return (<View></View>);
 
     //alert(JSON.stringify(resultados));
 
@@ -297,14 +297,14 @@ export default function Cirugia_BuscarScreen() {
             <View style={styles.divisor} />
             
             <DetalleMultiLinea label="Material" value={item.minialmacen}/>            
-            <DetalleLinea label="Equipo Poder" value={item.ep} />
-            <DetalleLinea label="Adicionales" value={item.adicionales} />
-            <DetalleLinea label="Consumibles" value={item.consumibles} />
-            <DetalleLinea label="Solicita Estéril" value={item.item_esteril} />
+            <DetalleMultiLinea label="Equipo Poder" value={item.ep} />
+            <DetalleMultiLinea label="Adicionales" value={item.adicionales} />
+            <DetalleMultiLinea label="Consumibles" value={item.consumibles} />
+            <DetalleLinea label="Solicita Estéril" value={item.esteril} />
 
             <View style={styles.divisor} />
 
-            <DetalleLinea label="Notas" value={item.notas} />
+            <DetalleMultiLinea label="Notas" value={item.notas} />
             <DetalleLinea label="Remisión" value={item.remision} />
             <DetalleLinea
               label="Última Modificación"
@@ -333,7 +333,7 @@ export default function Cirugia_BuscarScreen() {
 
     return (
       <View style={[styles.rowDetalleMulti,{paddingBottom:4}]}>
-        <Text style={[styles.labelDetalleMulti, { color: theme.textSub }]}>{label}:</Text>      
+        <Text style={[styles.labelDetalleMulti, { color: theme.textSub }]}>{label}:</Text> 
         
         <View style={{ flex: 2 }}> 
           {lineas.length > 0 ? (
@@ -404,7 +404,7 @@ export default function Cirugia_BuscarScreen() {
         setResultados(response.data);
         if (resultados_count == 0) {
           setSection_resultados_visible(false);
-          playErrorSound();
+          //playErrorSound();
           setModal({
             visible: true,
             titulo: t("cirugias_programar.search_success_title"),
@@ -416,8 +416,9 @@ export default function Cirugia_BuscarScreen() {
         else {
           setExpandedSection(null);
           setSection_resultados_visible(true);
+          scrollRef.current?.scrollTo({y: 10,animated: false});
           //setExpandedSection('resultados');
-          playSuccessSound();
+          //playSuccessSound();
           // render respose.data
 
           //alert(JSON.stringify(response));
@@ -425,7 +426,7 @@ export default function Cirugia_BuscarScreen() {
       }
       else {
         setSection_resultados_visible(false);
-        playErrorSound();
+        //playErrorSound();
         setModal({
           visible: true,
           titulo: t('common.error'),

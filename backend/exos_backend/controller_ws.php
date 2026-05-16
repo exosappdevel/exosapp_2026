@@ -27,6 +27,7 @@ class WebServiceController
     private $exosApp;
     private $implemented;
     private $result;
+    private $is_debuging=false;
 
     /**
      * Mapa de metadatos para el Auditor de Métodos
@@ -113,7 +114,7 @@ class WebServiceController
             'parameters' => ["id_usuario_app","tema","app_language","menu_favorites"],
         ],
         "guardar_cirugia" => [
-            'description' => 'Guarda una cirugia',
+            'descripcion' => 'Guarda una cirugia',
             'parameters' => [
                 'id_usuario',
                 'id_almacen',
@@ -171,6 +172,7 @@ class WebServiceController
     {
         $action = isset($_REQUEST["action"]) ? $_REQUEST["action"] : null;
         $subAction = isset($_REQUEST["sub_action"]) ? $_REQUEST["sub_action"] : null;
+        $this->is_debuging = isset($_REQUEST["debug"]) ? $_REQUEST["debug"]=='on' : false;
 
         if (!$action) {
             $this->sendError("Acción no especificada.");
@@ -220,6 +222,8 @@ class WebServiceController
         $id_usuario = isset($_REQUEST["id_usuario"]) ? strval($_REQUEST["id_usuario"]) : "0";
 
         $input = $_SERVER['QUERY_STRING'];
+        $data["is_debuging"] = $this->is_debuging?"true":"false";
+        $data["now"] = date('Y-m-d H:i:s');
 
         $output = XML_Envelope_Text($data);
 
@@ -313,8 +317,10 @@ class WebServiceController
 
     private function audit_ws_log()
     {
-        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+        $limit = (isset($_GET['limit']) ? (int) $_GET['limit'] : 10);
+        $limit = ($limit == 0?10:$limit);
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $page = ($page == 0?1:$page);
         $search = isset($_GET['search']) ? $_GET['search'] : '';
         $offset = ($page - 1) * $limit;
 
@@ -507,6 +513,7 @@ class WebServiceController
         if (!$id_usuario)
             return $this->DatosIncorrectos();
         $limit = !Requesting("limit") ? 1000 : Requesting("limit");
+        $limit = ($limit == 0?1000:$limit);
 
         // Query original para obtener productos como terminales
         $query = "SELECT a.id_almacen, a.nombre, a.codigo 
@@ -551,6 +558,7 @@ class WebServiceController
             return $this->DatosIncorrectos();
 
         $limit = !Requesting("limit") ? 5 : Requesting("limit");
+        $limit = ($limit == 0?5:$limit);
 
         // Query original para obtener productos como terminales
         $query = "SELECT p.id_producto as id_terminal, concat('Terminal ' , p.id_producto) as terminal
@@ -591,6 +599,7 @@ class WebServiceController
             return $this->DatosIncorrectos();
         }
         $limit = !Requesting("limit") ? 10 : Requesting("limit");
+        $limit = ($limit == 0?10:$limit);
 
         // Query original solicitado para la lista de pickeo
         $query = "SELECT p.id_producto, p.nombre, p.referencia, p.codigo_1, m.marca, f.fabricante, 
@@ -1197,6 +1206,28 @@ class WebServiceController
 	                 );	
         return ($this->result);	
     }
+    public function getExtrasList($list, $cat_table, $cat_id, $cat_name, $line_sep="\n") {
+        if (empty($list)) return "";
+
+        $values = explode(',', $list);
+        $items = []; // Usamos un array para manejar mejor los resultados
+
+        foreach ($values as $id) {
+            // Validamos que el par tenga el formato correcto para evitar errores            
+            $sQuery = "SELECT upper(c.$cat_name) as item 
+                    FROM $cat_table c                        
+                    WHERE c.$cat_id = $id";
+
+            $val = getValueSQL($sQuery, "item");
+            
+            if ($val) {
+                $items[] = $val;
+            }
+        
+        }       
+        return trim(implode($line_sep, $items));
+    }
+
     public function getMaterialList($list, $cat_table, $cat_id, $cat_name, $sub_table, $sub_id, $sub_name, $sep = " : ",$line_sep="\n") {
         if (empty($list)) return "";
 
@@ -1219,13 +1250,101 @@ class WebServiceController
                 $val = getValueSQL($sQuery, "item");
                 
                 if ($val) {
-                    $items[] = $val . $line_sep;
+                    $items[] = $val;
                 }
             }
         }
 
         // Unimos los resultados con un salto de línea (PHP_EOL) o una coma
-        return implode($line_sep, $items);
+        return trim(implode($line_sep, $items));
+    }
+    public function get_cirugia_report($id_cirugia){
+        $query = "SELECT c.id_cirugia, c.codigo, c.fecha_cirugia, c.estatus,c.fecha_programacion, 
+                        case when c.esteril=0 then 'NO' else 'SI' end as esteril, c.notas,
+                        c.minialmacen, c.equipo_poder, c.adicionales, c.consumibles,
+                        upper(v.nombre) as vendedor, 
+                        upper(t1.nombre) as tecnico, 
+                        upper(t2.nombre) as tecnico2, 
+                        c.id_subdistribuidor ,                
+                        upper(c.subdistribuidor) as subdistribuidor ,                
+                        upper(trim(concat(m.nombre, ' ', m.paterno,' ',m.materno))) as medico,
+                        upper(h.nombre) as hospital ,
+                        upper(e.nombre) as estado,
+                        upper(c.municipio) as municipio
+                FROM `cirugia` c 
+                    LEFT join vendedor v on c.id_vendedor = v.id_vendedor 
+                    LEFT join tecnico t1 on c.id_tecnico = t1.id_tecnico 
+                    LEFT join tecnico t2 on c.id_tecnico2 = t2.id_tecnico 
+                    /*LEFT join subdistribuidor sub on c.id_subdistribuidor=sub.id_subdistribuidor */
+                    LEFT join medico m on c.id_medico = m.id_medico
+                    LEFT join hospital h on c.id_hospital = h.id_hospital
+                    LEFT join estado e on c.id_estado = e.id_estado
+                WHERE c.id_cirugia=$id_cirugia";
+
+         
+        $qresult = DatasetSQL($query);
+        $data_count = 0;        
+        $row = mysqli_fetch_array($qresult);
+        $estatus = $row['estatus'];
+        switch($estatus){
+            case 0: $estatus_text = "CANCELADA"; break;
+            case 1: $estatus_text = "PROGRAMADA"; break;
+            case 2: $estatus_text = "SURITDA"; break;
+            case 3: $estatus_text = "FINALIZADA"; break;
+            case 4: $estatus_text = "MATERIAL ENTREGADO"; break;
+            case 5: $estatus_text = "SOLICITADA"; break;
+        }
+
+        $id_subdistribuidor = $row['id_subdistribuidor'];
+        $subdistribuidor = $row['subdistribuidor'];
+        if($id_subdistribuidor == 1) $subdistribuidor ="";            
+        
+
+        $data_count ++;
+        
+        $minialmacen = $this->getMaterialList($row['minialmacen'],"set_categoria","id_set_categoria","nombre","set_subcategoria","id_set_subcategoria","nombre",":");
+        $ep =  $this->getExtrasList($row['equipo_poder'],"equipo_poder_categoria","id_ep_categoria","nombre");
+        $adicionales = $this->getExtrasList($row['adicionales'],"instrumental_categoria","id_instru_categoria","nombre");
+        $consumibles = $this->getExtrasList($row['consumibles'],"consumible_categoria","id_consu_categoria","nombre");        
+        
+        $tiempo_surtido = "";
+        $tiempo_entrega_tecnico = "";
+
+        $remision = "";
+        $last_update ="";
+        $last_updater ="";
+        
+
+        $data = [
+            "id_cirugia" => $row['id_cirugia'],                    
+            "codigo" => $row['codigo'],                    
+            "fecha_cirugia" => $row['fecha_cirugia'],                    
+            "estatus" => $row['estatus'],                    
+            "estatus_text" => $estatus_text,
+            "vendedor" => $row['vendedor'],                    
+            "tecnico" => $row['tecnico'],                    
+            "tecnico2" => $row['tecnico2'],
+            "id_subdistribuidor" => $id_subdistribuidor,
+            "subdistribuidor" => $subdistribuidor,
+            "tiempo_surtido"  => $tiempo_surtido,
+            "tiempo_entrega_tecnico"  => $tiempo_entrega_tecnico,
+            "fecha_programacion"  => $row['fecha_programacion'],                    
+            "medico"  => $row['medico'],
+            "hospital"  => $row['hospital'],
+            "estado"  => $row['estado'],
+            "municipio"  => $row['municipio'],
+            "minialmacen"  => $minialmacen,
+            "ep"  => $ep,
+            "adicionales"  => $adicionales,
+            "consumibles"  => $consumibles,
+            "esteril"  => $row['esteril'],
+            "notas"  => $row['notas'],
+            "remision"  => $remision,
+            "last_update"  => $last_update,
+            "last_updater"  => $last_updater,            
+            'sql' => $this->is_debuging ? $query : ""
+        ];
+        return $data;
     }
     public function buscar_cirugia(){
         // if IMPLEMENTED
@@ -1243,103 +1362,40 @@ class WebServiceController
         $subdistribuidor  = Requesting('subdistribuidor');
         $codigo_cirugia   = Requesting('codigo_cirugia');
         $limite  = Requesting('limite');
+        $limite = (($limite == '' ) || ($limite=='0')?10:$limite);
 
         if (!$id_usuario) {
             return $this->DatosIncorrectos();
         }         
 
-        $query = "SELECT c.id_cirugia, c.codigo, c.fecha_cirugia, c.estatus,c.fecha_programacion, 
-                        case when c.esteril=0 then 'NO' else 'SI' end as esteril, c.notas,
-                        c.minialmacen,
-                        upper(v.nombre) as vendedor, 
-                        upper(t1.nombre) as tecnico, 
-                        upper(t2.nombre) as tecnico2, 
-                        upper(sub.subdistribuidor) as subdistribuidor ,                
-                        upper(trim(concat(m.nombre, ' ', m.paterno,' ',m.materno))) as medico,
-                        upper(h.nombre) as hospital ,
-                        upper(e.nombre) as estado,
-                        upper(c.municipio) as municipio
-                FROM `cirugia` c 
-                    LEFT join vendedor v on c.id_vendedor = v.id_vendedor 
-                    LEFT join tecnico t1 on c.id_tecnico = t1.id_tecnico 
-                    LEFT join tecnico t2 on c.id_tecnico2 = t2.id_tecnico 
-                    LEFT join subdistribuidor sub on c.id_subdistribuidor=sub.id_subdistribuidor 
-                    LEFT join medico m on c.id_medico = m.id_medico
-                    LEFT join hospital h on c.id_hospital = h.id_hospital
-                    LEFT join estado e on c.id_estado = e.id_estado
+        $query = "SELECT c.id_cirugia
+                FROM `cirugia` c                     
                 WHERE 1=1" 
                 . " and fecha_cirugia >= '$fecha_inicial'" 
                 . " and fecha_cirugia <= '$fecha_final'"
                 . ($vendedor ? " and id_vendedor=" . $vendedor : "")
                 . ($tecnico ? " and (id_tecnico1=$tecnico or id_tecnico2=$tecnico)":"")
                 . ($subdistribuidor ? " and id_subdistribuidor=" . $subdistribuidor : "")
-                . ($codigo_cirugia ? " and codigo=" . $codigo_cirugia : "")                
+                . ($codigo_cirugia ? " and c.codigo='" . $codigo_cirugia ."'" : "")                
                 . ($estatus >=0 ? " and estatus=" .  $estatus : "")
                 ." LIMIT " . ($limite ? $limite : "10");
 
          
-         $qresult = DatasetSQL($query);
-         $data_count = 0;
-         $data = [];
+        $qresult = DatasetSQL($query);
+        
+        $data = [];
         while ($row = mysqli_fetch_array($qresult)) {
-            $estatus = $row['estatus'];
-            switch($estatus){
-                case 0: $estatus_text = "CANCELADA"; break;
-                case 1: $estatus_text = "PROGRAMADA"; break;
-                case 2: $estatus_text = "SURITDA"; break;
-                case 3: $estatus_text = "FINALIZADA"; break;
-                case 4: $estatus_text = "MATERIAL ENTREGADO"; break;
-                case 5: $estatus_text = "SOLICITADA"; break;
-            }
-            $data_count ++;
-            
-            $minialmacen = $this->getMaterialList($row['minialmacen'],"set_categoria","id_set_categoria","nombre","set_subcategoria","id_set_subcategoria","nombre",":");
-            $ep ="";
-            $adicionales ="";
-            $consumibles = "";
-            
-            $tiempo_surtido = "";
-            $tiempo_entrega_tecnico = "";
-
-            $remision = "";
-            $last_update ="";
-            $last_updater ="";
-            
-
-            $data['item_' . $row['id_cirugia']] = [
-                "id_cirugia" => $row['id_cirugia'],                    
-                "codigo" => $row['codigo'],                    
-                "fecha_cirugia" => $row['fecha_cirugia'],                    
-                "estatus" => $row['estatus'],                    
-                "estatus_text" => $estatus_text,
-                "vendedor" => $row['vendedor'],                    
-                "tecnico" => $row['tecnico'],                    
-                "tecnico2" => $row['tecnico2'],
-                "subdistribuidor" => $row['subdistribuidor'],
-                "tiempo_surtido"  => $tiempo_surtido,
-                "tiempo_entrega_tecnico"  => $tiempo_entrega_tecnico,
-                "fecha_programacion"  => $row['fecha_programacion'],                    
-                "medico"  => $row['medico'],
-                "hospital"  => $row['hospital'],
-                "estado"  => $row['estado'],
-                "municipio"  => $row['municipio'],
-                "minialmacen"  => $minialmacen,
-                "ep"  => $ep,
-                "adicionales"  => $adicionales,
-                "consumibles"  => $consumibles,
-                "esteril"  => $row['esteril'],
-                "notas"  => $row['notas'],
-                "remision"  => $remision,
-                "last_update"  => $last_update,
-                "last_updater"  => $last_updater
-            ];
+            $id_cirugia = $row['id_cirugia'];            
+            $data['item_' . $row['id_cirugia']] = $this->get_cirugia_report($id_cirugia);
         }            
+        $data_count = count($data);
+
 
         return ( ['result' => 'ok',
                 'result_text' => '',
                 'data_count' => $data_count,
                 'data'=> $data,
-                'sql' => $query
+                'sql' => $this->is_debuging ? $query : ""                
                 ] );
     }                
 }

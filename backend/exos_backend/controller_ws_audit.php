@@ -36,7 +36,7 @@
         <p><i id="actionDescription"></i></p>
         <form id="testForm">
             <div id="paramsContainer"></div>
-            <button type="button" class="btn-test" onclick="runTest()">Ejecutar Test</button>
+            <button type="button" class="btn-test" onclick="runTest()">Ejecutar Test</button>            
         </form>
     </div>
 
@@ -123,6 +123,11 @@
                     }
                 }
             }
+            // add debug
+            const div = document.createElement('div');
+            div.className = 'param-row';
+            div.innerHTML = '<label>Debug:</label><input type="checkbox" id="chkDebug" name="debug" checked="yes" style="width: 30px !important;">';
+            container.appendChild(div);
 
             if (!hasParams) {
                 container.innerHTML = '<p>Este método no requiere parámetros adicionales.</p>';
@@ -144,6 +149,7 @@
         for (let [key, value] of formData.entries()) {
             params.append(key, value);
         }
+        
 
         try {
             const response = await fetch(WS_URL + "?" + params.toString());
