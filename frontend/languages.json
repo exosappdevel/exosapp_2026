@@ -159,7 +159,9 @@
       "estatus_text_3" : "Finalizada",
       "estatus_text_4" : "Material entregado",
       "estatus_text_5" : "Solicitada",
-      "title_use_dates" :"Filtrar por rango de fechas"
+      "title_use_dates" :"Filtrar por rango de fechas",
+      "search_valida_error_noparam" : "Debes proporcionar un filtro valido",
+      "search_valida_error_fechasinvalidas": "Rango de fecha no validas"
 }
   },
   "en": {

@@ -23,7 +23,7 @@ import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, formatDate, _ZoomableView } from '../components/elidev_components';
+import { _Header, _Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, formatDate, _ZoomableView } from '../components/elidev_components';
 import { addMonths } from 'date-fns';
 
 // Habilitar animaciones en Android
@@ -144,7 +144,7 @@ export default function Cirugia_BuscarScreen() {
         // Promise.all es más rápido porque dispara todas a la vez
         const [resHospitales, resVendedores, resTecnicos, resSubdistribuidores, resMedicos] = await Promise.all([
           ApiService.get_hospitales(user.id_almacen),
-          ApiService.get_vendedores(user.id_usuario, "Vendedor"),
+          ApiService.get_vendedores(user.id_usuario, ""),
           ApiService.get_tecnicos(user.id_usuario),
           ApiService.get_subdistribuidor(),
           ApiService.get_medicos_list(user.id_usuario)
@@ -220,12 +220,6 @@ export default function Cirugia_BuscarScreen() {
     colorIcon: '#f56565'
   });
 
-
-  const validateForm = () => {
-    return null;
-  };
-
-
   const renderResultados = () => {
     if (loading) return <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 20 }} />;
     if (resultados.length === 0) return (<View></View>);
@@ -283,90 +277,71 @@ export default function Cirugia_BuscarScreen() {
           onPress={() => setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)}
           yoff={85 + (index * 80)}
         >
-          <_ZoomableView showShare={true} shareButtonStyle={styles.shareButton} >
-            <View style={styles.detalleContainer}>
-              <Text style={{fontWeight:'bold', textAlign:'center'}}>DETALLE DE CIRUGIA</Text>
-              <DetalleLinea label="Codigo" value={item.codigo} />
-              <DetalleLinea label="Estatus" value={item.estatus_text} />
-              <DetalleLinea label="Vendedor" value={item.vendedor} />
-              <DetalleLinea label="Técnico 1" value={item.tecnico} />
-              <DetalleLinea label="Técnico 2" value={item.tecnico2} />
-              <DetalleLinea label="Tiempo de Surtido" value={item.tiempo_surtido} />
-              <DetalleLinea label="Tiempo de Entrega a Técnico" value={item.tiempo_entrega_tecnico} />
-              <DetalleLinea label="Fecha de Programación" value={item.fecha_programacion} />
-              <DetalleLinea label="Fecha de Reprogramación" value={item.fecha_reprogramacion} />
-              <DetalleLinea label="Fecha de Cirugía" value={item.fecha_cirugia} />
-              <DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
-              <DetalleLinea label="Médico" value={item.medico} />
-              <DetalleLinea label="Hospital" value={item.hospital} />
-              <DetalleLinea label="Municipio" value={`${item.municipio || ''}, ${item.estado || ''}`} />
+          <_Report>
+            <Text style={{ fontWeight: 'bold', textAlign: 'center' }}>DETALLE DE CIRUGIA</Text>
+            <_DetalleLinea label="Codigo" value={item.codigo} />
+            <_DetalleLinea label="Estatus" value={item.estatus_text} />
+            <_DetalleLinea label="Vendedor" value={item.vendedor} />
+            <_DetalleLinea label="Técnico 1" value={item.tecnico} />
+            <_DetalleLinea label="Técnico 2" value={item.tecnico2} />
+            <_DetalleLinea label="Tiempo de Surtido" value={item.tiempo_surtido} />
+            <_DetalleLinea label="Tiempo de Entrega a Técnico" value={item.tiempo_entrega_tecnico} />
+            <_DetalleLinea label="Fecha de Programación" value={item.fecha_programacion} />
+            <_DetalleLinea label="Fecha de Reprogramación" value={item.fecha_reprogramacion} />
+            <_DetalleLinea label="Fecha de Cirugía" value={item.fecha_cirugia} />
+            <_DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
+            <_DetalleLinea label="Médico" value={item.medico} />
+            <_DetalleLinea label="Hospital" value={item.hospital} />
+            <_DetalleLinea label="Municipio" value={`${item.municipio || ''}, ${item.estado || ''}`} />
 
-              <View style={styles.divisor} />
+            <View style={styles.divisor} />
 
-              <DetalleMultiLinea label="Material" value={item.minialmacen} />
-              <DetalleMultiLinea label="Equipo Poder" value={item.ep} />
-              <DetalleMultiLinea label="Adicionales" value={item.adicionales} />
-              <DetalleMultiLinea label="Consumibles" value={item.consumibles} />
-              <DetalleLinea label="Solicita Estéril" value={item.esteril} />
+            <_DetalleMultiLinea label="Material" value={item.minialmacen} />
+            <_DetalleMultiLinea label="Equipo Poder" value={item.ep} />
+            <_DetalleMultiLinea label="Adicionales" value={item.adicionales} />
+            <_DetalleMultiLinea label="Consumibles" value={item.consumibles} />
+            <_DetalleLinea label="Solicita Estéril" value={item.esteril} />
 
-              <View style={styles.divisor} />
+            <View style={styles.divisor} />
 
-              <DetalleMultiLinea label="Notas" value={item.notas} />
-              <DetalleLinea label="Remisión" value={item.remision} />
-              <DetalleLinea
-                label="Última Modificación"
-                value={`${item.last_update || ''} / ${item.last_updater || ''}`}
-              />
-            </View>
-          </_ZoomableView>
+            <_DetalleMultiLinea label="Notas" value={item.notas} />
+            <_DetalleLinea label="Remisión" value={item.remision} />
+            <_DetalleLinea
+              label="Última Modificación"
+              value={`${item.last_update || ''} / ${item.last_updater || ''}`}
+            />
+          </_Report>
         </_AccordionSection>
 
       );
     });
   };
 
-  // Componente pequeño para las líneas de detalle
-  const DetalleLinea = ({ label, value, label_style, value_style }: { label: string, value: any, label_style?:any, value_style?:any }) => (
-    <View style={styles.rowDetalle}>
-      <Text style={[styles.labelDetalle, { color: theme.textSub }, label_style]}>{label}:</Text>
-      <Text style={[styles.valueDetalle, { color: theme.accent }, value_style]}>{value || '---'}</Text>
-    </View>
-  );
+  const validateForm = () => {
+    // 1. Verificación de que al menos exista un parámetro de búsqueda
+    if (!vendedor && !tecnico && !subdistribuidor && !codigo_cirugia && !filtrar_fecha) {
+      return t('cirugias_programar.search_valida_error_noparam');
+    }
 
-  const DetalleMultiLinea = ({ label, value, label_style, value_style }: { label: string, value: any, label_style?:any, value_style?:any }) => {
-    // Convertimos a string y separamos por saltos de línea
-    const lineas = value && typeof value === 'string'
-      ? value.split('\n').filter(linea => linea.trim() !== '')
-      : [];
+    // 2. Verificación de rango de fechas si el filtro está activo
+    if (filtrar_fecha) {
+      // Convertimos los strings "DD/MM/YYYY" a objetos Date reales usando tu función parseDate
+      const dateIni = parseDate(fecha_ini);
+      const dateFin = parseDate(fecha_fin);
 
-    return (
-      <View style={[styles.rowDetalleMulti, { paddingBottom: 4 }]}>
-        <Text style={[styles.labelDetalleMulti, { color: theme.textSub }, label_style]}>{label}:</Text>
+      // Comparamos los milisegundos de ambas fechas
+      if (dateFin.getTime() < dateIni.getTime()) {
+        return t('cirugias_programar.search_valida_error_fechasinvalidas');
+      }
+    }
 
-        <View style={{ flex: 2 }}>
-          {lineas.length > 0 ? (
-            lineas.map((linea, index) => (
-              <Text
-                key={index}
-                style={[styles.valueDetalleMulti, { color: theme.accent },value_style]}
-              >
-                {linea}
-              </Text>
-            ))
-          ) : (
-            <Text style={[styles.valueDetalleMulti, { color: theme.accent },value_style]}>
-              ---
-            </Text>
-          )}
-        </View>
-      </View>
-    );
+    return null;
   };
+
+
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
-      playErrorSound();
-
       setModal({
         visible: true,
         titulo: 'Campos Requeridos',
@@ -1130,6 +1105,7 @@ const styles = StyleSheet.create({
   },
   detalleContainer: {
     paddingVertical: 5,
+    paddingHorizontal: 10
   },
   rowDetalle: {
     flexDirection: 'row',
@@ -1177,11 +1153,11 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
-  shareButton:{
+  shareButton: {
     top: -50,                   // Reducido un poco para que no choque con los bordes del acordeón
     left: 5,
   },
-  value_bold:{
-    fontWeight:'bold'
+  value_bold: {
+    fontWeight: 'bold'
   }
 });

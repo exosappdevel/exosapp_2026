@@ -9,4 +9,5 @@ export * from './_MenuLauncher';
 export * from './_MenuSection';
 export * from './_TouchableWithoutFeedback';
 export * from './_ZoomableView';
+export * from './_Report';
 

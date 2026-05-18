@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Alert, Platform,ViewStyle } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Alert, Platform, ViewStyle } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
@@ -9,40 +9,85 @@ import { useApp } from '../../context/AppContext';
 
 interface ZoomableProps {
   children: React.ReactNode;
-  showShare?: boolean; // Propiedad añadida (false por defecto)
+  showShare?: boolean;
   shareButtonStyle?: ViewStyle;
 }
 
-export const _ZoomableView = ({ children, showShare = false,shareButtonStyle }: ZoomableProps) => {
+export const _ZoomableView = ({ children, showShare = false, shareButtonStyle }: ZoomableProps) => {
   const { theme } = useApp();
-
-  // Referencia para capturar la vista del ViewShot
   const viewShotRef = useRef<ViewShot>(null);
 
-  // Valores compartidos de Reanimated para controlar la escala
+  // Estados compartidos para el Zoom (Escala)
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
 
-  // Definición del gesto Pinch (pinza con dos dedos)
+  // Estados compartidos para el Movimiento (Traslación X / Y)
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
+
+  // 1. GESTO DE PINCH (ZOOM)
   const pinchGesture = Gesture.Pinch()
     .onUpdate((event) => {
-      // El Math.max evita que hagan el View infinitamente pequeño (mínimo 0.5x)
-      // El Math.min evita que lo hagan gigante (máximo 4x)
-      scale.value = Math.max(0.5, Math.min(savedScale.value * event.scale, 4));
+      // Limitamos el zoom mínimo estrictamente a 1 (tamaño actual) y máximo a 4
+      scale.value = Math.max(1, Math.min(savedScale.value * event.scale, 4));
     })
     .onEnd(() => {
-      // Guardamos la escala actual para que el siguiente zoom empiece desde ahí
       savedScale.value = scale.value;
     });
 
-  // Estilo animado que se aplica al contenedor
+  // 2. GESTO DE PAN (ARRASTRE / MOVIMIENTO)
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      // Solo permitimos mover el contenido si el usuario ha hecho zoom (escala > 1)
+      if (scale.value > 1) {
+        translateX.value = savedTranslateX.value + event.translationX;
+        translateY.value = savedTranslateY.value + event.translationY;
+      }
+    })
+    .onEnd(() => {
+      if (scale.value > 1) {
+        savedTranslateX.value = translateX.value;
+        savedTranslateY.value = translateY.value;
+      } else {
+        // Si el usuario regresa al tamaño 1, reseteamos la posición suavemente
+        translateX.value = withTiming(0);
+        translateY.value = withTiming(0);
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+      }
+    });
+
+  // Gesto Doble Tap para restaurar rápidamente el estado original (Opcional y muy útil)
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      scale.value = withTiming(1);
+      savedScale.value = 1;
+      translateX.value = withTiming(0);
+      translateY.value = withTiming(0);
+      savedTranslateX.value = 0;
+      savedTranslateY.value = 0;
+    });
+
+  // Combinamos los gestos para que se ejecuten de manera simultánea
+  const composedGesture = Gesture.Race(
+    doubleTapGesture,
+    Gesture.Simultaneous(pinchGesture, panGesture)
+  );
+
+  // Estilos de animación aplicando tanto la escala como el desplazamiento X, Y
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: scale.value }],
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: scale.value },
+      ],
     };
   });
 
-  // Función para capturar y compartir el contenido en formato PNG
   const handleShare = async () => {
     if (Platform.OS === 'web') {
       Alert.alert('Compartir', 'La función de compartir captura no está soportada en entorno Web nativo.');
@@ -50,20 +95,17 @@ export const _ZoomableView = ({ children, showShare = false,shareButtonStyle }: 
     }
 
     try {
-      // Validamos si compartir está disponible en el dispositivo
       const isAvailable = await Sharing.isAvailableAsync();
       if (!isAvailable) {
         Alert.alert('Error', 'Compartir archivos no está disponible en este dispositivo.');
         return;
       }
 
-      // Convertimos el ViewShot a una imagen PNG temporal en disco
       const uri = await captureRef(viewShotRef, {
         format: 'png',
         quality: 1.0,
       });
 
-      // Abrimos el menú nativo del OS (WhatsApp, Guardar Imagen, Slack, AirDrop, etc)
       await Sharing.shareAsync(uri, {
         dialogTitle: 'Compartir captura',
         mimeType: 'image/png',
@@ -77,8 +119,8 @@ export const _ZoomableView = ({ children, showShare = false,shareButtonStyle }: 
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <GestureDetector gesture={pinchGesture}>
-        {/* ViewShot envuelve la caja de animación para capturar el contenido renderizado */}
+      <GestureDetector gesture={composedGesture}>
+        {/* El ViewShot mantiene overflow: 'hidden' para recortar el contenido en los bordes de la tarjeta */}
         <ViewShot
           ref={viewShotRef}
           options={{ format: 'png', quality: 1.0 }}
@@ -90,10 +132,11 @@ export const _ZoomableView = ({ children, showShare = false,shareButtonStyle }: 
         </ViewShot>
       </GestureDetector>
 
-      {/* Botón flotante superior derecho de compartir */}
       {showShare && (
         <TouchableOpacity
-          style={[styles.shareButton, { backgroundColor: theme.card, borderColor: theme.border },
+          style={[
+            styles.shareButton,
+            { backgroundColor: theme.card, borderColor: theme.border },
             shareButtonStyle
           ]}
           onPress={handleShare}
@@ -106,28 +149,24 @@ export const _ZoomableView = ({ children, showShare = false,shareButtonStyle }: 
   );
 };
 
-// En el StyleSheet.create de _ZoomableView.tsx
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    width: '100%',            // Asegura ocupar todo el ancho del acordeón
+    width: '100%'    
   },
   shotWrapper: {
     width: '100%',
-    // Eliminamos alignItems y justifyContent 'center' para que no comprima al hijo
+    overflow: 'hidden', // Crucial: Mantiene el contenido ampliado dentro de los límites del componente
   },
   zoomBox: {
     width: '100%',
-    // Eliminamos alignItems y justifyContent 'center' para que el texto/detalles
-    // puedan usar flex-direction: 'row' y estirarse de extremo a extremo
   },
   shareButton: {
     position: 'absolute',
-    top: -18,                   // Reducido un poco para que no choque con los bordes del acordeón
+    top: -18,
     right: 5,
-    width: 36,                // Un tamaño ligeramente más compacto
+    width: 36,
     height: 36,
     borderRadius: 18,
     borderWidth: 1,

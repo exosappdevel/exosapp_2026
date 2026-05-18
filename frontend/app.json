@@ -7,8 +7,7 @@
     "icon": "./assets/images/icon-exorta.png",
     "scheme": "exosapp",
     "userInterfaceStyle": "automatic",
-    
-    "ios": {    
+    "ios": {
       "supportsTablet": true,
       "newArchEnabled": true,
       "bundleIdentifier": "com.exos.exosapp",
@@ -39,7 +38,6 @@
           "backgroundColor": "#000000"
         }
       },
-      
       "package": "com.exos.exosapp",
       "permissions": [
         "android.permission.CAMERA",
@@ -83,7 +81,8 @@
           "faceIDPermission": "Quick and secure login"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
