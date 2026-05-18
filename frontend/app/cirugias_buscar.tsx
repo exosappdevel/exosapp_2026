@@ -23,7 +23,7 @@ import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, formatDate } from '../components/elidev_components';
+import { _Header, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, formatDate, _ZoomableView } from '../components/elidev_components';
 import { addMonths } from 'date-fns';
 
 // Habilitar animaciones en Android
@@ -247,6 +247,7 @@ export default function Cirugia_BuscarScreen() {
           key={item.id_cirugia || index}
           scrollRef={scrollRef}
           backgroundColor={hexToRGBA(theme.card, 1)}
+          HideTitleOnOpen={true}
           title={
             <View style={{ flex: 1, paddingRight: 5 }}>
               {/* Primer Renglón */}
@@ -282,36 +283,42 @@ export default function Cirugia_BuscarScreen() {
           onPress={() => setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)}
           yoff={85 + (index * 80)}
         >
-          <View style={styles.detalleContainer}>
-            <DetalleLinea label="Técnico 1" value={item.tecnico} />
-            <DetalleLinea label="Técnico 2" value={item.tecnico2} />
-            <DetalleLinea label="Tiempo de Surtido" value={item.tiempo_surtido} />
-            <DetalleLinea label="Tiempo de Entrega a Técnico" value={item.tiempo_entrega_tecnico} />
-            <DetalleLinea label="Fecha de Programación" value={item.fecha_programacion} />
-            <DetalleLinea label="Fecha de Reprogramación" value={item.fecha_reprogramacion} />
-            <DetalleLinea label="Fecha de Cirugía" value={item.fecha_cirugia} />
-            <DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
-            <DetalleLinea label="Médico" value={item.medico} />
-            <DetalleLinea label="Hospital" value={item.hospital} />
-            <DetalleLinea label="Municipio" value={`${item.municipio || ''}, ${item.estado || ''}`} />
+          <_ZoomableView showShare={true} shareButtonStyle={styles.shareButton} >
+            <View style={styles.detalleContainer}>
+              <Text style={{fontWeight:'bold', textAlign:'center'}}>DETALLE DE CIRUGIA</Text>
+              <DetalleLinea label="Codigo" value={item.codigo} />
+              <DetalleLinea label="Estatus" value={item.estatus_text} />
+              <DetalleLinea label="Vendedor" value={item.vendedor} />
+              <DetalleLinea label="Técnico 1" value={item.tecnico} />
+              <DetalleLinea label="Técnico 2" value={item.tecnico2} />
+              <DetalleLinea label="Tiempo de Surtido" value={item.tiempo_surtido} />
+              <DetalleLinea label="Tiempo de Entrega a Técnico" value={item.tiempo_entrega_tecnico} />
+              <DetalleLinea label="Fecha de Programación" value={item.fecha_programacion} />
+              <DetalleLinea label="Fecha de Reprogramación" value={item.fecha_reprogramacion} />
+              <DetalleLinea label="Fecha de Cirugía" value={item.fecha_cirugia} />
+              <DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
+              <DetalleLinea label="Médico" value={item.medico} />
+              <DetalleLinea label="Hospital" value={item.hospital} />
+              <DetalleLinea label="Municipio" value={`${item.municipio || ''}, ${item.estado || ''}`} />
 
-            <View style={styles.divisor} />
+              <View style={styles.divisor} />
 
-            <DetalleMultiLinea label="Material" value={item.minialmacen} />
-            <DetalleMultiLinea label="Equipo Poder" value={item.ep} />
-            <DetalleMultiLinea label="Adicionales" value={item.adicionales} />
-            <DetalleMultiLinea label="Consumibles" value={item.consumibles} />
-            <DetalleLinea label="Solicita Estéril" value={item.esteril} />
+              <DetalleMultiLinea label="Material" value={item.minialmacen} />
+              <DetalleMultiLinea label="Equipo Poder" value={item.ep} />
+              <DetalleMultiLinea label="Adicionales" value={item.adicionales} />
+              <DetalleMultiLinea label="Consumibles" value={item.consumibles} />
+              <DetalleLinea label="Solicita Estéril" value={item.esteril} />
 
-            <View style={styles.divisor} />
+              <View style={styles.divisor} />
 
-            <DetalleMultiLinea label="Notas" value={item.notas} />
-            <DetalleLinea label="Remisión" value={item.remision} />
-            <DetalleLinea
-              label="Última Modificación"
-              value={`${item.last_update || ''} / ${item.last_updater || ''}`}
-            />
-          </View>
+              <DetalleMultiLinea label="Notas" value={item.notas} />
+              <DetalleLinea label="Remisión" value={item.remision} />
+              <DetalleLinea
+                label="Última Modificación"
+                value={`${item.last_update || ''} / ${item.last_updater || ''}`}
+              />
+            </View>
+          </_ZoomableView>
         </_AccordionSection>
 
       );
@@ -319,14 +326,14 @@ export default function Cirugia_BuscarScreen() {
   };
 
   // Componente pequeño para las líneas de detalle
-  const DetalleLinea = ({ label, value }: { label: string, value: any }) => (
+  const DetalleLinea = ({ label, value, label_style, value_style }: { label: string, value: any, label_style?:any, value_style?:any }) => (
     <View style={styles.rowDetalle}>
-      <Text style={[styles.labelDetalle, { color: theme.textSub }]}>{label}:</Text>
-      <Text style={[styles.valueDetalle, { color: theme.text }]}>{value || '---'}</Text>
+      <Text style={[styles.labelDetalle, { color: theme.textSub }, label_style]}>{label}:</Text>
+      <Text style={[styles.valueDetalle, { color: theme.accent }, value_style]}>{value || '---'}</Text>
     </View>
   );
 
-  const DetalleMultiLinea = ({ label, value }: { label: string, value: any }) => {
+  const DetalleMultiLinea = ({ label, value, label_style, value_style }: { label: string, value: any, label_style?:any, value_style?:any }) => {
     // Convertimos a string y separamos por saltos de línea
     const lineas = value && typeof value === 'string'
       ? value.split('\n').filter(linea => linea.trim() !== '')
@@ -334,20 +341,20 @@ export default function Cirugia_BuscarScreen() {
 
     return (
       <View style={[styles.rowDetalleMulti, { paddingBottom: 4 }]}>
-        <Text style={[styles.labelDetalleMulti, { color: theme.textSub }]}>{label}:</Text>
+        <Text style={[styles.labelDetalleMulti, { color: theme.textSub }, label_style]}>{label}:</Text>
 
         <View style={{ flex: 2 }}>
           {lineas.length > 0 ? (
             lineas.map((linea, index) => (
               <Text
                 key={index}
-                style={[styles.valueDetalleMulti, { color: theme.text, textAlign: 'left', paddingVertical: 4, paddingLeft: 5 }]}
+                style={[styles.valueDetalleMulti, { color: theme.accent },value_style]}
               >
                 {linea}
               </Text>
             ))
           ) : (
-            <Text style={[styles.valueDetalleMulti, { color: theme.text, textAlign: 'left' }]}>
+            <Text style={[styles.valueDetalleMulti, { color: theme.accent },value_style]}>
               ---
             </Text>
           )}
@@ -389,7 +396,7 @@ export default function Cirugia_BuscarScreen() {
         await ApiService.buscar_cirugia(
           user.id_usuario,
           (estatus ? estatus.estatus.toString() : '-1'),
-          (filtrar_fecha ? "1 " :"0" ), 
+          (filtrar_fecha ? "1 " : "0"),
           fecha_ini,
           fecha_fin,
           (vendedor ? vendedor.id_vendedor : '0'),
@@ -571,163 +578,164 @@ export default function Cirugia_BuscarScreen() {
                 onPress={() => toggleSection('parametros')}
               >
 
-                
+
 
                 {/* GRUPO DE FECHAS */}
                 <View style={[
                   styles.grupoFechasContainer,
-                  { borderColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.2) ,
-                    height:filtrar_fecha?250:50
+                  {
+                    borderColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.2),
+                    height: filtrar_fecha ? 250 : 50
                   }
                 ]}>
                   {/* Checkbox para activar/desactivar el filtro */}
                   <_checkBox
                     key_id='use_dates'
                     use_switch={true}
-                    value={filtrar_fecha}                    
+                    value={filtrar_fecha}
                     setValue={() => setFiltrar_fecha(!filtrar_fecha)}
                     text={t('cirugias_programar.title_use_dates')}
                   />
 
                   {filtrar_fecha && (
-                  /* Contenedor de Inputs (Se atenúa si está deshabilitado) */
-                  <View style={{ opacity: filtrar_fecha ? 1 : 0.4, marginTop: 10 }} pointerEvents={filtrar_fecha ? 'auto' : 'none'}>
+                    /* Contenedor de Inputs (Se atenúa si está deshabilitado) */
+                    <View style={{ opacity: filtrar_fecha ? 1 : 0.4, marginTop: 10 }} pointerEvents={filtrar_fecha ? 'auto' : 'none'}>
 
-                    {/* Fecha ini */}
-                    <View style={styles.fieldContainer}>
-                      <Text style={[styles.label, { color: theme.text }]}>
-                        {t('cirugias_programar.fecha_ini')}
-                      </Text>
+                      {/* Fecha ini */}
+                      <View style={styles.fieldContainer}>
+                        <Text style={[styles.label, { color: theme.text }]}>
+                          {t('cirugias_programar.fecha_ini')}
+                        </Text>
 
-                      {Platform.OS === 'web' ? (
-                        <View style={[
-                          styles.selector,
-                          { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                        ]}>
-                          <input
-                            type="date"
-                            disabled={!filtrar_fecha}
-                            value={(() => {
-                              const partes = fecha_ini.split('/');
-                              if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
-                              return "";
-                            })()}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val) {
-                                const [year, month, day] = val.split('-').map(Number);
-                                onDateChange_ini({ type: 'set' } as any, new Date(year, month - 1, day));
-                              }
-                            }}
-                            style={{
-                              flex: 1,
-                              border: 'none',
-                              outline: 'none',
-                              background: 'transparent',
-                              color: theme.text,
-                              fontSize: 16,
-                              fontFamily: 'inherit',
-                              cursor: filtrar_fecha ? 'pointer' : 'default'
-                            }}
-                          />
-                          <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                        </View>
-                      ) : (
-                        <>
-                          <TouchableOpacity
-                            style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                            onPress={() => setShowDatePicker('inicio')}
-                            disabled={!filtrar_fecha}
-                          >
-                            <Text style={[styles.selectorText, { color: fecha_ini ? theme.text : theme.textSub }]}>
-                              {fecha_ini || 'DD/MM/YYYY'}
-                            </Text>
+                        {Platform.OS === 'web' ? (
+                          <View style={[
+                            styles.selector,
+                            { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
+                          ]}>
+                            <input
+                              type="date"
+                              disabled={!filtrar_fecha}
+                              value={(() => {
+                                const partes = fecha_ini.split('/');
+                                if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
+                                return "";
+                              })()}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val) {
+                                  const [year, month, day] = val.split('-').map(Number);
+                                  onDateChange_ini({ type: 'set' } as any, new Date(year, month - 1, day));
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                border: 'none',
+                                outline: 'none',
+                                background: 'transparent',
+                                color: theme.text,
+                                fontSize: 16,
+                                fontFamily: 'inherit',
+                                cursor: filtrar_fecha ? 'pointer' : 'default'
+                              }}
+                            />
                             <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                          </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <>
+                            <TouchableOpacity
+                              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                              onPress={() => setShowDatePicker('inicio')}
+                              disabled={!filtrar_fecha}
+                            >
+                              <Text style={[styles.selectorText, { color: fecha_ini ? theme.text : theme.textSub }]}>
+                                {fecha_ini || 'DD/MM/YYYY'}
+                              </Text>
+                              <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                            </TouchableOpacity>
 
-                          {showDatePicker === 'inicio' && filtrar_fecha && (
-                            <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
-                              <DateTimePicker
-                                value={parseDate(fecha_ini)}
-                                key="dtFechaIni"
-                                mode="date"
-                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                onChange={onDateChange_ini}
-                              />
-                            </View>
-                          )}
-                        </>
-                      )}
-                    </View>
+                            {showDatePicker === 'inicio' && filtrar_fecha && (
+                              <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
+                                <DateTimePicker
+                                  value={parseDate(fecha_ini)}
+                                  key="dtFechaIni"
+                                  mode="date"
+                                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                  onChange={onDateChange_ini}
+                                />
+                              </View>
+                            )}
+                          </>
+                        )}
+                      </View>
 
-                    {/* Fecha fin */}
-                    <View style={styles.fieldContainer}>
-                      <Text style={[styles.label, { color: theme.text }]}>
-                        {t('cirugias_programar.fecha_fin')}
-                      </Text>
+                      {/* Fecha fin */}
+                      <View style={styles.fieldContainer}>
+                        <Text style={[styles.label, { color: theme.text }]}>
+                          {t('cirugias_programar.fecha_fin')}
+                        </Text>
 
-                      {Platform.OS === 'web' ? (
-                        <View style={[
-                          styles.selector,
-                          { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                        ]}>
-                          <input
-                            type="date"
-                            disabled={!filtrar_fecha}
-                            value={(() => {
-                              const partes = fecha_fin.split('/');
-                              if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
-                              return "";
-                            })()}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val) {
-                                const [year, month, day] = val.split('-').map(Number);
-                                onDateChange_fin({ type: 'set' } as any, new Date(year, month - 1, day));
-                              }
-                            }}
-                            style={{
-                              flex: 1,
-                              border: 'none',
-                              outline: 'none',
-                              background: 'transparent',
-                              color: theme.text,
-                              fontSize: 16,
-                              fontFamily: 'inherit',
-                              cursor: filtrar_fecha ? 'pointer' : 'default'
-                            }}
-                          />
-                          <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                        </View>
-                      ) : (
-                        <>
-                          <TouchableOpacity
-                            style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                            onPress={() => setShowDatePicker('fin')}
-                            disabled={!filtrar_fecha}
-                          >
-                            <Text style={[styles.selectorText, { color: fecha_fin ? theme.text : theme.textSub }]}>
-                              {fecha_fin || 'DD/MM/YYYY'}
-                            </Text>
+                        {Platform.OS === 'web' ? (
+                          <View style={[
+                            styles.selector,
+                            { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
+                          ]}>
+                            <input
+                              type="date"
+                              disabled={!filtrar_fecha}
+                              value={(() => {
+                                const partes = fecha_fin.split('/');
+                                if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
+                                return "";
+                              })()}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val) {
+                                  const [year, month, day] = val.split('-').map(Number);
+                                  onDateChange_fin({ type: 'set' } as any, new Date(year, month - 1, day));
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                border: 'none',
+                                outline: 'none',
+                                background: 'transparent',
+                                color: theme.text,
+                                fontSize: 16,
+                                fontFamily: 'inherit',
+                                cursor: filtrar_fecha ? 'pointer' : 'default'
+                              }}
+                            />
                             <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                          </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <>
+                            <TouchableOpacity
+                              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                              onPress={() => setShowDatePicker('fin')}
+                              disabled={!filtrar_fecha}
+                            >
+                              <Text style={[styles.selectorText, { color: fecha_fin ? theme.text : theme.textSub }]}>
+                                {fecha_fin || 'DD/MM/YYYY'}
+                              </Text>
+                              <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
+                            </TouchableOpacity>
 
-                          {showDatePicker === 'fin' && filtrar_fecha && (
-                            <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
-                              <DateTimePicker
-                                value={parseDate(fecha_fin)}
-                                key="dtFechaFin"
-                                mode="date"
-                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                onChange={onDateChange_fin}
-                              />
-                            </View>
-                          )}
-                        </>
-                      )}
+                            {showDatePicker === 'fin' && filtrar_fecha && (
+                              <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
+                                <DateTimePicker
+                                  value={parseDate(fecha_fin)}
+                                  key="dtFechaFin"
+                                  mode="date"
+                                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                  onChange={onDateChange_fin}
+                                />
+                              </View>
+                            )}
+                          </>
+                        )}
+                      </View>
+
                     </View>
-
-                  </View>
                   )}
                 </View>
 
@@ -1154,6 +1162,8 @@ const styles = StyleSheet.create({
   valueDetalleMulti: {
     fontSize: 11,
     textAlign: 'left',
+    paddingVertical: 4,
+    paddingLeft: 5
   },
   divisor: {
     height: 1,
@@ -1167,4 +1177,11 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
+  shareButton:{
+    top: -50,                   // Reducido un poco para que no choque con los bordes del acordeón
+    left: 5,
+  },
+  value_bold:{
+    fontWeight:'bold'
+  }
 });

@@ -26,6 +26,7 @@ interface AccordionProps {
     yoff?: number;
     visible?:boolean;
     backgroundColor?:string;
+    HideTitleOnOpen?: boolean;
 }
 
 export const _AccordionSection = ({ 
@@ -36,7 +37,8 @@ export const _AccordionSection = ({
     scrollRef, 
     yoff,
     visible = true,
-    backgroundColor
+    backgroundColor,
+    HideTitleOnOpen = false
 }: AccordionProps) => {
     
     const { theme } = useApp();
@@ -59,6 +61,8 @@ export const _AccordionSection = ({
         }
     };
 
+    const mostrarTitulo = !(HideTitleOnOpen && isOpen);
+
     return (
         <View style={[
             styles.accordionContainer, 
@@ -67,12 +71,17 @@ export const _AccordionSection = ({
             <TouchableOpacity
                 style={[
                     styles.accordionHeader,
-                    { backgroundColor: isOpen ? theme.card + '10' : 'transparent' }
+                    { 
+                        backgroundColor: isOpen ? 'rgba(255,255,255,0.05)' : 'transparent',
+                        // Si el título se oculta, justificamos al final para que el ícono se quede a la derecha
+                        justifyContent: mostrarTitulo ? 'space-between' : 'flex-end'
+                    }
                 ]}
                 onPress={handlePress}
                 activeOpacity={0.7}
             >
                 {/* LÓGICA DE TÍTULO CUSTOM */}
+                {mostrarTitulo ? (
                 <View style={{ flex: 1 }}>
                     {typeof title === 'string' ? (
                         <Text style={[styles.accordionTitle, { color: theme.text }]}>
@@ -82,6 +91,12 @@ export const _AccordionSection = ({
                         title // Si es un componente (View, Text custom, etc), se renderiza tal cual
                     )}
                 </View>
+                ) : (
+                    /* Contenedor vacío con la misma altura mínima que el ícono (24px) 
+                      para asegurar estabilidad dimensional en el layout de iOS y Android.
+                    */
+                    <View style={{ height: 24 }} />
+                )}
                 <MaterialCommunityIcons
                     name={isOpen ? 'chevron-up' : 'chevron-down'}
                     size={24}
@@ -114,6 +129,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         padding: 15,
         alignItems: 'center',
+        minHeight: 54,
     },
     accordionTitle: {
         fontSize: 16,
