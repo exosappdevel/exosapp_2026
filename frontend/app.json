@@ -15,6 +15,9 @@
         "NSCameraUsageDescription": "Scanea QR y codigo de barras",
         "NSLocationWhenInUseUsageDescription": "Trackea localidad del warehouse",
         "NSFaceIDUsageDescription": "Usa el faceid para iniciar sesión"
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
       }
     },
     "android": {
@@ -44,8 +47,16 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
-      ]
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -86,6 +97,16 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ce9627cb-a45b-462f-9c3f-28a12d20d7be"
+      }
+    },
+    "owner": "exosapp",
+    "updates": {
+      "url": "https://u.expo.dev/ce9627cb-a45b-462f-9c3f-28a12d20d7be"
     }
   }
 }
