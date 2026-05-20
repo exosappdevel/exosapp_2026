@@ -156,7 +156,8 @@ class WebServiceController
                 'tecnico',
                 'subdistribuidor',
                 'codigo_cirugia',
-                'limite'
+                'limite',
+                "orderby"
             ]
         ]
     ];
@@ -438,6 +439,7 @@ class WebServiceController
         }
 
         try {
+            
             $id_tipo_usuario = GetValueSQL("select id_tipo_usuario from usuario where id_usuario=" .$id_usuario ,'id_tipo_usuario');
 
             $query = "SELECT count(id_usuario_app) as existe, u.* 
@@ -869,19 +871,25 @@ class WebServiceController
 
         $query = "SELECT case when id_usuario=" . $id_usuario . " then 0 else 1 end as yo_primero, id_usuario, id_vendedor, upper(nombre) as nombre, programar FROM vendedor WHERE activo = 1 ORDER BY yo_primero, nombre";
         $qresult = DatasetSQL($query);
-        $data = [];
-        if ($first_row != "") {
-            $data['item_0'] = [
-                'id_vendedor' => "0",
-                'nombre' => $first_row,
-            ];
-        }
+        $data = [];        
+        $row_no = 0;
         while ($row = mysqli_fetch_array($qresult)) {
-            // Se usa el prefijo 'prod_' para asegurar etiquetas XML válidas
-            $data['item_' . $row['id_vendedor']] = [
-                'id_vendedor' => $row['id_vendedor'],
-                'nombre' => $row['nombre'],
-            ];
+            if (($row_no == 0) && ($row['yo_primero']==1)){
+                if ($first_row != "") {
+                    $data['item_0'] = [
+                        'id_vendedor' => "0",
+                        'nombre' => $first_row                        
+                    ];
+                }
+            }
+            else{
+                // Se usa el prefijo 'prod_' para asegurar etiquetas XML válidas
+                $data['item_' . $row['id_vendedor']] = [
+                    'id_vendedor' => $row['id_vendedor'],
+                    'nombre' => $row['nombre']                    
+                ];
+            }
+            $row_no++;
         }
         return ( $data ? [
                 'result' => 'ok',
@@ -903,19 +911,21 @@ class WebServiceController
             return $this->DatosIncorrectos();
         }
 
-        $sSQL = "SELECT case when upper(t.tipo_usuario) = 'TECNICO' then 1 else 0 end as es_tecnico" .
-            " from usuario u left join tipo_usuario t on u.id_tipo_usuario=t.id_tipo_usuario where u.id_usuario =" . $id_usuario;
+        $sSQL = "SELECT u.nombre, case when upper(t.tipo_usuario) = 'TECNICO' then 1 else 0 end as es_tecnico, count(v.id_vendedor) as es_vendedor, case when count(v.id_vendedor)=0 then 0 else max(v.id_vendedor) end as id_vendedor
+                    from usuario u left join tipo_usuario t on u.id_tipo_usuario=t.id_tipo_usuario 
+                        left join vendedor v on u.id_usuario=v.id_usuario
+                    where u.id_usuario=$id_usuario";
+
         $es_tecnico = GetValueSQL($sSQL, "es_tecnico");
-
-        $sSQL = "SELECT COUNT(v.id_vendedor) AS es_vendedor from vendedor v WHERE v.id_usuario =" . $id_usuario;
+        $nombre_usuario = GetValueSQL($sSQL, "nombre");
         $es_vendedor = GetValueSQL($sSQL, "es_vendedor");
-
+        $id_vendedor = GetValueSQL($sSQL, "id_vendedor");
 
         $data = [];
 
         $data['item_0'] = [
             'id_tecnico' => "0",
-            'nombre' => ($es_tecnico || $es_vendedor) ? "VENDEDOR" : "MISMO QUE VENDEDOR"
+            'nombre' => ($es_tecnico || $es_vendedor) ? $nombre_usuario : "MISMO QUE VENDEDOR"
         ];
 
         $query = "select case when t.id_usuario=" . $id_usuario . " then 0 else 1 end as yo_primero, t.id_usuario,  t.id_tecnico, t.nombre from tecnico t where t.activo = 1 and upper(t.nombre)<>'VENDEDOR' order by yo_primero, t.nombre";
@@ -1360,11 +1370,18 @@ class WebServiceController
         $fecha_inicial  = $this->SQLDate(Requesting('fecha_inicial'));
         $fecha_final  = $this->SQLDate(Requesting('fecha_final'));
         $vendedor  = Requesting('vendedor');
-        $tecnico  = Requesting('tecnico');
+        $tecnico  = Requesting('tecnico');        
         $subdistribuidor  = Requesting('subdistribuidor');
         $codigo_cirugia   = Requesting('codigo_cirugia');
         $limite  = Requesting('limite');
         $limite = (($limite == '' ) || ($limite=='0')?10:$limite);
+        $orderby = Requesting('orderby');
+        if ( ($orderby =='')  || ($orderby =='newest'))
+            $orderby = "fecha_cirugia desc";
+        else if ( ($orderby =='oldest'))
+            $orderby = "fecha_cirugia";
+        else if ( ($orderby =='codigo'))
+            $orderby = "codigo";
 
         if (!$id_usuario) {
             return $this->DatosIncorrectos();
@@ -1381,7 +1398,9 @@ class WebServiceController
                 . ($subdistribuidor ? " and id_subdistribuidor=" . $subdistribuidor : "")
                 . ($codigo_cirugia ? " and c.codigo='" . $codigo_cirugia ."'" : "")                
                 . ($estatus >=0 ? " and estatus=" .  $estatus : "")
-                ." LIMIT " . ($limite ? $limite : "10");
+                . " order by $orderby"
+                ." LIMIT " . ($limite ? $limite : "10");        
+
         
         $qresult = DatasetSQL($query);
         

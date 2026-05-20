@@ -233,7 +233,9 @@ class ApiService {
     tecnico: string,
     subdistribuidor: string,
     codigo_cirugia: string,
-    limite: string){
+    limite: string,
+    orderby: string
+    ){
     return await this.request("buscar_cirugia", { id_usuario, 
       estatus,
       filtrar_fecha,
@@ -244,6 +246,7 @@ class ApiService {
       subdistribuidor,
       codigo_cirugia,
       limite,
+      orderby
     });
   }
 

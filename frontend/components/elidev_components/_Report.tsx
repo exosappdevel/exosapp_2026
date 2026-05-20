@@ -39,7 +39,7 @@ export const _DetalleLinea = ({ label, value, label_style, value_style }: { labe
     return (
         <View style={styles.rowDetalle}>
             <Text style={[styles.labelDetalle, { color: theme.textSub }, label_style]}>{label}:</Text>
-            <Text style={[styles.valueDetalle, { color: theme.text }, value_style]}>{value || '---'}</Text>
+            <Text style={[styles.valueDetalle, { color: theme.accent }, value_style]}>{value || '---'}</Text>
         </View>
     );
 };
@@ -56,7 +56,7 @@ export const _DetalleMultiLinea = ({ label, value, label_style, value_style }: {
         <View style={{ width: '50%', marginTop: 4 }}>
           {lineas.length > 0 ? (
             lineas.map((linea, index) => (
-              <Text key={index} style={[styles.valueDetalleMulti, { color: theme.text }, value_style]}>
+              <Text key={index} style={[styles.valueDetalleMulti, { color: theme.accent }, value_style]}>
                 {linea}
               </Text>
             ))
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
         textAlign: 'right',
     },
     rowDetalleMulti: {
-        flexDirection: 'row',
+        
         justifyContent: 'space-between',
         paddingVertical: 4,
         borderBottomWidth: 0.5,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     },
     valueDetalleMulti: {
         fontSize: 12,
-        textAlign: 'right',
+        textAlign: 'left',
         width: '100%',
     },
     shareButton: {

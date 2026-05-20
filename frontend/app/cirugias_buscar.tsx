@@ -92,8 +92,11 @@ export default function Cirugia_BuscarScreen() {
   const [tecnico, setTecnico] = useState<iTecnico | null>(null);
   const [subdistribuidor, setSubdistribuidor] = useState<iSubdistribuidor | null>(null);
   const [codigo_cirugia, setCodigo_cirugia] = useState('');
-  const [limite, setLimite] = useState("10");
+  const [limite, setLimite] = useState("15");
   const [filtrar_fecha, setFiltrar_fecha] = useState(false); // Por defecto NO se filtra por fecha
+  // Agregar junto a tus otros useState
+  const [orderBy, setOrderBy] = useState<'newest' | 'oldest' | 'codigo'>('newest');
+  const [showOrderModal, setShowOrderModal] = useState(false); // Para mostrar las opciones de ordenamiento
 
 
   // listas  
@@ -128,7 +131,21 @@ export default function Cirugia_BuscarScreen() {
   const [resultados, setResultados] = useState([]);
   const [resultados_count, setResultados_count] = useState(0);
 
+  const incrementarLimite = () => {
+    setLimite(prev => {
+      const num = parseInt(prev, 10) || 0; // Si es vacío o NaN, empezamos en 0
+      const nuevoValor = Math.min(num + 1, 15);
+      return String(nuevoValor);
+    });
+  };
 
+  const decrementarLimite = () => {
+    setLimite(prev => {
+      const num = parseInt(prev, 10) || 0;
+      const nuevoValor = Math.max(num - 1, 0);
+      return String(nuevoValor);
+    });
+  };
 
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
   useEffect(() => {
@@ -378,7 +395,9 @@ export default function Cirugia_BuscarScreen() {
           (tecnico ? tecnico.id_tecnico : '0'),
           (subdistribuidor ? subdistribuidor.id_subdistribuidor : '0'),
           (codigo_cirugia ? codigo_cirugia : ""),
-          (limite ? limite : "-1"));
+          (limite ? limite : "-1"),
+          orderBy
+        );
 
       if (response.result === 'ok') {
         setSubmitting(false);
@@ -798,16 +817,93 @@ export default function Cirugia_BuscarScreen() {
                       {t('cirugias_programar.limite')}
                     </Text>
                     <TextInput
-                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
-                      placeholder="Ej.1"
-                      placeholderTextColor={theme.textSub}
-                      value={limite}
-                      onChangeText={setLimite}
-                      autoCapitalize='characters'
+                      style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                      value={limite} // Ya es un string, se pasa directo
+                      keyboardType="numeric"
+                      maxLength={2} // Máximo 2 caracteres (ya que el tope es 15)
+                      onChangeText={(text) => {
+                        // Si el usuario borra por completo el campo, lo dejamos como string vacío temporalmente
+                        if (text === '') {
+                          setLimite('');
+                          return;
+                        }
 
+                        // Eliminamos cualquier carácter que no sea un dígito numérico (puntos, comas, guiones)
+                        const numeroLimpio = text.replace(/[^0-9]/g, '');
+
+                        // Convertimos a entero para evaluar el rango
+                        const valorNumerico = parseInt(numeroLimpio, 10);
+
+                        if (!isNaN(valorNumerico)) {
+                          // Forzamos el rango matemático de 0 a 15
+                          const valorLimitado = Math.max(0, Math.min(valorNumerico, 15));
+                          // Guardamos la respuesta convertida a string
+                          setLimite(String(valorLimitado));
+                        }
+                      }}
                     />
+
                   </View>
                 </_TouchableWithoutFeedback>
+
+                {/* Selector de Ordenamiento */}
+                <_TouchableWithoutFeedback>
+                  <View style={{ marginVertical: 10, paddingHorizontal: 5 }}>
+                    <Text style={{ color: theme.textSub, fontSize: 13, fontWeight: '600', marginBottom: 5 }}>
+                      Ordenar por:
+                    </Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <TouchableOpacity
+                        style={[
+                          styles.actionButton,
+                          {
+                            width: '31%',
+                            backgroundColor: orderBy === 'newest' ? theme.accent : theme.card,
+                            borderColor: theme.border
+                          }
+                        ]}
+                        onPress={() => setOrderBy('newest')}
+                      >
+                        <Text style={{ color: orderBy === 'newest' ? '#fff' : theme.text, fontSize: 11, fontWeight: 'bold' }}>
+                          Más recientes
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.actionButton,
+                          {
+                            width: '31%',
+                            backgroundColor: orderBy === 'oldest' ? theme.accent : theme.card,
+                            borderColor: theme.border
+                          }
+                        ]}
+                        onPress={() => setOrderBy('oldest')}
+                      >
+                        <Text style={{ color: orderBy === 'oldest' ? '#fff' : theme.text, fontSize: 11, fontWeight: 'bold' }}>
+                          Más antiguos
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.actionButton,
+                          {
+                            width: '31%',
+                            backgroundColor: orderBy === 'codigo' ? theme.accent : theme.card,
+                            borderColor: theme.border
+                          }
+                        ]}
+                        onPress={() => setOrderBy('codigo')}
+                      >
+                        <Text style={{ color: orderBy === 'codigo' ? '#fff' : theme.text, fontSize: 11, fontWeight: 'bold' }}>
+                          Nº de Orden
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </_TouchableWithoutFeedback>
+
 
                 {/* Submit Button */}
                 <TouchableOpacity
