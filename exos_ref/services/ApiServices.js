@@ -62,7 +62,7 @@ class ApiService {
               }
             }
           } else {
-            value = node.textContent || "";
+            value = node || "";
           }
           value = value.trim();
           // -------------------------
@@ -83,7 +83,7 @@ class ApiService {
                     }
                   }
                 } else {
-                  childValue = child.textContent || "";
+                  childValue = child || "";
                 }
                 item[child.nodeName] = childValue.trim();
               }

@@ -13,9 +13,7 @@ class ApiService {
     this.URL_CONTROLLER = config.url.endsWith('/')
       ? config.url + "controller_ws.php"
       : config.url + "/controller_ws.php";
-    this.URL_FILES_CIRUGIAS = "https://exorta.creaccionesweb.com/pagos_cirugias/"; /*config.url.endsWith('/')
-                                  ? config.url + "pagos_cirugias/"
-                                  : config.url + "/pagos_cirugias/";*/
+    this.URL_FILES_CIRUGIAS = "https://exorta.creaccionesweb.com/pagos_cirugias/";
     this.PASSKEY = config.passkey;
   }
 
@@ -46,7 +44,7 @@ class ApiService {
       return { result: "error", result_text: "Error de conexión" };
     }
   }
-  
+
 
   static parseXmlToJson(xmlString: string): any {
     try {
@@ -69,7 +67,7 @@ class ApiService {
         let itemsArray: any[] = [];
         let propertiesObj: any = {};
         let isList = false;
-        if (children.length === 0) {          
+        if (children.length === 0) {
           return node.nodeName.toLowerCase() == "data" ? [] : ""; // O puedes devolver [] si sabes que siempre debería ser lista
         }
         for (let i = 0; i < children.length; i++) {
@@ -101,15 +99,65 @@ class ApiService {
     }
   }
 
-  static async audit_ws_log(limit: string, page:string, search: string ) {
-    return await this.request("audit_ws_log", { limit: limit, page:page, search:search });
+  static async uploadFileDirect(file: { uri: string, name: string, type: string }): Promise<string> {
+    const formData = new FormData();
+
+    if (Platform.OS === 'web') {
+      try {
+        const response = await fetch(file.uri);
+        const blob = await response.blob();
+        // IMPORTANTE: Lo mandamos como 'files' para que coincida con el $_FILES['files'] del PHP
+        formData.append('files[]', blob, file.name);
+      } catch (e) {
+        console.error("Error convirtiendo URI a Blob en Web", e);
+      }
+    } else {
+      // @ts-ignore
+      formData.append('files', {
+        uri: Platform.OS === 'android' ? file.uri : file.uri.replace('file://', ''),
+        name: file.name,
+        type: file.type,
+      });
+    }
+
+    // Apuntamos al controlador oficial con la nueva acción y la PASSKEY por URL
+    const uploadUrl = `${this.URL_CONTROLLER}?action=upload_pago_cirugia&key=${this.PASSKEY}`;
+
+    try {
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          // Dejar que el navegador asigne el Content-Type automático en Web
+          ...(Platform.OS !== 'web' && { 'Content-Type': 'multipart/form-data' })
+        },
+      });
+    
+      const text = await response.text();
+      const result = this.parseXmlToJson(text);
+
+      if (result.result === 'ok' && result.url) {
+        return result.url; // Retornamos la URL que guardó tu PHP
+      } else {
+        console.error("Error del servidor:", result.result_text);
+        return "";
+      }
+    } catch (error) {
+      console.error("Error en uploadFileDirect:", error);
+      throw error;
+    }
+  }
+
+  static async audit_ws_log(limit: string, page: string, search: string) {
+    return await this.request("audit_ws_log", { limit: limit, page: page, search: search });
   }
   static async inicia_sesion(usuario: string, password: string) {
     return await this.request("inicia_sesion", { login_usuario: usuario, login_password: password });
   }
-  static async save_profile(id_usuario_app: string, tema: string, app_language: string, menu_favorites:string) {
+  static async save_profile(id_usuario_app: string, tema: string, app_language: string, menu_favorites: string) {
     return await this.request("save_profile", { id_usuario_app, tema, app_language, menu_favorites });
-  }    
+  }
 
   static async get_almacenes_list(id_usuario: string) {
     return await this.request("get_almacenes_list", { id_usuario });
@@ -161,8 +209,8 @@ class ApiService {
   static async get_hospitales(id_almacen: string) {
     return await this.request("get_hospitales", { id_almacen });
   }
-  static async get_subdistribuidor() {
-    return await this.request("get_subdistribuidor", {});
+  static async get_subdistribuidor(es_socio: string) {
+    return await this.request("get_subdistribuidor", { es_socio });
   }
   static async get_medicos_list(id_usuario: string) {
     return await this.request("get_medicos_list", { id_usuario });
@@ -226,7 +274,7 @@ class ApiService {
   static async buscar_cirugia(
     id_usuario: string,
     estatus: string,
-    filtrar_fecha:string,
+    filtrar_fecha: string,
     fecha_inicial: string,
     fecha_final: string,
     vendedor: string,
@@ -235,8 +283,9 @@ class ApiService {
     codigo_cirugia: string,
     limite: string,
     orderby: string
-    ){
-    return await this.request("buscar_cirugia", { id_usuario, 
+  ) {
+    return await this.request("buscar_cirugia", {
+      id_usuario,
       estatus,
       filtrar_fecha,
       fecha_inicial,
@@ -251,54 +300,6 @@ class ApiService {
   }
 
   // En ApiService.ts
-
-  // En ApiServices.ts
-
-  static async uploadFileDirect(file: { uri: string, name: string, type: string }): Promise<string> {
-    const uploader = "UploadHandler.php";
-    const formData = new FormData();
-
-    if (Platform.OS === 'web') {
-      // LÓGICA PARA WEB
-      try {
-        const response = await fetch(file.uri);
-        const blob = await response.blob();
-        formData.append('files[]', blob, file.name);
-      } catch (e) {
-        console.error("Error convirtiendo URI a Blob en Web", e);
-      }
-    } else {// El servidor espera 'files[]' según tu código de jQuery
-      // @ts-ignore
-      formData.append('files[]', {
-        uri: Platform.OS === 'android' ? file.uri : file.uri.replace('file://', ''),
-        name: file.name,
-        type: file.type,
-      });
-    }
-
-    const uploadUrl = this.URL_FILES_CIRUGIAS + "UploadHandler.php";
-
-    try {
-      const response = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      const result = await response.json();
-      if (result.files && result.files.length > 0) {
-        // Retornamos la URL final del servidor
-        return this.URL_FILES_CIRUGIAS + "files/" + result.files[0].name;
-      }
-      return "";
-    } catch (error) {
-      console.error("Error en uploadFileDirect:", error);
-      return "";
-    }
-  }
 }
 
 export default ApiService;

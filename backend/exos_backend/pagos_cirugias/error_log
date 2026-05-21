@@ -1,0 +1,4 @@
+[06-Oct-2023 00:15:24 UTC] PHP Deprecated:  Implicit conversion from float 46.51851851851852 to int loses precision in /home/creaccio/exorta.creaccionesweb.com/pagos_cirugias/UploadHandler.php on line 798
+[06-Oct-2023 00:15:24 UTC] PHP Deprecated:  Implicit conversion from float 46.51851851851852 to int loses precision in /home/creaccio/exorta.creaccionesweb.com/pagos_cirugias/UploadHandler.php on line 832
+[06-Oct-2023 21:57:43 UTC] PHP Deprecated:  Implicit conversion from float 36.96682464454976 to int loses precision in /home/creaccio/exorta.creaccionesweb.com/pagos_cirugias/UploadHandler.php on line 798
+[06-Oct-2023 21:57:43 UTC] PHP Deprecated:  Implicit conversion from float 36.96682464454976 to int loses precision in /home/creaccio/exorta.creaccionesweb.com/pagos_cirugias/UploadHandler.php on line 832

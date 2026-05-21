@@ -167,9 +167,9 @@ export default function LoginScreen() {
           id_usuario_app: response.id_usuario_app || '',
           id_usuario: response.id_usuario || '',
           id_almacen: response.id_almacen || '',
-          almacen_nombre: response.almacen_nombre?.textContent || '',
+          almacen_nombre: response.almacen_nombre || '',
           almacen_codigo: response.almacen_codigo || '',
-          alias_usuario: (response.alias_usuario?.textContent || '').toUpperCase() || '',
+          alias_usuario: (response.alias_usuario || '').toUpperCase() || '',
           tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light',
           menu_favorites: fav.split(';').filter((item: String) => item !== ""),
           menu_items: menuItems

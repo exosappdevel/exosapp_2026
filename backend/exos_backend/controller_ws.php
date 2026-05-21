@@ -103,7 +103,7 @@ class WebServiceController
         ],
         "get_subdistribuidor" => [
             'descripcion' => 'Obtiene listado de subdistribuidor',
-            'parameters' => []
+            'parameters' => ["es_socio"]
         ],
         "get_medicos_list" => [
             'descripcion' => 'Obtiene listado de medicos por usuario',
@@ -379,6 +379,66 @@ class WebServiceController
         $dateObj = DateTime::createFromFormat('d/m/Y', $dateStr);
         // Retornamos en formato yyyy-mm-dd para el SQL
         return $dateObj ? $dateObj->format('Y-m-d') : $dateStr;
+    }
+
+    public function upload_pago_cirugia(){
+        // Identificar si el archivo viene bajo la clave 'files[]' (como se ve en tu captura) o 'files'
+        $paramName = isset($_FILES['files[]']) ? 'files[]' : (isset($_FILES['files']) ? 'files' : null);
+
+        if ($paramName === null) {
+            return [
+                'result' => 'error',
+                'result_text' => 'No se detectó ninguna clave de archivo válida en $_FILES. Recibido: ' . json_encode(array_keys($_FILES))
+            ];
+        }
+
+        // Extraer los datos dinámicamente según cómo lo haya empaquetado el navegador
+        $fileData = $_FILES[$paramName];
+        
+        if (is_array($fileData['name'])) {
+            $fileName    = $fileData['name'][0];
+            $fileTmpName = $fileData['tmp_name'][0];
+            $fileError   = $fileData['error'][0];
+        } else {
+            $fileName    = $fileData['name'];
+            $fileTmpName = $fileData['tmp_name'];
+            $fileError   = $fileData['error'];
+        }
+
+        // Si hay un error en el servidor temporal, te devolverá el código numérico exacto de PHP
+        if ($fileError !== UPLOAD_ERR_OK) {
+            return [
+                'result' => 'error',
+                'result_text' => 'Error en el servidor temporal de PHP. Código de error interno: ' . $fileError . '. (Verifica post_max_size o upload_max_filesize en tu php.ini)'
+            ];
+        }
+
+        // Directorio de subida (Asegúrate de que la carpeta tenga permisos de escritura 755 o 777)
+        $uploadDir = __DIR__ . '/pagos_cirugias/files/exosapp/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+        $newFileName   = uniqid('pago_', true) . '.' . $fileExtension;
+        $destination   = $uploadDir . $newFileName;
+
+        if (move_uploaded_file($fileTmpName, $destination)) {
+            $publicUrl = "https://exorta.creaccionesweb.com/pagos_cirugias/files/exosapp/" . $newFileName;
+            return [
+                'result' => 'ok',
+                'result_text' => 'Archivo subido con éxito al controlador.',
+                'url' => $publicUrl,
+                'fileName' => $fileName,
+                'tmp' => $fileTmpName,
+                'dest' => $destination
+            ];
+        } else {
+            return [
+                'result' => 'error',
+                'result_text' => 'El archivo llegó al temporal pero no se pudo mover a la carpeta final: ' . $uploadDir
+            ];
+        }
     }
     //****************************************************************************************** */
     // -------------------------- IMPLEMENTACION DE LOS WEB SERVICES MOCKUP --------------------
@@ -983,9 +1043,12 @@ class WebServiceController
         if ($this->implemented && $this->result != null) {
             return $this->result;
         }
+         $es_socio = Requesting("es_socio");
         // ELSE USE NEXT MOCKUP
 
-        $query = "SELECT id_subdistribuidor, subdistribuidor FROM subdistribuidor where es_socio=0  ORDER BY subdistribuidor";
+        $query = "SELECT id_subdistribuidor, subdistribuidor FROM subdistribuidor where "
+                . ( ($es_socio!="")? " es_socio=$es_socio":"")  
+                ." ORDER BY subdistribuidor";
         $qresult = DatasetSQL($query);
         $data = [];
 

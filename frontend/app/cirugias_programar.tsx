@@ -27,7 +27,7 @@ import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection } from '../components/elidev_components';
+import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate } from '../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 
 // Habilitar animaciones en Android
@@ -126,7 +126,7 @@ export default function ProgramaCirugiaScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   // Form fields
-  const [fecha, setFecha] = useState('');
+  const [fecha, setFecha] = useState( formatDate(new Date()));
   const [hora, setHora] = useState('');
   const [estado, setEstado] = useState<iEstado | null>(null);
   const [ciudad, setCiudad] = useState('');
@@ -218,7 +218,7 @@ export default function ProgramaCirugiaScreen() {
           ApiService.get_equipos_poder_categoria(),
           ApiService.get_instrumental_categoria(),
           ApiService.get_consumible_categoria(),
-          ApiService.get_subdistribuidor(),
+          ApiService.get_subdistribuidor(""),
           ApiService.get_medicos_list(user.id_usuario)
         ]);
 
@@ -358,14 +358,14 @@ export default function ProgramaCirugiaScreen() {
       let urlsSubidas: string[] = [];
       //alert(JSON.stringify(archivos));
 
-      /*for (const archivo of archivos) {
+      for (const archivo of archivos) {
         // Solo subimos si es un objeto local (tiene uri local)
         //alert(JSON.stringify(archivo));
         const urlServidor = await ApiService.uploadFileDirect(archivo);
         if (urlServidor) {
           urlsSubidas.push(urlServidor);
         }
-      }*/
+      }
 
       const stringArchivos = urlsSubidas.join(',');
 
