@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import translations from '../languages.json';
+import { hexToRGBA } from '@/components/elidev_components';
 
 type Language = 'es' | 'en';
 type ThemeType = 'light' | 'dark' | 'blue' | 'pink';
@@ -12,6 +13,8 @@ export interface Menu_item{
 interface User {
   id_usuario_app: string;
   id_usuario: string;
+  id_tipo_usuario: string;
+  tipo_usuario: string;
   id_almacen: string;
   almacen_nombre: string;
   almacen_codigo: string;
@@ -31,15 +34,20 @@ interface AppConfig {
 
 interface Theme {
   bg: string;
+  bg_mask : string;
   card: string;
   text: string;
+  text_shadow:string;
   textSub: string;
+  textSub_shadow:string;
   border: string;
   inputBg: string;
   isDark: boolean;
   accent: string;
   iconColor: string;
+  iconColor_shadow:string;
   iconTextColor: string;
+  iconTextColor_shadow: string;
 }
 
 interface AppContextType {
@@ -62,51 +70,71 @@ export const AppContext = createContext<AppContextType | undefined>(undefined);
 const themes: Record<ThemeType, Theme> = {
   light: {
     bg: "#f5f5f5",
+    bg_mask : hexToRGBA('#ffffff',0),
     card: "#ffffff",
     text: "#1a1a1a",
     textSub: "#666666",
+    text_shadow : "#ffffff",
+    textSub_shadow: "#ffffff",
+    iconColor_shadow : "#444444",
     border: "#e2e8f0",
     inputBg: "#edf2f7",
     isDark: false,
     accent: "#3182ce",
     iconColor: "#3182ce",
-    iconTextColor:"#ffffff"
+    iconTextColor:"#ffffff",
+    iconTextColor_shadow:"#444444"
   },
   dark: {
     bg: "#121212",
+    bg_mask : hexToRGBA('#000000',0.5),
     card: "#2d2d2d",
     text: "#ffffff",
     textSub: "#a0aec0",
     border: "#3d3d3d",
     inputBg: "rgba(255,255,255,0.1)",
+    text_shadow : "#444444",
+    textSub_shadow: "#444444",
+    iconColor_shadow : "#fffffff",
     isDark: true,
     accent: "#63b3ed",
     iconColor: "#000000",
-    iconTextColor:"#fbfbfb"
+    iconTextColor:"#fbfbfb",
+    iconTextColor_shadow:"#000000"
   },
   blue: {
     bg: "#e3f2fd",
+    bg_mask : hexToRGBA('#154883',0),
     card: "#ffffff",
     text: "#1565c0",
     textSub: "#42a5f5",
+    text_shadow : "#444488",
+    textSub_shadow: "#444444",
+    iconColor_shadow : "#cfcfcf",
     border: "#90caf9",
     inputBg: "#bbdefb",
     isDark: false,
     accent: "#1976d2",
     iconColor: "#1976d2",
-    iconTextColor:"#154883"
+    iconTextColor:"#154883",
+    iconTextColor_shadow:"#000000"
   },
   pink: {
     bg: "#fce4ec",
+    bg_mask : hexToRGBA('#ffc0d5',0.2),
     card: "#ffffff",
     text: "#c2185b",
     textSub: "#f06292",
+    text_shadow : "#664444",
+    textSub_shadow: "#664444",
+    iconColor_shadow : "#f06292",
     border: "#f8bbd9",
     inputBg: "#f8bbd9",
     isDark: false,
     accent: "#e91e63",
     iconColor: "#f062915e",
-    iconTextColor:"#b1427a"
+    iconTextColor:"#b1427a",
+    iconTextColor_shadow:"#000000"
   }
 };
 
@@ -122,6 +150,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [user, setUser] = useState<User>({
     id_usuario_app: "",
     id_usuario: "",
+    id_tipo_usuario:"",
+    tipo_usuario:"",
     id_almacen: "",
     almacen_nombre: "",
     almacen_codigo: "",
@@ -205,6 +235,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUser({
       id_usuario_app: "",
       id_usuario: "",
+      id_tipo_usuario:"",
+      tipo_usuario:"",
       id_almacen: "",
       almacen_nombre: "",
       almacen_codigo: "",

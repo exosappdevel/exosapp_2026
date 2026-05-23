@@ -14,6 +14,8 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState({ 
     id_usuario_app: "", 
     id_usuario:"",
+    id_tipo_usuario:"",
+    tipo_usuario:"",
     id_almacen:"", 
     almacen_nombre:"", 
     almacen_codigo:"", 

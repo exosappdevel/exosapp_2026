@@ -93,7 +93,7 @@ export const _Background = ({ children, id_almacen }: { children: any, id_almace
         >
             <View style={[
                 styles.backgroundOverlay,
-                { backgroundColor: hexToRGBA(theme.bg, 0) }
+                { backgroundColor: theme.bg_mask }
             ]}>
                 {children}
             </View>

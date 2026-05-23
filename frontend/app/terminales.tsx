@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  ActivityIndicator, 
+  ActivityIndicator,
   Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -73,8 +73,20 @@ export default function TerminalesScreen() {
         <MaterialCommunityIcons name="desktop-tower-monitor" size={32} color={hexToRGBA(theme.accent, 1)} />
       </View>
       <View style={styles.terminalInfo}>
-        <Text style={[styles.terminalName, { color: theme.text }]}>{item.nombre}</Text>
-        <Text style={[styles.terminalDesc, { color: theme.textSub }]}>{item.descripcion}</Text>
+        <Text style={[styles.terminalName, {
+          color: theme.text,
+          textShadowColor: hexToRGBA(theme.text_shadow, 0.8),
+          textShadowOffset: { width: 1, height: 3 },
+          textShadowRadius: 10,
+        }]}>
+          {item.nombre}
+        </Text>
+        <Text style={[styles.terminalDesc, {
+          color: theme.textSub,
+          textShadowColor: hexToRGBA(theme.textSub_shadow, 0.8),
+          textShadowOffset: { width: 1, height: 3 },
+          textShadowRadius: 10,
+        }]}>{item.descripcion}</Text>
       </View>
       <MaterialCommunityIcons name="chevron-right" size={24} color={theme.textSub} />
     </TouchableOpacity>
@@ -92,7 +104,7 @@ export default function TerminalesScreen() {
             <Text style={[styles.loadingText, { color: theme.textSub }]}>{t('terminales.loading')}</Text>
           </View>
         ) : terminales.length === 0 ? (
-          <View style={[styles.emptyContainer, {backgroundColor:hexToRGBA(theme.card,0.0)}]}>
+          <View style={[styles.emptyContainer, { backgroundColor: hexToRGBA(theme.card, 0.0) }]}>
             <MaterialCommunityIcons name="desktop-tower-monitor" size={60} color={theme.card} />
             <Text style={[styles.emptyText, { color: theme.card }]}>{t('terminales.noTerminals')}</Text>
           </View>
@@ -154,15 +166,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   emptyText: {
     marginTop: 15,
     fontSize: 16,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   listContent: {
     padding: 15,
@@ -175,9 +187,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     ...({
-            backdropFilter: 'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)',
-        } as any),
+      backdropFilter: 'blur(5px)',
+      WebkitBackdropFilter: 'blur(5px)',
+    } as any),
   },
   iconContainer: {
     width: 50,

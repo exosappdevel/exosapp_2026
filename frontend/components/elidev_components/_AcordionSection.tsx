@@ -66,13 +66,13 @@ export const _AccordionSection = ({
     return (
         <View style={[
             styles.accordionContainer, 
-            { borderColor: theme.border, backgroundColor: containerBg }
+            { borderColor: theme.border, backgroundColor: hexToRGBA(theme.bg,0.8) }
         ]}>
             <TouchableOpacity
                 style={[
                     styles.accordionHeader,
                     { 
-                        backgroundColor: isOpen ? 'rgba(255,255,255,0.05)' : 'transparent',
+                        backgroundColor: isOpen ? 'rgba(255,255,255,0.3)' : 'transparent',
                         // Si el título se oculta, justificamos al final para que el ícono se quede a la derecha
                         justifyContent: mostrarTitulo ? 'space-between' : 'flex-end'
                     }

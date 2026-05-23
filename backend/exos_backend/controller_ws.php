@@ -500,7 +500,8 @@ class WebServiceController
 
         try {
             
-            $id_tipo_usuario = GetValueSQL("select id_tipo_usuario from usuario where id_usuario=" .$id_usuario ,'id_tipo_usuario');
+            $id_tipo_usuario = GetValueSQL("select u.id_tipo_usuario, t.tipo_usuario from usuario u left join tipo_usuario t on u.id_tipo_usuario=t.id_tipo_usuario where u.id_usuario=" .$id_usuario ,'id_tipo_usuario');
+            $tipo_usuario = GetValueSQL("select u.id_tipo_usuario, t.tipo_usuario from usuario u left join tipo_usuario t on u.id_tipo_usuario=t.id_tipo_usuario where u.id_usuario=" .$id_usuario ,'tipo_usuario');
 
             $query = "SELECT count(id_usuario_app) as existe, u.* 
                 FROM user_profile u
@@ -554,6 +555,7 @@ class WebServiceController
         }
 
         $this->result["id_tipo_usuario"] = $id_tipo_usuario;
+        $this->result["tipo_usuario"] = $tipo_usuario;
         $this->result["id_usuario_app"] = $id_usuario_app;
         $this->result["tema"] = $tema;
         $this->result["app_language"] = $app_language;

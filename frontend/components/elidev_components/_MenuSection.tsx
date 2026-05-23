@@ -79,15 +79,19 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }
             <View style={[styles.listIconContainer, { backgroundColor: theme.iconColor + '80' }]}>
                 <MaterialCommunityIcons name={item.icon as any} size={24} color={theme.iconTextColor}
                     style={{
-                        textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                        textShadowOffset: { width: 1, height: 1 },
-                        textShadowRadius: 2,
+                        textShadowColor: hexToRGBA(theme.iconColor_shadow ,0.5),
+                        textShadowOffset: { width: 1, height: 3 },
+                        textShadowRadius: 4
                     }}
                 />
             </View>
 
             <View style={styles.listTextContainer}>
-                <Text style={[styles.listTitle, { color: theme.iconTextColor }]}>
+                <Text style={[styles.listTitle, { color: theme.iconTextColor, 
+                            textShadowColor: hexToRGBA(theme.iconColor_shadow,0.5),
+                            textShadowOffset: { width: 1, height: 3 },
+                            textShadowRadius: 4
+                 }]}>
                     {t(item.titleKey)}
                 </Text>
 
@@ -96,17 +100,17 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }
                     // Icono para ELIMINAR (Estrella rellena)
                     <TouchableOpacity onPress={removeFavorite} style={{ padding: 10 }}>
                         <MaterialCommunityIcons name="star" size={22} color={theme.iconColor} style={{
-                            textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                            textShadowOffset: { width: 1, height: 1 },
-                            textShadowRadius: 2,
+                            textShadowColor: hexToRGBA(theme.iconColor_shadow,0.5),
+                            textShadowOffset: { width: 1, height: 3 },
+                            textShadowRadius: 4
                         }} />
                     </TouchableOpacity>
                 ) : (
                     // Icono para AGREGAR (Estrella vacía)
                     <TouchableOpacity onPress={addFavorite} style={{ padding: 10 }}>
                         <MaterialCommunityIcons name="star-outline" size={22} color={theme.textSub}
-                            style={{
-                                textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                            style={{ 
+                                textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
                                 textShadowOffset: { width: 1, height: 1 },
                                 textShadowRadius: 2,
                             }} />
@@ -138,8 +142,17 @@ export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon 
                 onPress={onToggle} // Ahora llama a la función del padre
             >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <MaterialCommunityIcons name={icon} size={22} color={theme.iconTextColor} />
-                    <Text style={[styles.iconGroup_Title, { color: theme.iconTextColor, marginLeft: 10 }]}>{title}</Text>
+                    <MaterialCommunityIcons name={icon} size={22} color={theme.iconTextColor} 
+                            style={{ 
+                                textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
+                                textShadowOffset: { width: 1, height: 3 },
+                                textShadowRadius: 10,
+                            }} />
+                    <Text style={[styles.iconGroup_Title, { color: theme.iconTextColor, marginLeft: 10,
+                        textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
+                                textShadowOffset: { width: 1, height: 3 },
+                                textShadowRadius: 10,
+                     }]}>{title}</Text>
                 </View>
                 {/* 
                 <MaterialCommunityIcons
@@ -226,7 +239,7 @@ const styles = StyleSheet.create({
 
         // 1. Transparencia: Usamos un blanco muy tenue con 15% de opacidad
         // IMPORTANTE: Esto debe sobreescribir cualquier color sólido
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        backgroundColor: 'rgba(255, 255, 255, 0.45)',
         borderColor: 'rgba(255, 255, 255, 0.2)',
 
         // 2. Sombras
@@ -240,8 +253,8 @@ const styles = StyleSheet.create({
         // 3. Hack para Web sin errores de TypeScript
         // Al usar "as any", evitamos el error de "Property does not exist"
         ...({
-            backdropFilter: 'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
         } as any),
     },
     groupHeader: {
@@ -285,8 +298,7 @@ const styles = StyleSheet.create({
     },
     listTitle: {
         fontSize: 16,
-        fontWeight: '500',
-        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+        fontWeight: '500',        
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 2,
 

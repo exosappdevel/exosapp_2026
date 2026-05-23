@@ -166,6 +166,8 @@ export default function LoginScreen() {
         const userData = {
           id_usuario_app: response.id_usuario_app || '',
           id_usuario: response.id_usuario || '',
+          id_tipo_usuario: response.id_tipo_usuario || '',
+          tipo_usuario: response.tipo_usuario || '',
           id_almacen: response.id_almacen || '',
           almacen_nombre: response.almacen_nombre || '',
           almacen_codigo: response.almacen_codigo || '',

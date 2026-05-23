@@ -63,7 +63,7 @@ export default function HomeScreen() {
   if (isAllowed('menu_logistica', 'socios')) AddMenuItem(menuItems_Logistica, "screens.socios");
 
   // 1. Estado para la sección activa (por defecto Favoritos)
-  const [activeSection, setActiveSection] = useState('favoritos');
+  const [activeSection, setActiveSection] = useState('favorites');
 
   // 2. Definición de las secciones para el lanzador
   const favoriteItems = AppmenuItems.filter(item => user.menu_favorites?.includes(item.id));

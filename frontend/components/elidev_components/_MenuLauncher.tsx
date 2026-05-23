@@ -25,7 +25,8 @@ export const _MenuLauncher = ({ sections, activeId, onSelect }: MenuLauncherProp
                 const activeColor = hexToRGBA(theme.iconColor, 0.5); // 40% de opacidad del color de acento
                 const borderColor = hexToRGBA(theme.border, 0.2); // Borde basado en el color del texto
                 const baseIconColor = hexToRGBA(theme.iconTextColor, 0.5); // 40% de opacidad del color de acento
-                const textColor = hexToRGBA(theme.iconTextColor, 0.7); // Borde basado en el color del texto
+                const textColor = hexToRGBA(theme.iconTextColor, 0.8); // Borde basado en el color del texto
+                const iconTextColor_shadow = hexToRGBA(theme.iconTextColor_shadow, 0.3); // Borde basado en el color del texto
 
                 return (
                     <TouchableOpacity
@@ -50,10 +51,19 @@ export const _MenuLauncher = ({ sections, activeId, onSelect }: MenuLauncherProp
                                 name={section.icon as any}
                                 size={32}
                                 // El icono cambia según el tema o puedes dejarlo fijo
-                                color={isActive ? theme.iconTextColor : baseIconColor}
+                                color={isActive ? theme.iconTextColor : theme.iconTextColor}
+                                style={{ 
+                                textShadowColor: iconTextColor_shadow,
+                                textShadowOffset: { width: 1, height: 3 },
+                                textShadowRadius: 10,
+                            }} 
                             />
                         </View>
-                        <Text style={[styles.launcherText, { color: textColor }]}>
+                        <Text style={[styles.launcherText, { color:theme.iconColor_shadow,
+                                textShadowColor: textColor,
+                                textShadowOffset: { width: 1, height: 1 },
+                                textShadowRadius: 5,
+                         }]}>
                             {section.title}
                         </Text>
                     </TouchableOpacity>

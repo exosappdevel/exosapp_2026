@@ -19,8 +19,8 @@ import { _Footer, _Background, hexToRGBA } from '@/components/elidev_components'
 const themeOptions = [
   { id: 'light', color: '#f5f5f5', borderColor: '#e2e8f0' },
   { id: 'dark', color: '#121212', borderColor: '#3d3d3d' },
-  { id: 'blue', color: '#e3f2fd', borderColor: '#90caf9' },
-  { id: 'pink', color: '#fce4ec', borderColor: '#f8bbd9' },
+  /*{ id: 'blue', color: '#e3f2fd', borderColor: '#90caf9' },
+  { id: 'pink', color: '#fce4ec', borderColor: '#f8bbd9' },*/
 ];
 
 interface Almacen {
@@ -124,6 +124,10 @@ export default function ProfileScreen() {
             <View style={styles.userInfo}>
               <MaterialCommunityIcons name="account-circle" size={30} color={theme.accent} />
               <Text style={[styles.userName, { color: theme.text }]}>{user.alias_usuario}</Text>
+
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, { color: theme.text, fontSize:12, fontWeight:'normal', paddingLeft:30 }]}>{user.tipo_usuario}</Text>
             </View>
           </View>
 
@@ -175,7 +179,7 @@ export default function ProfileScreen() {
           </View>
 
           {/* Language Selection */}
-          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border, display: 'none' }]}>
             <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.language')}</Text>
             <View style={styles.languageRow}>
               <TouchableOpacity
@@ -376,8 +380,8 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
-    paddingHorizontal:15,
-    paddingVertical:1
+    paddingHorizontal: 15,
+    paddingVertical: 1
   },
   codeButton: {
     flexDirection: 'row',
