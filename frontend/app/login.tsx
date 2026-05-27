@@ -149,20 +149,20 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const response = await ApiService.inicia_sesion(loginUser, loginPass);
-      
+
 
       if (response.result === 'ok') {
-        
+
         const menuNames = (typeof response.menus == 'object') ? [] : response.menus.split(';') || [];
         const menuItems: Menu_item[] = menuNames.map((mName: string) => {
           // Construimos la clave dinámica, por ejemplo: 'menu_almacen'
           const fieldKey = `menu_${mName}`;
           return {
             menu: fieldKey,
-            items: (typeof response[fieldKey] == 'object')? '': response[fieldKey] 
+            items: (typeof response[fieldKey] == 'object') ? '' : response[fieldKey]
           };
         });
-        const fav = (typeof response.menu_favorites =='object')? '' : response.menu_favorites;
+        const fav = (typeof response.menu_favorites == 'object') ? '' : response.menu_favorites;
         const userData = {
           id_usuario_app: response.id_usuario_app || '',
           id_usuario: response.id_usuario || '',
@@ -183,6 +183,11 @@ export default function LoginScreen() {
 
         // Save user to AsyncStorage
         await AsyncStorage.setItem('@exosapp_user', JSON.stringify(userData));
+
+        // se guarda la version actual de la app
+        const appVersion = Constants.expoConfig?.version || '1.0.0';
+        await AsyncStorage.setItem('@exosapp_version', appVersion);
+        await AsyncStorage.setItem('@exosapp_last_activity', Date.now().toString());
 
         // Save credentials if FaceID is enabled
         if (enableFaceId) {

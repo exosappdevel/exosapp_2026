@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import translations from '../languages.json';
-import { hexToRGBA } from '@/components/elidev_components';
+import { hexToRGBA } from '@/components/elidev_components/_Functions';
 
 type Language = 'es' | 'en';
 type ThemeType = 'light' | 'dark' | 'blue' | 'pink';

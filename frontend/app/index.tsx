@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Asegúrate de importar esto
+import Constants from 'expo-constants';
 
 export default function Index() {
   const router = useRouter();
@@ -12,27 +13,44 @@ export default function Index() {
   useEffect(() => {
     // Initialize API Service
     ApiService.init(appConfig);
-    
+
     const checkSessionAndNavigate = async () => {
       const FIVE_MINUTES = 5 * 60 * 1000; // 300,000 milisegundos
-      const now = Date.now();      
+      const now = Date.now();
 
       if (isLoggedIn) {
         try {
+          // 1. 🌟 VALIDACIÓN DE VERSIÓN DE LA APP
+          const savedVersion = await AsyncStorage.getItem('@exosapp_version');
+          const currentVersion = Constants.expoConfig?.version || '1.0.0';
+
+          if (savedVersion && savedVersion !== currentVersion) {
+            console.log(`Cierre de sesión forzado: Cambio de versión detectado (${savedVersion} -> ${currentVersion})`);
+            // Borramos credenciales locales inmediatamente
+            await AsyncStorage.multiRemove(['@exosapp_user', '@exosapp_version', '@exosapp_last_activity']);
+            await setIsLoggedIn(false);
+            router.replace('/login');
+            return;
+          }
+
+          // 2. 🌟 VALIDACIÓN DE EXPIRACIÓN POR INACTIVIDAD
           const lastActivity = await AsyncStorage.getItem('@exosapp_last_activity');
-          
+
           if (lastActivity) {
             const elapsed = now - parseInt(lastActivity);
-            
+
             if (elapsed > FIVE_MINUTES) {
-              // Si pasaron más de 5 min, expiramos la sesión
+              console.log("Sesión expirada por inactividad de 5 minutos.");
+              await AsyncStorage.removeItem('@exosapp_last_activity'); // Limpiamos el token de tiempo
               await setIsLoggedIn(false);
               router.replace('/login');
               return;
             }
           }
+          // Si pasa ambas validaciones, actualizamos el timestamp por la entrada a la app
+          await AsyncStorage.setItem('@exosapp_last_activity', now.toString());
         } catch (e) {
-          console.error("Error verificando expiración", e);
+          console.error("Error ejecutando auditoría de sesión en el arranque:", e);
         }
       }
 
