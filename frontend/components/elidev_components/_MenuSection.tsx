@@ -73,7 +73,8 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }
 
     return (
         <TouchableOpacity
-            style={[styles.listItemContainer, { borderBottomColor: theme.border }]}
+            style={[styles.listItemContainer, { borderBottomColor: theme.border,
+             }]}
             onPress={handlePress}
         >
             <View style={[styles.listIconContainer, { backgroundColor: theme.iconColor + '80' }]}>
@@ -136,7 +137,11 @@ export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon 
     const { theme } = useApp();
 
     return (
-        <View style={styles.iconGroup_Container}>
+        <View style={[styles.iconGroup_Container,{
+                backgroundColor: hexToRGBA(theme.card,0.5),
+                borderColor: hexToRGBA(theme.text,0.15),
+
+        }]}>
             <TouchableOpacity
                 style={styles.groupHeader}
                 onPress={onToggle} // Ahora llama a la función del padre
@@ -235,15 +240,10 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginVertical: 12,
         padding: 15,
-        borderWidth: 1,
-
-        // 1. Transparencia: Usamos un blanco muy tenue con 15% de opacidad
-        // IMPORTANTE: Esto debe sobreescribir cualquier color sólido
-        backgroundColor: 'rgba(255, 255, 255, 0.45)',
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderWidth:1,
 
         // 2. Sombras
-        elevation: 3,
+        elevation: 0,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
@@ -252,10 +252,10 @@ const styles = StyleSheet.create({
 
         // 3. Hack para Web sin errores de TypeScript
         // Al usar "as any", evitamos el error de "Property does not exist"
-        ...({
+        /*...({
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
-        } as any),
+        } as any),*/
     },
     groupHeader: {
         flexDirection: 'row',

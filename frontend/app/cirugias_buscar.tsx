@@ -26,11 +26,6 @@ import CustomModal from '../components/CustomModal';
 import { _Header, _Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, formatDate, _ZoomableView } from '../components/elidev_components';
 import { addMonths } from 'date-fns';
 
-// Habilitar animaciones en Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 
 interface PickerOption {
   id: string;

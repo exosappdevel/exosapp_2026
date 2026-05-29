@@ -25,12 +25,12 @@
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#0000000"
+        "backgroundColor": "#051c4a"
       },
       "splash": {
         "image": "./assets/images/splash.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#ffffff",
+        "resizeMode": "cover",
+        "backgroundColor": "#000000",
         "mdpi": "./assets/images/splash.png",
         "hdpi": "./assets/images/splash.png",
         "xhdpi": "./assets/images/splash.png",
@@ -41,14 +41,8 @@
           "backgroundColor": "#000000"
         }
       },
-      "package": "com.exos.exosapp",
+      "package": "com.elidev.exosapp",
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT",
-        "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -68,10 +62,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "image": "./assets/images/splash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#000000"
         }
       ],
       [
@@ -93,7 +86,9 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-audio",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

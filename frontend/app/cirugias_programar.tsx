@@ -30,11 +30,6 @@ import CustomModal, { Soon_Modal } from '../components/CustomModal';
 import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate } from '../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 
-// Habilitar animaciones en Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 
 // Sample data based on the HTML form
 const horasData = [

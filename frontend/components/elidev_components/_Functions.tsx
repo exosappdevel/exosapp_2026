@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { useAudioPlayer, createAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 
 export const hexToRGBA = (hex: string, opacity: number) => {
@@ -8,33 +8,29 @@ export const hexToRGBA = (hex: string, opacity: number) => {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
-export const formatDate=(fecha : Date) =>{
+export const formatDate = (fecha: Date) => {
     const day = fecha.getDate().toString().padStart(2, '0');
     const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const year = fecha.getFullYear();
-
-    const formattedDate = `${day}/${month}/${year}`;
-    return formattedDate;
-}
-
+    return `${day}/${month}/${year}`;
+};
 
 /**
  * Ejecuta un sonido de éxito y una vibración ligera (haptic feedback)
  */
 export const playSuccessSound = async () => {
     try {
-        // Vibración tipo notificación de éxito
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        
-        const { sound } = await Audio.Sound.createAsync(
-            require('../../assets/sounds/success.mp3') // Asegúrate de tener este archivo
+
+        const player = createAudioPlayer(
+            require('../../assets/sounds/success.mp3')
         );
-        await sound.playAsync();
-        
-        // Liberar memoria automáticamente al terminar
-        sound.setOnPlaybackStatusUpdate((status) => {
-            if (status.isLoaded && status.didJustFinish) {
-                sound.unloadAsync();
+        player.play();
+
+        // Liberar memoria al terminar
+        player.addListener('playbackStatusUpdate', (status) => {
+            if (status.didJustFinish) {
+                player.remove();
             }
         });
     } catch (error) {
@@ -47,17 +43,17 @@ export const playSuccessSound = async () => {
  */
 export const playErrorSound = async () => {
     try {
-        // Vibración tipo notificación de error
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        
-        const { sound } = await Audio.Sound.createAsync(
-            require('../../assets/sounds/error.mp3') // Asegúrate de tener este archivo
-        );
-        await sound.playAsync();
 
-        sound.setOnPlaybackStatusUpdate((status) => {
-            if (status.isLoaded && status.didJustFinish) {
-                sound.unloadAsync();
+        const player = createAudioPlayer(
+            require('../../assets/sounds/error.mp3')
+        );
+        player.play();
+
+        // Liberar memoria al terminar
+        player.addListener('playbackStatusUpdate', (status) => {
+            if (status.didJustFinish) {
+                player.remove();
             }
         });
     } catch (error) {
