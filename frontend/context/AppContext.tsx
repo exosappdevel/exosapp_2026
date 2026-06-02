@@ -24,10 +24,9 @@ interface User {
   menu_items : Menu_item[];
 }
 
-interface AppConfig {
+interface AppConfig {  
   passtrough_mode: boolean;
-  name: string;
-  server: string;
+  name: string;  
   passkey: string;
   url: string;
 }
@@ -139,12 +138,12 @@ const themes: Record<ThemeType, Theme> = {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [appConfig] = useState<AppConfig>({
+  const use_local = true
+  const [appConfig] = useState<AppConfig>({    
     passtrough_mode: false,
-    name: "exosapp",
-    server: "https://exorta.exos.software/",
+    name: "exosapp",    
     passkey: "{PASSKEY}",
-    url: "https://exorta.exos.software/",
+    url: use_local? " http://jon-dell/exorta/" : "https://exorta.exos.software/",
   });
 
   const [user, setUser] = useState<User>({

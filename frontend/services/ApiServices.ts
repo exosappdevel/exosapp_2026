@@ -4,16 +4,14 @@ import { Platform } from 'react-native';
 
 class ApiService {
   static URL_CONTROLLER = "";
-  static PASSKEY = "";
-  static URL_FILES_CIRUGIAS = "";
+  static PASSKEY = "";  
   //static fields_as_arrays ={  } 
 
 
   static init(config: { url: string; passkey: string }) {
     this.URL_CONTROLLER = config.url.endsWith('/')
       ? config.url + "controller_ws.php"
-      : config.url + "/controller_ws.php";
-    this.URL_FILES_CIRUGIAS = "https://exorta.creaccionesweb.com/pagos_cirugias/";
+      : config.url + "/controller_ws.php";    
     this.PASSKEY = config.passkey;
   }
 

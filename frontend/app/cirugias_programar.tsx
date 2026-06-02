@@ -107,7 +107,7 @@ interface iSubdistribuidor {
 
 export default function ProgramaCirugiaScreen() {
   const router = useRouter();
-  const { user, theme, t } = useApp();
+  const { user, theme, t,appConfig } = useApp();
   const pageConfig = {
     name: t('cirugias_programar.new_title'),
     icon: "calendar-plus",
@@ -320,7 +320,7 @@ export default function ProgramaCirugiaScreen() {
   };
 
   const handleSubmit = async () => {
-    const error = validateForm();
+    const error = false;//validateForm();
     if (error) {
       playErrorSound();
 
@@ -357,8 +357,9 @@ export default function ProgramaCirugiaScreen() {
         // Solo subimos si es un objeto local (tiene uri local)
         //alert(JSON.stringify(archivo));
         const urlServidor = await ApiService.uploadFileDirect(archivo);
+        
         if (urlServidor) {
-          urlsSubidas.push(urlServidor);
+          urlsSubidas.push(appConfig.url + urlServidor);
         }
       }
 

@@ -19,6 +19,9 @@ require_once "dompdf/autoload.inc.php";
 include "assets/plugins/phpqrcode/qrlib.php";
 require_once "include/functions_ws.php";
 
+require_once 'lib/vendor/autoload.php';
+require_once 'include/chat_client_config.php';
+
 date_default_timezone_set('America/Mexico_City');
 @session_start();
 
@@ -40,6 +43,14 @@ class WebServiceController
         'metodo_ejemplo' => [
             'descripcion' => 'Ejemplo de implementacion real.',
             'parameters' => ['id']
+        ],
+        'get_enviroment' => [
+            'descripcion' => 'Get locales',
+            'parameters' => ['login_usuario', 'login_password']
+        ],
+        "get_stream_token" => [
+            'descripcion' => 'Genera el token seguro de GetStream Feeds para el usuario de la App.',
+            'parameters' => ['id_usuario_app','alias_usuario']
         ],
         'inicia_sesion' => [
             'descripcion' => 'Valida las credenciales del usuario y genera una sesión activa.',
@@ -424,7 +435,7 @@ class WebServiceController
         $destination   = $uploadDir . $newFileName;
 
         if (move_uploaded_file($fileTmpName, $destination)) {
-            $publicUrl = "https://exorta.creaccionesweb.com/pagos_cirugias/files/exosapp/" . $newFileName;
+            $publicUrl = "pagos_cirugias/files/exosapp/" . $newFileName;
             return [
                 'result' => 'ok',
                 'result_text' => 'Archivo subido con éxito al controlador.',
@@ -460,6 +471,87 @@ class WebServiceController
             $tema = "light";
             $this->sendResponse(["exception" => $e->getMessage()]);
         }
+    }
+    // ----------------------------------------------------
+    // ########################### GET STREAM TOKEN (FEEDS) #########################
+    public function get_stream_token(){
+        $id_usuario_app = Requesting("id_usuario_app");
+        $alias_usuario  = Requesting("alias_usuario");
+
+        if (!$id_usuario_app || !$alias_usuario) {
+            return $this->DatosIncorrectos();
+        }        
+        return $this->get_stream_token_fn($id_usuario_app, $alias_usuario);
+    }
+
+    private function _init_get_stream() {                 
+        $client_keys = Stream_chat_key();
+
+        // 2. Definición local de credenciales
+        $apiKey    = $client_keys["apiKey"];
+        $apiSecret = $client_keys["apiSecret"];
+        $AppID = $client_keys["AppID"];
+
+        return [
+            'client'  => new GetStream\StreamChat\Client($apiKey, $apiSecret),
+            'api_key' => $apiKey,
+            'AppID' => $AppID
+        ];
+    }
+
+    public function get_stream_token_fn($id_usuario_app, $alias_usuario)
+    {     
+        // Inicializamos variables críticas para que existan siempre en el bloque return/catch
+        $apiKey = '';
+        $AppID = '';
+        $token  = null;
+
+        try {            
+            $streamSetup  = $this->_init_get_stream();
+            $streamClient = $streamSetup['client'];
+            $apiKey       = $streamSetup['api_key'];
+            $AppID        = $streamSetup['AppID'];
+
+            $userIdStr = strval($id_usuario_app);
+
+            // 4. Sincronizar metadatos del usuario en la plataforma de GetStream
+            // Ajustado a la sintaxis estándar de la SDK de PHP para Feeds
+            $streamClient->updateUser([
+                'id'   => $userIdStr,
+                'name' => strtoupper($alias_usuario),
+                'role' => 'user'               
+            ]);
+            // 5. Generación del token para el usuario de la App
+            $token = $streamClient->createToken($userIdStr);
+
+            return [
+                'result'       => 'ok',
+                'result_text'  => 'Token generado correctamente.',
+                'stream_token' => $token,
+                'api_key'      => $apiKey,
+                'AppID'        => $AppID          
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'result'       => 'error',
+                'result_text'  => 'Error en Stream: ' . $e->getMessage(),
+                'stream_token' => null, // Evitamos el "Undefined variable"
+                'api_key'      => $apiKey ,
+                'AppID'        => $AppID                 
+            ];         
+        }
+    }
+    // --- get_enviroment -
+    public function get_enviroment($logged){
+        global $WS_DB_USE_LOCAL, $STREAM_CHAT_APP_NAME;
+        if (!$logged) {
+            return ["env"=>""]; 
+        }
+        return [
+            "__DIR_" => __DIR__,            
+            "STREAM_CHAT_APP_NAME" => $STREAM_CHAT_APP_NAME            
+         ];
     }
     // --- LOGIN ---
     public function inicia_sesion()
@@ -560,7 +652,15 @@ class WebServiceController
         $this->result["tema"] = $tema;
         $this->result["app_language"] = $app_language;
         $this->result["menu_favorites"] = $menu_favorites;
+        if ($this->is_debuging)
+            $this->result["environment"] = $this->get_enviroment(true);
 
+        // ------ chat token
+        $chat_client = $this->get_stream_token_fn($id_usuario_app, $this->result["alias_usuario"]);
+        $this->result["chat_client_connected"] =  $chat_client["result"]=="ok"?1:0;
+        $this->result["chat_client_result_text"] = $chat_client["result_text"];
+        $this->result["chat_client_stream_token"] = $chat_client["stream_token"];
+        $this->result["chat_client_api_key"] = $chat_client["api_key"];
         return ($this->result);
     }
 
@@ -1228,14 +1328,15 @@ class WebServiceController
 
         
 
-        $fecha = $nuevo_cirugia_fecha." ".$nuevo_cirugia_hora;        
+        $fecha = $nuevo_cirugia_fecha." ".$nuevo_cirugia_hora;  
+        
 
         if($nuevo_cirugia_id == "0"){
                 $thisyear = date("Y");
-                $query = "select concat('". $thisyear ."','CX', case when count(*)=0 then 1 else max(cast(mid(mid(c.codigo,1, instr(c.codigo, a.codigo)-1),5) as integer))+1 end,a.codigo) as codigo_num " 
+                $query = "select concat('". $thisyear ."','CX', case when count(*)=0 then 1 else max(cast(mid(mid(c.codigo,1, instr(c.codigo, a.codigo)-1),5) as unsigned))+1 end,a.codigo) as codigo_num " 
                          . " from cirugia c left join almacen a on c.id_almacen=a.id_almacen where c.year=" . $thisyear
                          . " and c.id_almacen=" . $id_almacen;
-
+                                
                 $codigo_de_cirugia = GetValueSQL($query,"codigo_num");
 
                 $query = "INSERT INTO cirugia (codigo, id_solicitud, id_vendedor, id_almacen, id_tecnico,id_tecnico2, 
