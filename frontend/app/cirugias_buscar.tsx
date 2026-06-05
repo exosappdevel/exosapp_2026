@@ -159,7 +159,7 @@ export default function Cirugia_BuscarScreen() {
           ApiService.get_vendedores(user.id_usuario, ""),
           ApiService.get_tecnicos(user.id_usuario),
           ApiService.get_subdistribuidor(""),
-          ApiService.get_medicos_list(user.id_usuario)
+          ApiService.get_medicos_list(user.id_usuario,user.id_almacen)
         ]);
 
         if (!isMounted) return;

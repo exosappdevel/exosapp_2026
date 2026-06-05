@@ -101,7 +101,8 @@
       "loadError": "No se pudieron obtener los productos del servidor.",
       "notice":"Aviso",
       "submit":"Enviar",
-      "requerido":"Requerido"
+      "requerido":"Requerido",
+      "close":"Cerrar"
     },
     "cirugias_programar":{
       "new_title":" Programar cirugía",

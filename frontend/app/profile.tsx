@@ -129,7 +129,8 @@ export default function ProfileScreen() {
             <View style={styles.userInfo}>
               <Text style={[styles.userName, { color: theme.text, fontSize:12, fontWeight:'normal', paddingLeft:30 }]}>{user.tipo_usuario}</Text>
             </View>
-          </View>
+            
+          </View>          
 
           {/* Almacen Selection */}
           <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>

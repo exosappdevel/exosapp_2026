@@ -210,8 +210,8 @@ class ApiService {
   static async get_subdistribuidor(es_socio: string) {
     return await this.request("get_subdistribuidor", { es_socio });
   }
-  static async get_medicos_list(id_usuario: string) {
-    return await this.request("get_medicos_list", { id_usuario });
+  static async get_medicos_list(id_usuario: string,id_almacen:string) {
+    return await this.request("get_medicos_list", { id_usuario, id_almacen });
   }
   static async guarda_cirugia(
     id_usuario: string,

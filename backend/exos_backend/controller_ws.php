@@ -661,6 +661,7 @@ class WebServiceController
         $this->result["chat_client_result_text"] = $chat_client["result_text"];
         $this->result["chat_client_stream_token"] = $chat_client["stream_token"];
         $this->result["chat_client_api_key"] = $chat_client["api_key"];
+        $this->result["chat_client_appid"] = $chat_client["AppID"];
         return ($this->result);
     }
 

@@ -174,7 +174,12 @@ export default function LoginScreen() {
           alias_usuario: (response.alias_usuario || '').toUpperCase() || '',
           tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light',
           menu_favorites: fav.split(';').filter((item: String) => item !== ""),
-          menu_items: menuItems
+          menu_items: menuItems, 
+          chat_client_enabled : response.chat_client_enabled,         
+          chat_client_coonnected : response.chat_client_connected == 1,
+          chat_client_appID : response.chat_client_appid,
+          chat_client_appKey : response.chat_client_api_key,
+          chat_client_token : response.chat_client_stream_token
         };
         //alert(JSON.stringify(fav.split(';').filter((item: String) => item !== "")));
         setUser(userData);

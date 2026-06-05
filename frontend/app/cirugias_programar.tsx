@@ -27,7 +27,7 @@ import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate } from '../components/elidev_components';
+import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report } from '../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 
 
@@ -107,7 +107,7 @@ interface iSubdistribuidor {
 
 export default function ProgramaCirugiaScreen() {
   const router = useRouter();
-  const { user, theme, t,appConfig } = useApp();
+  const { user, theme, t, appConfig } = useApp();
   const pageConfig = {
     name: t('cirugias_programar.new_title'),
     icon: "calendar-plus",
@@ -119,9 +119,11 @@ export default function ProgramaCirugiaScreen() {
   const [appReady, setAppReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [report_visible, setReportVisible] = useState(false);
+  const [report_data, setReportData] = useState(null);
 
   // Form fields
-  const [fecha, setFecha] = useState( formatDate(new Date()));
+  const [fecha, setFecha] = useState(formatDate(new Date()));
   const [hora, setHora] = useState('');
   const [estado, setEstado] = useState<iEstado | null>(null);
   const [ciudad, setCiudad] = useState('');
@@ -207,14 +209,14 @@ export default function ProgramaCirugiaScreen() {
         const [resEstados, resHospitales, resVendedores, resTecnicos, resCategorias, resEquipopoder, resInstrumentales, resConsumibles, resSubdistribuidores, resMedicos] = await Promise.all([
           ApiService.get_estados(),
           ApiService.get_hospitales(user.id_almacen),
-          ApiService.get_vendedores(user.id_usuario, "Vendedor"),
+          ApiService.get_vendedores(user.id_usuario, ""),
           ApiService.get_tecnicos(user.id_usuario),
           ApiService.get_set_categorias_subcategorias(),
           ApiService.get_equipos_poder_categoria(),
           ApiService.get_instrumental_categoria(),
           ApiService.get_consumible_categoria(),
           ApiService.get_subdistribuidor(""),
-          ApiService.get_medicos_list(user.id_usuario)
+          ApiService.get_medicos_list(user.id_usuario, user.id_almacen)
         ]);
 
         if (!isMounted) return;
@@ -283,6 +285,7 @@ export default function ProgramaCirugiaScreen() {
     icon: 'alert-circle-outline',
     colorIcon: '#f56565'
   });
+  const [show_modal, setShowModal] = useState(false);
 
   const get_subcat_selected = (tipo: string): string => {
     // 1. Obtenemos todas las llaves del objeto (ej: ["ins_24", "ep_10", "ins_45"])
@@ -320,7 +323,7 @@ export default function ProgramaCirugiaScreen() {
   };
 
   const handleSubmit = async () => {
-    const error = false;//validateForm();
+    const error = validateForm();
     if (error) {
       playErrorSound();
 
@@ -336,7 +339,7 @@ export default function ProgramaCirugiaScreen() {
 
     setSubmitting(true);
 
-    const materiales_sel = get_subcat_selected("cat");
+    const materiales_sel = get_subcat_selected("materiales");
     const ep_sel = get_subcat_selected("ep");
     const adi_sel = get_subcat_selected("ins");
     const cons_sel = get_subcat_selected("cons");
@@ -357,7 +360,7 @@ export default function ProgramaCirugiaScreen() {
         // Solo subimos si es un objeto local (tiene uri local)
         //alert(JSON.stringify(archivo));
         const urlServidor = await ApiService.uploadFileDirect(archivo);
-        
+
         if (urlServidor) {
           urlsSubidas.push(appConfig.url + urlServidor);
         }
@@ -397,16 +400,11 @@ export default function ProgramaCirugiaScreen() {
       if (response.result === 'ok') {
         setSubmitting(false);
         playSuccessSound();
-        setModal({
-          visible: true,
-          titulo: t("cirugias.success_title"),
-          mensaje: t("cirugias.success"),
-          icon: 'check-circle-outline',
-          colorIcon: '#48bb78'
-        });
+        setReportData(response.get_cirugia_report);
+        setReportVisible(true);
       }
       else {
-        playErrorSound();
+        playErrorSound();        
         setModal({
           visible: true,
           titulo: t('common.error'),
@@ -482,16 +480,16 @@ export default function ProgramaCirugiaScreen() {
   const [expandedSection, setExpandedSection] = useState<string | null>('lugar');
 
   const toggleSection = (section: string) => {
-    if (expandedSection === section){
-      
+    if (expandedSection === section) {
+
       setExpandedSection(null);
-      if(section.indexOf("materiales_")>-1)
+      if (section.indexOf("materiales_") > -1)
         setTimeout(() => {
-          setExpandedSection("materiales");          
+          setExpandedSection("materiales");
         }, 50);
-        
+
     }
-    else{
+    else {
       setExpandedSection(section);
     }
 
@@ -984,11 +982,11 @@ export default function ProgramaCirugiaScreen() {
               </_AccordionSection>
 
 
-              {/* SECCIÓN 3: materiales */}             
+              {/* SECCIÓN 3: materiales */}
 
               <_AccordionSection
                 title={t('cirugias_programar.materiales')}
-                isOpen={(expandedSection === 'materiales') ||(expandedSection?.indexOf('materiales_')==0)}
+                isOpen={(expandedSection === 'materiales') || (expandedSection?.indexOf('materiales_') == 0)}
                 yoff={270}
                 scrollRef={scrollRef}
                 onPress={() => toggleSection('materiales')}
@@ -1012,11 +1010,11 @@ export default function ProgramaCirugiaScreen() {
                             title={seleccionadosEnEstaCat > 0
                               ? `${item.nombre} (${seleccionadosEnEstaCat})`
                               : item.nombre
-                            }            
+                            }
                             isOpen={expandedSection === `materiales_${item.id_set_categoria}`}
-                            yoff={270+(index*68)}
+                            yoff={270 + (index * 68)}
                             scrollRef={scrollRef}
-                            onPress={() => { toggleSection(`materiales_${item.id_set_categoria}`);}}   
+                            onPress={() => { toggleSection(`materiales_${item.id_set_categoria}`); }}
                           >
                             {Array.isArray(item.subcategorias) &&
                               item.subcategorias.map((sub: iSubCategoria) => {
@@ -1312,6 +1310,15 @@ export default function ProgramaCirugiaScreen() {
           colorIcon={modal.colorIcon}
           onClose={() => setModal({ ...modal, visible: false })}
         />
+        <_Show_Cirugia_Report
+          titulo={'Detalle de la cirugia'}
+          visible={report_visible}
+          item={report_data}
+          onClose={() => setReportVisible(false)}
+        />
+
+
+
       </_Background>
     </SafeAreaView>
   );

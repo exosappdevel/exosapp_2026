@@ -2,7 +2,7 @@
   "expo": {
     "name": "ExosApp",
     "slug": "exosapp",
-    "version": "1.0.1.20260525",
+    "version": "1.0.1.20260604",
     "orientation": "portrait",
     "icon": "./assets/images/icon-exorta.png",
     "scheme": "exosapp",
@@ -88,7 +88,8 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-audio",
-      "expo-video"
+      "expo-video",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
