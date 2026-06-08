@@ -143,7 +143,7 @@ const themes: Record<ThemeType, Theme> = {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const use_local = true
+  const use_local = false
   const [appConfig] = useState<AppConfig>({
     passtrough_mode: false,
     name: "exosapp",

@@ -177,6 +177,10 @@ export default function Cirugia_BuscarScreen() {
         setFecha_ini(formatDate(today));
         setFecha_fin(formatDate(nextMonth));
 
+         if (Array.isArray(resVendedores.data) && (resVendedores.data.length == 1)) {
+          setVendedor(resVendedores.data[0]);         
+        }
+
       } catch (error) {
         console.error("Error crítico en loadData:", error);
       } finally {

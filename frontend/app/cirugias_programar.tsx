@@ -233,6 +233,14 @@ export default function ProgramaCirugiaScreen() {
         setSubdistribuidores(Array.isArray(resSubdistribuidores.data) ? resSubdistribuidores.data : []);
         setMedicos(Array.isArray(resMedicos.data) ? resMedicos.data : []);
 
+        if (Array.isArray(resVendedores.data) && (resVendedores.data.length == 1)) {
+          setVendedor(resVendedores.data[0]);
+          if (Array.isArray(resTecnicos.data)) {
+            setTecnico1(resTecnicos.data[0]);
+            setTecnico2(resTecnicos.data[0]);
+          }
+        }
+
       } catch (error) {
         console.error("Error crítico en loadData:", error);
       } finally {
@@ -404,7 +412,7 @@ export default function ProgramaCirugiaScreen() {
         setReportVisible(true);
       }
       else {
-        playErrorSound();        
+        playErrorSound();
         setModal({
           visible: true,
           titulo: t('common.error'),
