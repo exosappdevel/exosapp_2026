@@ -17,13 +17,16 @@ export default function Index() {
     const checkSessionAndNavigate = async () => {
       const FIVE_MINUTES = 5 * 60 * 1000; // 300,000 milisegundos
       const now = Date.now();
+      
+      console.log("¿El usuario está logueado en el arranque?:", isLoggedIn);
 
       if (isLoggedIn) {
         try {
           // 1. 🌟 VALIDACIÓN DE VERSIÓN DE LA APP
           const savedVersion = await AsyncStorage.getItem('@exosapp_version');
           const currentVersion = Constants.expoConfig?.version || '1.0.0';
-
+          
+          console.log(`Versión match? (${savedVersion} -> ${currentVersion})`);
           if (savedVersion && savedVersion !== currentVersion) {
             console.log(`Cierre de sesión forzado: Cambio de versión detectado (${savedVersion} -> ${currentVersion})`);
             // Borramos credenciales locales inmediatamente

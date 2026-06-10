@@ -127,10 +127,13 @@ export default function ProfileScreen() {
 
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.text, fontSize:12, fontWeight:'normal', paddingLeft:30 }]}>{user.tipo_usuario}</Text>
+              <Text style={[styles.userName, { color: theme.text, fontSize:12, fontWeight:'normal', paddingLeft:30 }]}>{user.tipo_usuario}</Text>              
+            </View>
+            <View style={styles.userInfo}>              
+              <Text style={[styles.userName, { color: theme.text+"90", fontSize:12, fontWeight:'normal', paddingLeft:30, paddingTop:10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}</Text>  
             </View>
             
-          </View>          
+          </View>            
 
           {/* Almacen Selection */}
           <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>

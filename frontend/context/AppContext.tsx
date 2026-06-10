@@ -34,6 +34,7 @@ interface AppConfig {
   name: string;
   passkey: string;
   url: string;
+  backend_server:string;
 }
 
 interface Theme {
@@ -143,12 +144,20 @@ const themes: Record<ThemeType, Theme> = {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const use_local = false
+  const servers = {
+    "local" : "http://jon-dell/exorta/webservice",
+    "exos" : "https://exorta.exos.software/webservice",
+    "exodos": "https://exodos.exos.software/webservice"
+  };
+  
+  const backend_server = "exodos";
+  
   const [appConfig] = useState<AppConfig>({
     passtrough_mode: false,
     name: "exosapp",
     passkey: "{PASSKEY}",
-    url: use_local ? " http://jon-dell/exorta/webservice" : "https://exorta.exos.software/webservice",
+    url: servers[backend_server],
+    backend_server: backend_server
   });
 
   const [user, setUser] = useState<User>({

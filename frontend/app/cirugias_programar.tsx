@@ -312,6 +312,7 @@ export default function ProgramaCirugiaScreen() {
       .join(',');
   };
 
+
   const validateForm = () => {
     if (!fecha) return 'Ingrese la fecha de la cirugía';
     if (!hora) return 'Seleccione la hora';
@@ -328,6 +329,35 @@ export default function ProgramaCirugiaScreen() {
   const finalizarSeleccion = () => {
     const materialesSeleccionados = Object.keys(selectedSubcats).filter(id => selectedSubcats[id]);
     console.log("IDs a enviar al servidor:", materialesSeleccionados);
+  };
+const Clean_form =()=>{
+    setFecha(formatDate(new Date()));
+    setHora('');
+    setEstado(null);
+    setCiudad('');
+
+    setSubdistribuidor(null);
+    setSubdistribuidor_otro('');
+    setHospital(null);
+    setMedico(null);
+    setNotas('');
+    setPaciente({ nombre: '', paterno: '', materno: '' });
+    setSelectedSubcats({});
+    setArchivos([]);
+
+    setVendedor(null);
+    setTecnico1(null);
+    setTecnico2(null);
+
+    if (Array.isArray(vendedores) && (vendedores.length == 1)) {
+          setVendedor(vendedores[0]);
+          if (Array.isArray(tecnicos)) {
+            setTecnico1(tecnicos[0]);
+            setTecnico2(tecnicos[0]);
+          }
+        }
+
+    return null;
   };
 
   const handleSubmit = async () => {
@@ -1223,7 +1253,21 @@ export default function ProgramaCirugiaScreen() {
             ) : (
               <>
                 <MaterialCommunityIcons name="calendar-check" size={24} color="#fff" />
-                <Text style={styles.submitButtonText}>PROGRAMAR CIRUGÍA</Text>
+                <Text style={styles.submitButtonText}>{t('cirugias_programar.submit_button')}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.submitButton, { backgroundColor: theme.accent, marginLeft:30 }]}
+            onPress={Clean_form}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="trash-can-outline" size={24} color="#fff" />
+                <Text style={styles.submitButtonText}>{t('common.clean_form')}</Text>
               </>
             )}
           </TouchableOpacity>

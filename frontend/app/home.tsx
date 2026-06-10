@@ -17,7 +17,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, theme, t, isLoggedIn } = useApp();
+  const { user, theme, t, isLoggedIn, appConfig } = useApp();
   const pageConfig = {
     name: t("app.name"),
     icon: "home",
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     opacity: 0.8,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowColor: '0, 1, 3, rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   }

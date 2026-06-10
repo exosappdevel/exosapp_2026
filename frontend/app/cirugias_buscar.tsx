@@ -23,7 +23,7 @@ import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, playSuccessSound, playErrorSound, formatDate, _ZoomableView } from '../components/elidev_components';
+import { _Header, _Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../components/elidev_components';
 import { addMonths } from 'date-fns';
 
 
@@ -31,6 +31,11 @@ interface PickerOption {
   id: string;
   nombre: string;
 }
+interface iOrderList {
+  order: string;
+  text: string;
+}
+
 interface iEstatusList {
   estatus: number;
   text: string;
@@ -76,6 +81,7 @@ export default function Cirugia_BuscarScreen() {
   const [appReady, setAppReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [report_visible, setReportVisible] = useState(false);
 
   // Form fields
   const [fecha_ini, setFecha_ini] = useState('');
@@ -90,7 +96,6 @@ export default function Cirugia_BuscarScreen() {
   const [limite, setLimite] = useState("15");
   const [filtrar_fecha, setFiltrar_fecha] = useState(false); // Por defecto NO se filtra por fecha
   // Agregar junto a tus otros useState
-  const [orderBy, setOrderBy] = useState<'newest' | 'oldest' | 'codigo'>('newest');
   const [showOrderModal, setShowOrderModal] = useState(false); // Para mostrar las opciones de ordenamiento
 
 
@@ -104,6 +109,15 @@ export default function Cirugia_BuscarScreen() {
     { estatus: 4, text: t('cirugias_programar.estatus_text_4') },
     { estatus: 5, text: t('cirugias_programar.estatus_text_5') }
   ]);
+  const [Order_list, setOrderList] = useState<iOrderList[]>([
+    { order: "codigo_newest", text: t('cirugias_programar.order_codigo_newest') },
+    { order: "codigo_oldest", text: t('cirugias_programar.order_codigo_oldest') },
+    { order: "fecha_newest", text: t('cirugias_programar.order_fecha_newest') },
+    { order: "fecha_oldest", text: t('cirugias_programar.order_fecha_oldest') },
+  ]);
+  const [orderBy, setOrderBy] = useState<iOrderList | null>(Order_list[0]);
+
+
   const [hospitales, setHospitales] = useState<iHospital[]>([]);
   const [vendedores, setVendedores] = useState<iVendedor[]>([]);
   const [tecnicos, setTecnicos] = useState<iTecnico[]>([]);
@@ -111,6 +125,7 @@ export default function Cirugia_BuscarScreen() {
   const [medicos, setMedicos] = useState<iMedico[]>([]);
 
   const [showEstatusPicker, setShowEstatusPicker] = useState(false);
+  const [showOrderPicker, setShowOrderPicker] = useState(false);
   const [showHospitalPicker, setShowHospitalPicker] = useState(false);
   const [showMedicoPicker, setShowMedicoPicker] = useState(false);
   const [showVendedorPicker, setShowVendedorPicker] = useState(false);
@@ -159,7 +174,7 @@ export default function Cirugia_BuscarScreen() {
           ApiService.get_vendedores(user.id_usuario, ""),
           ApiService.get_tecnicos(user.id_usuario),
           ApiService.get_subdistribuidor(""),
-          ApiService.get_medicos_list(user.id_usuario,user.id_almacen)
+          ApiService.get_medicos_list(user.id_usuario, user.id_almacen)
         ]);
 
         if (!isMounted) return;
@@ -177,8 +192,8 @@ export default function Cirugia_BuscarScreen() {
         setFecha_ini(formatDate(today));
         setFecha_fin(formatDate(nextMonth));
 
-         if (Array.isArray(resVendedores.data) && (resVendedores.data.length == 1)) {
-          setVendedor(resVendedores.data[0]);         
+        if (Array.isArray(resVendedores.data) && (resVendedores.data.length == 1)) {
+          setVendedor(resVendedores.data[0]);
         }
 
       } catch (error) {
@@ -293,40 +308,13 @@ export default function Cirugia_BuscarScreen() {
           onPress={() => setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)}
           yoff={85 + (index * 80)}
         >
-          <_Report>
-            <Text style={{ fontWeight: 'bold', textAlign: 'center' }}>DETALLE DE CIRUGIA</Text>
-            <_DetalleLinea label="Codigo" value={item.codigo} />
-            <_DetalleLinea label="Estatus" value={item.estatus_text} />
-            <_DetalleLinea label="Vendedor" value={item.vendedor} />
-            <_DetalleLinea label="Técnico 1" value={item.tecnico} />
-            <_DetalleLinea label="Técnico 2" value={item.tecnico2} />
-            <_DetalleLinea label="Tiempo de Surtido" value={item.tiempo_surtido} />
-            <_DetalleLinea label="Tiempo de Entrega a Técnico" value={item.tiempo_entrega_tecnico} />
-            <_DetalleLinea label="Fecha de Programación" value={item.fecha_programacion} />
-            <_DetalleLinea label="Fecha de Reprogramación" value={item.fecha_reprogramacion} />
-            <_DetalleLinea label="Fecha de Cirugía" value={item.fecha_cirugia} />
-            <_DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
-            <_DetalleLinea label="Médico" value={item.medico} />
-            <_DetalleLinea label="Hospital" value={item.hospital} />
-            <_DetalleLinea label="Municipio" value={`${item.municipio || ''}, ${item.estado || ''}`} />
+          <_Show_Cirugia_Report
+            titulo={'Detalle de la cirugia'}
+            visible={true}
+            item={item}
+            onClose={() => setExpandedSection(null)}
+          />
 
-            <View style={styles.divisor} />
-
-            <_DetalleMultiLinea label="Material" value={item.minialmacen} />
-            <_DetalleMultiLinea label="Equipo Poder" value={item.ep} />
-            <_DetalleMultiLinea label="Adicionales" value={item.adicionales} />
-            <_DetalleMultiLinea label="Consumibles" value={item.consumibles} />
-            <_DetalleLinea label="Solicita Estéril" value={item.esteril} />
-
-            <View style={styles.divisor} />
-
-            <_DetalleMultiLinea label="Notas" value={item.notas} />
-            <_DetalleLinea label="Remisión" value={item.remision} />
-            <_DetalleLinea
-              label="Última Modificación"
-              value={`${item.last_update || ''} / ${item.last_updater || ''}`}
-            />
-          </_Report>
         </_AccordionSection>
 
       );
@@ -395,7 +383,7 @@ export default function Cirugia_BuscarScreen() {
           (subdistribuidor ? subdistribuidor.id_subdistribuidor : '0'),
           (codigo_cirugia ? codigo_cirugia : ""),
           (limite ? limite : "-1"),
-          orderBy
+          orderBy? orderBy.order : ''
         );
 
       if (response.result === 'ok') {
@@ -455,7 +443,7 @@ export default function Cirugia_BuscarScreen() {
   const renderPickerModal = (
     visible: boolean,
     onClose: () => void,
-    data: string[] | iEstatusList[] | PickerOption[] | iVendedor[] | iTecnico[] | iHospital[] | iMedico[] | iSubdistribuidor[],
+    data: string[] | iEstatusList[] | PickerOption[] | iVendedor[] | iTecnico[] | iHospital[] | iMedico[] | iSubdistribuidor[] | iOrderList[],
     key_name: string = "id",
     onSelect: (item: any) => void,
     title: string
@@ -810,6 +798,25 @@ export default function Cirugia_BuscarScreen() {
                     />
                   </View>
                 </_TouchableWithoutFeedback>
+
+                {/* Selector de Ordenamiento */}
+                <_TouchableWithoutFeedback>
+                  <View style={{ marginVertical: 10, paddingHorizontal: 5 }}>
+                    <Text style={{ color: theme.textSub, fontSize: 13, fontWeight: '600', marginBottom: 5 }}>
+                      Ordenar por:
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                      onPress={() => setShowOrderPicker(true)}
+                    >
+                      <Text style={[styles.selectorText, { color: orderBy ? theme.text : theme.textSub }]}>
+                        {orderBy?.text || 'Ordenar resultados por...'}
+                      </Text>
+                      <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                    </TouchableOpacity>
+                  </View>
+                </_TouchableWithoutFeedback>
+
                 <_TouchableWithoutFeedback>
                   <View style={styles.fieldContainer}>
                     <Text style={[styles.label, { color: theme.text }]}>
@@ -844,65 +851,6 @@ export default function Cirugia_BuscarScreen() {
 
                   </View>
                 </_TouchableWithoutFeedback>
-
-                {/* Selector de Ordenamiento */}
-                <_TouchableWithoutFeedback>
-                  <View style={{ marginVertical: 10, paddingHorizontal: 5 }}>
-                    <Text style={{ color: theme.textSub, fontSize: 13, fontWeight: '600', marginBottom: 5 }}>
-                      Ordenar por:
-                    </Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <TouchableOpacity
-                        style={[
-                          styles.actionButton,
-                          {
-                            width: '31%',
-                            backgroundColor: orderBy === 'newest' ? theme.accent : theme.card,
-                            borderColor: theme.border
-                          }
-                        ]}
-                        onPress={() => setOrderBy('newest')}
-                      >
-                        <Text style={{ color: orderBy === 'newest' ? '#fff' : theme.text, fontSize: 11, fontWeight: 'bold' }}>
-                          Más recientes
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.actionButton,
-                          {
-                            width: '31%',
-                            backgroundColor: orderBy === 'oldest' ? theme.accent : theme.card,
-                            borderColor: theme.border
-                          }
-                        ]}
-                        onPress={() => setOrderBy('oldest')}
-                      >
-                        <Text style={{ color: orderBy === 'oldest' ? '#fff' : theme.text, fontSize: 11, fontWeight: 'bold' }}>
-                          Más antiguos
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.actionButton,
-                          {
-                            width: '31%',
-                            backgroundColor: orderBy === 'codigo' ? theme.accent : theme.card,
-                            borderColor: theme.border
-                          }
-                        ]}
-                        onPress={() => setOrderBy('codigo')}
-                      >
-                        <Text style={{ color: orderBy === 'codigo' ? '#fff' : theme.text, fontSize: 11, fontWeight: 'bold' }}>
-                          Nº de Orden
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </_TouchableWithoutFeedback>
-
 
                 {/* Submit Button */}
                 <TouchableOpacity
@@ -943,6 +891,15 @@ export default function Cirugia_BuscarScreen() {
             "estatus",
             (item: iEstatusList) => setEstatus(item),
             'Estatus'
+          )}
+        {
+          renderPickerModal(
+            showOrderPicker,
+            () => setShowOrderPicker(false),
+            Order_list,
+            "order",
+            (item: iOrderList) => setOrderBy(item),
+            'Ordenar por:'
           )}
         {
           renderPickerModal(

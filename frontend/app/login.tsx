@@ -322,6 +322,9 @@ export default function LoginScreen() {
           <Text style={styles.versionText} >
             Versión de la App: {Constants.expoConfig?.version || "1.0.0"}
           </Text>
+          <Text style={styles.versionText} >
+            Servidor: {appConfig?.backend_server.toUpperCase() || ""}
+          </Text>
 
           <ImageCustom
             source={require("../assets/images/logo_Elidev.png")}
