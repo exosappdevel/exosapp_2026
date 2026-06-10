@@ -31,48 +31,23 @@ interface PickerOption {
   id: string;
   nombre: string;
 }
+interface iEstatusList {
+  id_estatus: number,
+  estatus: string;
+  color: string;
+}
 interface iOrderList {
   order: string;
   text: string;
 }
 
-interface iEstatusList {
-  estatus: number;
-  text: string;
-}
 
-interface iHospital {
-  id_hospital: string;
-  nombre: string;
-}
-interface iMedico {
-  id_medico: string;
-  nombre: string;
-}
-
-interface iTecnico {
-  id_tecnico: string;
-  nombre: string;
-}
-interface iVendedor {
-  id_vendedor: string;
-  nombre: string;
-}
-interface iSubdistribuidor {
-  id_subdistribuidor: string;
-  subdistribuidor: string;
-  no_registrado: string;
-}
-
-
-
-
-export default function Cirugia_BuscarScreen() {
+export default function reporte_piezas_danadas_view_Screen() {
   const router = useRouter();
   const { user, theme, t } = useApp();
   const pageConfig = {
-    name: t('screens.cirugias_buscar'),
-    icon: "magnify",
+    name: t('screens.reporte_piezas_danadas_view'),
+    icon: "glass-fragile",
     previous: "/home",
     show_user: true,
     show_menu: true
@@ -86,13 +61,14 @@ export default function Cirugia_BuscarScreen() {
   // Form fields
   const [fecha_ini, setFecha_ini] = useState('');
   const [fecha_fin, setFecha_fin] = useState('');
-  const [estatus, setEstatus] = useState<iEstatusList | null>(null);
-  const [hospital, setHospital] = useState<iHospital | null>(null);
-  const [medico, setMedico] = useState<iMedico | null>(null);
-  const [vendedor, setVendedor] = useState<iVendedor | null>(null);
-  const [tecnico, setTecnico] = useState<iTecnico | null>(null);
-  const [subdistribuidor, setSubdistribuidor] = useState<iSubdistribuidor | null>(null);
+  const [codigo_registro, setCodigoRegistro] = useState('');
   const [codigo_cirugia, setCodigo_cirugia] = useState('');
+  const [activo, setActivo] = useState('');
+  const [referencia, setReferncia] = useState('');
+  const [lote, setLote] = useState('');
+  const [estatus, setEstatus] = useState<iEstatusList | null>(null);
+  const [traspaso, setTraspaso] = useState('');
+
   const [limite, setLimite] = useState("15");
   const [filtrar_fecha, setFiltrar_fecha] = useState(false); // Por defecto NO se filtra por fecha
   // Agregar junto a tus otros useState
@@ -100,15 +76,7 @@ export default function Cirugia_BuscarScreen() {
 
 
   // listas  
-  const [Estatus_list, setEstatusList] = useState<iEstatusList[]>([
-    { estatus: -1, text: t('cirugias_programar.estatus_text_All') },
-    { estatus: 0, text: t('cirugias_programar.estatus_text_0') },
-    { estatus: 1, text: t('cirugias_programar.estatus_text_1') },
-    { estatus: 2, text: t('cirugias_programar.estatus_text_2') },
-    { estatus: 3, text: t('cirugias_programar.estatus_text_3') },
-    { estatus: 4, text: t('cirugias_programar.estatus_text_4') },
-    { estatus: 5, text: t('cirugias_programar.estatus_text_5') }
-  ]);
+  const [Estatus_list, setEstatusList] = useState<iEstatusList[]>([]);
   const [Order_list, setOrderList] = useState<iOrderList[]>([
     { order: "codigo_newest", text: t('cirugias_programar.order_codigo_newest') },
     { order: "codigo_oldest", text: t('cirugias_programar.order_codigo_oldest') },
@@ -117,28 +85,14 @@ export default function Cirugia_BuscarScreen() {
   ]);
   const [orderBy, setOrderBy] = useState<iOrderList | null>(Order_list[0]);
 
-
-  const [hospitales, setHospitales] = useState<iHospital[]>([]);
-  const [vendedores, setVendedores] = useState<iVendedor[]>([]);
-  const [tecnicos, setTecnicos] = useState<iTecnico[]>([]);
-  const [subdistribuidores, setSubdistribuidores] = useState<iSubdistribuidor[]>([]);
-  const [medicos, setMedicos] = useState<iMedico[]>([]);
-
   const [showEstatusPicker, setShowEstatusPicker] = useState(false);
   const [showOrderPicker, setShowOrderPicker] = useState(false);
-  const [showHospitalPicker, setShowHospitalPicker] = useState(false);
-  const [showMedicoPicker, setShowMedicoPicker] = useState(false);
-  const [showVendedorPicker, setShowVendedorPicker] = useState(false);
-  const [showTecnicoPicker, setShowTecnicoPicker] = useState(false);
-  const [showSubdistribuidorPicker, setShowSubdistribuidorPicker] = useState(false);
-  
-  const [date, setDate] = useState(new Date());
+
   const [showDatePicker, setShowDatePicker] = useState<string | null>(null);
+
   const scrollRef = React.useRef<ScrollView>(null);
 
-  const [section_resultados_visible, setSection_resultados_visible] = useState(false);
-  const [resultados, setResultados] = useState([]);  
-  const [resultados_count, setResultados_count] = useState(0);
+  const [resultados, setResultados] = useState([]);
 
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
   useEffect(() => {
@@ -151,33 +105,18 @@ export default function Cirugia_BuscarScreen() {
       try {
         console.log("Iniciando carga de datos...");
 
-        // Promise.all es más rápido porque dispara todas a la vez
-        const [resHospitales, resVendedores, resTecnicos, resSubdistribuidores, resMedicos] = await Promise.all([
-          ApiService.get_hospitales(user.id_almacen),
-          ApiService.get_vendedores(user.id_usuario, ""),
-          ApiService.get_tecnicos(user.id_usuario),
-          ApiService.get_subdistribuidor(""),
-          ApiService.get_medicos_list(user.id_usuario, user.id_almacen)
-        ]);
+        const [resEstatus] = await Promise.all([ApiService.piezas_danadas_reporte_estatus("1")]);
 
         if (!isMounted) return;
-
-        // Seteamos los datos validando que sean arrays
-        setHospitales(Array.isArray(resHospitales.data) ? resHospitales.data : []);
-        setVendedores(Array.isArray(resVendedores.data) ? resVendedores.data : []);
-        setTecnicos(Array.isArray(resTecnicos.data) ? resTecnicos.data : []);
-        setSubdistribuidores(Array.isArray(resSubdistribuidores.data) ? resSubdistribuidores.data : []);
-        setMedicos(Array.isArray(resMedicos.data) ? resMedicos.data : []);
 
         const today = new Date();
         const nextMonth = addMonths(new Date(), 1);
 
         setFecha_ini(formatDate(today));
         setFecha_fin(formatDate(nextMonth));
-
-        if (Array.isArray(resVendedores.data) && (resVendedores.data.length == 1)) {
-          setVendedor(resVendedores.data[0]);
-        }
+        setEstatusList(Array.isArray(resEstatus.data) ? resEstatus.data : []);
+        if (Array.isArray(resEstatus.data))
+          setEstatus(resEstatus.data[0]);
 
       } catch (error) {
         console.error("Error crítico en loadData:", error);
@@ -209,9 +148,6 @@ export default function Cirugia_BuscarScreen() {
     setShowDatePicker(null);
 
     if (event.type === 'set' && selectedDate) {
-      // 1. Actualizamos el objeto Date para el componente interno
-      //setDate(selectedDate);
-
       // 2. Formateamos la fecha para mostrarla en el campo de texto
       const day = selectedDate.getDate().toString().padStart(2, '0');
       const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
@@ -306,7 +242,7 @@ export default function Cirugia_BuscarScreen() {
 
   const validateForm = () => {
     // 1. Verificación de que al menos exista un parámetro de búsqueda
-    if (!vendedor && !tecnico && !subdistribuidor && !codigo_cirugia && !filtrar_fecha) {
+    if (!codigo_cirugia && !codigo_registro && !activo && !referencia && !lote && !traspaso && !estatus && !codigo_cirugia && !filtrar_fecha) {
       return t('cirugias_programar.search_valida_error_noparam');
     }
 
@@ -318,7 +254,7 @@ export default function Cirugia_BuscarScreen() {
 
       // Comparamos los milisegundos de ambas fechas
       if (dateFin.getTime() < dateIni.getTime()) {
-        return t('cirugias_programar.search_valida_error_fechasinvalidas');
+        return t('reporte_piezas_danadas_view.search_valida_error_fechasinvalidas');
       }
     }
 
@@ -354,7 +290,7 @@ export default function Cirugia_BuscarScreen() {
           "limite" : limite? limite : "-1"
         }
       ));*/
-      const response =
+      /*const response =
         await ApiService.buscar_cirugia(
           user.id_usuario,
           (estatus ? estatus.estatus.toString() : '-1'),
@@ -367,8 +303,8 @@ export default function Cirugia_BuscarScreen() {
           (codigo_cirugia ? codigo_cirugia : ""),
           (limite ? limite : "-1"),
           orderBy ? orderBy.order : ''
-        );
-
+        );*/
+      /*
       if (response.result === 'ok') {
         setSubmitting(false);
         //alert(JSON.stringify(response));
@@ -407,7 +343,7 @@ export default function Cirugia_BuscarScreen() {
           icon: 'alert-circle-outline',
           colorIcon: '#f56565'
         });
-      }
+      }*/
     } catch (e) {
       alert((e instanceof Error) ? e.message : String(e));
       setModal({
@@ -426,7 +362,7 @@ export default function Cirugia_BuscarScreen() {
   const renderPickerModal = (
     visible: boolean,
     onClose: () => void,
-    data: string[] | iEstatusList[] | PickerOption[] | iVendedor[] | iTecnico[] | iHospital[] | iMedico[] | iSubdistribuidor[] | iOrderList[],
+    data: string[] | iEstatusList[] | PickerOption[] | iOrderList[],
     key_name: string = "id",
     onSelect: (item: any) => void,
     title: string
@@ -464,7 +400,7 @@ export default function Cirugia_BuscarScreen() {
                 <Text style={[styles.pickerItemText, { color: theme.text }]}>
                   {typeof item === 'string'
                     ? item
-                    : (item.text || item.nombre || item.subdistribuidor || 'Sin nombre')}
+                    : (item.text || item.estatus || 'Sin nombre')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -531,12 +467,12 @@ export default function Cirugia_BuscarScreen() {
 
           <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
-            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom:50 }]}>
+            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50 }]}>
 
 
               {/* SECCIÓN 1: parametros */}
               <_AccordionSection
-                title={t('cirugias_programar.parameters_search_title')}
+                title={t('reporte_piezas_danadas_view.parameters_search_title')}
                 isOpen={(expandedSection === 'parametros')}
                 yoff={0}
                 scrollRef={scrollRef}
@@ -559,7 +495,7 @@ export default function Cirugia_BuscarScreen() {
                     use_switch={true}
                     value={filtrar_fecha}
                     setValue={() => setFiltrar_fecha(!filtrar_fecha)}
-                    text={t('cirugias_programar.title_use_dates')}
+                    text={t('reporte_piezas_danadas_view.title_use_dates')}
                   />
 
                   {filtrar_fecha && (
@@ -569,7 +505,7 @@ export default function Cirugia_BuscarScreen() {
                       {/* Fecha ini */}
                       <View style={styles.fieldContainer}>
                         <Text style={[styles.label, { color: theme.text }]}>
-                          {t('cirugias_programar.fecha_ini')}
+                          {t('reporte_piezas_danadas_view.fecha_ini')}
                         </Text>
 
                         {Platform.OS === 'web' ? (
@@ -636,7 +572,7 @@ export default function Cirugia_BuscarScreen() {
                       {/* Fecha fin */}
                       <View style={styles.fieldContainer}>
                         <Text style={[styles.label, { color: theme.text }]}>
-                          {t('cirugias_programar.fecha_fin')}
+                          {t('reporte_piezas_danadas_view.fecha_fin')}
                         </Text>
 
                         {Platform.OS === 'web' ? (
@@ -704,68 +640,22 @@ export default function Cirugia_BuscarScreen() {
                   )}
                 </View>
 
-                {/*Status: 0-cancelada 1-programada 2-surtida 3-finalizada 4-material entregado 5-solicitada*/}
-                <View style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias_programar.estatus_title')}
-                  </Text>
-                  <TouchableOpacity
-                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                    onPress={() => setShowEstatusPicker(true)}
-                  >
-                    <Text style={[styles.selectorText, { color: theme.text }]}>
-                      {estatus?.text || t("cirugias_programar.estatus_text_All")}
+                <_TouchableWithoutFeedback>
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t('reporte_piezas_danadas_view.codigo_registro')}
                     </Text>
-                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                  </TouchableOpacity>
-                </View>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder="Ej. 26RPD0000A-GDL"
+                      placeholderTextColor={theme.textSub}
+                      value={codigo_registro}
+                      onChangeText={setCodigoRegistro}
+                      autoCapitalize='characters'
 
-                {/* Agente */}
-                <View style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias_programar.agente')}
-                  </Text>
-                  <TouchableOpacity
-                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                    onPress={() => setShowVendedorPicker(true)}
-                  >
-                    <Text style={[styles.selectorText, { color: vendedor ? theme.text : theme.textSub }]}>
-                      {vendedor?.nombre || 'Seleccione vendedor...'}
-                    </Text>
-                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                  </TouchableOpacity>
-                </View>
-                {/* Tecnico1 */}
-                <View style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias_programar.tecnico')}
-                  </Text>
-                  <TouchableOpacity
-                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                    onPress={() => setShowTecnicoPicker(true)}
-                  >
-                    <Text style={[styles.selectorText, { color: tecnico ? theme.text : theme.textSub }]}>
-                      {tecnico?.nombre || 'Seleccione técnico...'}
-                    </Text>
-                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                  </TouchableOpacity>
-                </View>
-                {/* Subdistribuidor */}
-                <View style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias_programar.subdistribuidor')}
-                  </Text>
-
-                  <TouchableOpacity
-                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                    onPress={() => setShowSubdistribuidorPicker(true)}
-                  >
-                    <Text style={[styles.selectorText, { color: subdistribuidor ? theme.text : theme.textSub }]}>
-                      {subdistribuidor?.subdistribuidor || 'Seleccione subdistribuidor...'}
-                    </Text>
-                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
-                  </TouchableOpacity>
-                </View>
+                    />
+                  </View>
+                </_TouchableWithoutFeedback>
                 <_TouchableWithoutFeedback>
                   <View style={styles.fieldContainer}>
                     <Text style={[styles.label, { color: theme.text }]}>
@@ -782,6 +672,69 @@ export default function Cirugia_BuscarScreen() {
                     />
                   </View>
                 </_TouchableWithoutFeedback>
+                <_TouchableWithoutFeedback>
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t('reporte_piezas_danadas_view.activo')}
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder="Ej. INSTRUMENTAL"
+                      placeholderTextColor={theme.textSub}
+                      value={activo}
+                      onChangeText={setActivo}
+                      autoCapitalize='characters'
+
+                    />
+                  </View>
+                </_TouchableWithoutFeedback>
+                <_TouchableWithoutFeedback>
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t('reporte_piezas_danadas_view.referencia')}
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder="Ej.111026558"
+                      placeholderTextColor={theme.textSub}
+                      value={referencia}
+                      onChangeText={setReferncia}
+                      autoCapitalize='characters'
+
+                    />
+                  </View>
+                </_TouchableWithoutFeedback>
+                <_TouchableWithoutFeedback>
+                  <View style={styles.fieldContainer}>
+                    <Text style={[styles.label, { color: theme.text }]}>
+                      {t('reporte_piezas_danadas_view.lote')}
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text, textTransform: 'uppercase' }]}
+                      placeholder="Ej. 123ABC"
+                      placeholderTextColor={theme.textSub}
+                      value={lote}
+                      onChangeText={setLote}
+                      autoCapitalize='characters'
+
+                    />
+                  </View>
+                </_TouchableWithoutFeedback>
+                {/*Status: 0-cancelada 1-programada 2-surtida 3-finalizada 4-material entregado 5-solicitada*/}
+                <View style={styles.fieldContainer}>
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t('reporte_piezas_danadas_view.estatus_title')}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => setShowEstatusPicker(true)}
+                  >
+                    <Text style={[styles.selectorText, { color: theme.text }]}>
+                      {estatus?.estatus || t("reporte_piezas_danadas_view.estatus_text_All")}
+                    </Text>
+                    <MaterialCommunityIcons name="chevron-down" size={20} color={theme.textSub} />
+                  </TouchableOpacity>
+                </View>
 
                 {/* Selector de Ordenamiento */}
                 <_TouchableWithoutFeedback>
@@ -859,9 +812,9 @@ export default function Cirugia_BuscarScreen() {
             showEstatusPicker,
             () => setShowEstatusPicker(false),
             Estatus_list,
-            "estatus",
+            "id_estatus",
             (item: iEstatusList) => setEstatus(item),
-            'Estatus'
+            'estatus'
           )}
         {
           renderPickerModal(
@@ -872,56 +825,6 @@ export default function Cirugia_BuscarScreen() {
             (item: iOrderList) => setOrderBy(item),
             'Ordenar por:'
           )}
-        {
-          renderPickerModal(
-            showVendedorPicker,
-            () => setShowVendedorPicker(false),
-            vendedores,
-            "id_vendedor",
-            (item: iVendedor) => setVendedor(item),
-            'Seleccionar Vendedor'
-          )}
-        {
-          renderPickerModal(
-            showTecnicoPicker,
-            () => setShowTecnicoPicker(false),
-            tecnicos,
-            "id_tecnico",
-            (item: iTecnico) => setTecnico(item),
-            'Seleccionar Técnico'
-          )}
-
-        {
-          renderPickerModal(
-            showSubdistribuidorPicker,
-            () => setShowSubdistribuidorPicker(false),
-            subdistribuidores,
-            "id_subdistribuidor",
-            (item: iSubdistribuidor) => setSubdistribuidor(item),
-            'Seleccionar Subdistribuidor'
-          )}
-
-        {
-          renderPickerModal(
-            showHospitalPicker,
-            () => setShowHospitalPicker(false),
-            hospitales,
-            "id_hospital",
-            (item: iHospital) => setHospital(item),
-            'Seleccionar hospital'
-          )}
-        {
-          renderPickerModal(
-            showMedicoPicker,
-            () => setShowMedicoPicker(false),
-            medicos,
-            "id_medico",
-            (item: iMedico) => setMedico(item),
-            'Seleccionar Medico'
-          )}
-
-
-
 
         <CustomModal
           visible={modal.visible}
@@ -943,7 +846,7 @@ export default function Cirugia_BuscarScreen() {
             ) : (
               <>
                 <MaterialCommunityIcons name="magnify" size={24} color="#fff" />
-                <Text style={styles.submitButtonText}>{t('cirugias_programar.search_button')}</Text>
+                <Text style={styles.submitButtonText}>{t('reporte_piezas_danadas_view.search_button')}</Text>
               </>
             )}
           </TouchableOpacity>

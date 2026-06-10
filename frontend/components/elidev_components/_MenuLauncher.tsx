@@ -79,12 +79,14 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'flex-start', // Alineado a la izquierda para que parezcan apps
         paddingHorizontal: '3%',
-        marginTop: 15
+        marginTop: 15,
+        marginBottom:50
     },
     launcherItem: {
         width: '25%', // 4 iconos por fila para que se vea más como iOS
         alignItems: 'center',
-        marginBottom: 60,
+        marginBottom: 0,
+        paddingBottom:10
     },
     launcherIconBox: {
         width: 62,

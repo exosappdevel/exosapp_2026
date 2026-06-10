@@ -11,7 +11,8 @@
       "menu_favorites" : "Favoritos",
       "menu_almacen" :"Almacén",
       "menu_cirugias" : "Cirugías",
-      "menu_logistica" : "Logística"      
+      "menu_logistica" : "Logística",
+      "menu_calidad" : "Calidad"  
     },
     "screens":{
       "home":"Inicio",
@@ -37,7 +38,8 @@
       "cirugias_programar" : "Programar cirugía",
       "cirugias_buscar":"Buscar cirugía",
       "cirugias_calendario" : "Calendario de cirugías",
-      "cirugias_vista_diario" : "Vista diaria"      
+      "cirugias_vista_diario" : "Vista diaria" ,
+      "reporte_piezas_danadas_view": "Ver reporte piezas dañadas"
 
     },
     "login": {      
@@ -168,6 +170,26 @@
       "order_codigo_oldest" : "Número de order más antiguo" ,
       "order_fecha_newest" : "Fecha cirugia más reciente" ,
       "order_fecha_oldest" : "Fecha cirugia más antigua" 
+    },
+    "reporte_piezas_danadas_view":{
+      "search_valida_error_fechasinvalidas":"Rango de fecha no validas",
+      "parameters_search_title":"Parametros de búsqueda",
+      "title_use_dates" :"Filtrar por rango de fecha de reporte",
+      "fecha_ini":"Fecha inicial",
+      "fecha_fin":"Fecha final",
+      "limite":"Número máx. de resultados",
+      "codigo_cirugia":"Código de cirugía",
+      "codigo_registro":"Código de registro",
+      "activo":"Activo",
+      "referencia":"Referencia",
+      "lote":"Lote",
+      "resultados_found":"Reportes encontrados",
+      "search_button":"Buscar reportes",
+      "search_success_title":"Resultado",
+      "search_success":"Reportes encontradao",
+      "search_success_singular":"Reporte encontrado"  ,
+      "estatus_title":"Estatus",
+      "estatus_text_All" : "Todas"
     }
   },
   "en": {

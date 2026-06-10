@@ -31,6 +31,7 @@ export default function HomeScreen() {
   const menuItems_Cirugias: iMenuItem[] = [];
   const menuItems_Logistica: iMenuItem[] = [];
   const menuItems_Favorites: iMenuItem[] = [];
+  const menuItems_Calidad: iMenuItem[] = [];
 
   const Show_soonModal = () => {
     setShow_soon(true);
@@ -62,6 +63,8 @@ export default function HomeScreen() {
   if (isAllowed('menu_logistica', 'carpetas')) AddMenuItem(menuItems_Logistica, "screens.carpetas");
   if (isAllowed('menu_logistica', 'socios')) AddMenuItem(menuItems_Logistica, "screens.socios");
 
+  if (isAllowed('menu_calidad', 'reporte_piezas_danadas_view')) AddMenuItem(menuItems_Calidad, "screens.reporte_piezas_danadas_view");
+
   // 1. Estado para la sección activa (por defecto Favoritos)
   const [activeSection, setActiveSection] = useState('favorites');
 
@@ -74,6 +77,7 @@ export default function HomeScreen() {
     { id: 'almacen', title: t('home.menu_almacen'), icon: 'warehouse', data: menuItems_Almacen },
     { id: 'cirugias', title: t('home.menu_cirugias'), icon: 'medical-bag', data: menuItems_Cirugias },
     { id: 'logistica', title: t('home.menu_logistica'), icon: 'truck-delivery', data: menuItems_Logistica },
+    { id: 'calidad', title: t('home.menu_calidad'), icon: 'shield-star-outline', data: menuItems_Calidad },
   ].filter(section => (section.data.length > 0) || (section.id=='favorites')); // <-- FILTRO CRUCIAL
 
   // 4. Obtener la sección que se debe renderizar en el "Widget"

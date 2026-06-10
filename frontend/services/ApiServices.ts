@@ -269,6 +269,7 @@ class ApiService {
       nuevo_cirugia_file_name
     });
   }
+
   static async buscar_cirugia(
     id_usuario: string,
     estatus: string,
@@ -296,7 +297,9 @@ class ApiService {
       orderby
     });
   }
-
+  static async piezas_danadas_reporte_estatus(show_todos:string){
+    return await this.request("piezas_danadas_reporte_estatus", {show_todos});
+  }
   // En ApiService.ts
 }
 

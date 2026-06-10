@@ -24,6 +24,7 @@ export default function RootLayout() {
           <Stack.Screen name="pickeo" />
           <Stack.Screen name="cirugias_programar" />
           <Stack.Screen name="cirugias_buscar" />
+          <Stack.Screen name="reporte_piezas_danadas_view"/>          
         </Stack>
       </_ActivityTrackerWrapper>
     </AppProvider>

@@ -25,7 +25,8 @@ export const AppmenuItems:iMenuItem[] = [
   { id:'13',titleKey: "screens.socios", icon: "account-multiple", color: "#e53e3e", href: null },
   { id:'14',titleKey: "screens.cirugias_buscar", icon: "file-search", color: "#ecc94b", href: "/cirugias_buscar" },
   { id:'15',titleKey: "screens.cirugias_calendario", icon: "calendar", color: "#48bb78", href: null },
-  { id:'16',titleKey: "screens.cirugias_vista_diario", icon: "calendar", color: "#48bb78", href: null }
+  { id:'16',titleKey: "screens.cirugias_vista_diario", icon: "calendar", color: "#48bb78", href: null },
+  { id:'17',titleKey: "screens.reporte_piezas_danadas_view", icon: "glass-fragile", color: "#48bb78", href: "/reporte_piezas_danadas_view" }
 ];
 
 
