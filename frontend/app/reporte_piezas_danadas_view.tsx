@@ -23,7 +23,7 @@ import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../components/elidev_components';
+import { _Header, _Report,_Show_Generic_Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../components/elidev_components';
 import { addMonths } from 'date-fns';
 
 
@@ -32,7 +32,7 @@ interface PickerOption {
   nombre: string;
 }
 interface iEstatusList {
-  id_estatus: number,
+  id_estatus: string,
   estatus: string;
   color: string;
 }
@@ -78,10 +78,10 @@ export default function reporte_piezas_danadas_view_Screen() {
   // listas  
   const [Estatus_list, setEstatusList] = useState<iEstatusList[]>([]);
   const [Order_list, setOrderList] = useState<iOrderList[]>([
-    { order: "codigo_newest", text: t('cirugias_programar.order_codigo_newest') },
-    { order: "codigo_oldest", text: t('cirugias_programar.order_codigo_oldest') },
-    { order: "fecha_newest", text: t('cirugias_programar.order_fecha_newest') },
-    { order: "fecha_oldest", text: t('cirugias_programar.order_fecha_oldest') },
+    { order: "codigo_cirugia desc", text: t('reporte_piezas_danadas_view.codigo_cirugia_desc') },
+    { order: "codigo_cirugia ", text: t('reporte_piezas_danadas_view.codigo_cirugia_asc') },
+    { order: "codigo desc", text: t('reporte_piezas_danadas_view.codigo_desc') },
+    { order: "codigo", text: t('reporte_piezas_danadas_view.codigo_asc') },
   ]);
   const [orderBy, setOrderBy] = useState<iOrderList | null>(Order_list[0]);
 
@@ -113,7 +113,7 @@ export default function reporte_piezas_danadas_view_Screen() {
         const nextMonth = addMonths(new Date(), 1);
 
         setFecha_ini(formatDate(today));
-        setFecha_fin(formatDate(nextMonth));
+        setFecha_fin(formatDate(today));
         setEstatusList(Array.isArray(resEstatus.data) ? resEstatus.data : []);
         if (Array.isArray(resEstatus.data))
           setEstatus(resEstatus.data[0]);
@@ -176,17 +176,8 @@ export default function reporte_piezas_danadas_view_Screen() {
 
     //alert(JSON.stringify(resultados));
 
-    return resultados.map((item: any, index: number) => {
-      //alert(JSON.stringify(item));
-      const tituloGrupo = `<View><Text>${item.codigo}</Text><Text>${item.estatus_text}</Text><Text>${item.vendedor}</Text></View>`;
-
-      return (
-        /*<View>
-          <Text>{item.codigo}</Text>
-          <Text>{item.estatus_text}</Text>
-          <Text>{item.vendedor}</Text>
-        </View>*/
-
+    return resultados.map((item: any, index: number) => {            
+      return (        
         <_AccordionSection
           key={item.id_cirugia || index}
           scrollRef={scrollRef}
@@ -195,30 +186,36 @@ export default function reporte_piezas_danadas_view_Screen() {
           title={
             <View style={{ flex: 1, paddingRight: 5 }}>
               {/* Primer Renglón */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
                 <Text style={{
                   color: theme.text,
                   fontWeight: 'bold',
                   fontSize: 16
                 }}>
-                  {item.codigo}
+                  {item.codigo_cirugia}
                 </Text>
+                <Text style={{
+                  color: theme.text,                  
+                  fontSize: 14
+                }}>
+                  {item.codigo_set}
+                </Text>
+              </View>
+
+              {/* Segundo Renglón */}
+              <View style={{ marginTop: 2, flexDirection: 'row',justifyContent: 'space-between' }}>
                 <Text style={{
                   color: theme.accent,
                   fontSize: 12,
                   fontStyle: 'italic'
                 }}>
-                  {item.estatus_text}
+                  {item.codigo}
                 </Text>
-              </View>
-
-              {/* Segundo Renglón */}
-              <View style={{ marginTop: 2 }}>
                 <Text style={{
                   color: theme.textSub,
                   fontSize: 14
                 }}>
-                  {item.vendedor}
+                  {item.referencia}
                 </Text>
               </View>
             </View>
@@ -227,13 +224,27 @@ export default function reporte_piezas_danadas_view_Screen() {
           onPress={() => setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)}
           yoff={85 + (index * 80)}
         >
-          <_Show_Cirugia_Report
+          <_Show_Generic_Report
             titulo={'Detalle de la cirugia'}
             visible={true}
             item={item}
             onClose={() => setExpandedSection(null)}
-          />
+            style_content={{marginTop:150}}
+            items_fields={ [
+              {'label':'Cirugía','value':item.codigo_cirugia, 'tipo_linea':'multi_linea'},
+              {'label':'Activo Origen','value':item.codigo_set, 'tipo_linea':'multi_linea'},
+              {'label':'Codigo Registro','value':item.codigo, 'tipo_linea':'linea'},
+              {'label':'Referencia','value':item.referencia, 'tipo_linea':'linea'},            
+              {'label':'Lote','value':item.lote, 'tipo_linea':'linea'},
+              {'label':'Notas','value':item.comentarios, 'tipo_linea':'multi_linea'}              
+              
+            ]}
+          >
 
+          </_Show_Generic_Report>
+          <View>
+            <Text></Text>
+          </View>
         </_AccordionSection>
 
       );
@@ -290,29 +301,26 @@ export default function reporte_piezas_danadas_view_Screen() {
           "limite" : limite? limite : "-1"
         }
       ));*/
-      /*const response =
-        await ApiService.buscar_cirugia(
-          user.id_usuario,
-          (estatus ? estatus.estatus.toString() : '-1'),
-          (filtrar_fecha ? "1 " : "0"),
-          fecha_ini,
-          fecha_fin,
-          (vendedor ? vendedor.id_vendedor : '0'),
-          (tecnico ? tecnico.id_tecnico : '0'),
-          (subdistribuidor ? subdistribuidor.id_subdistribuidor : '0'),
-          (codigo_cirugia ? codigo_cirugia : ""),
-          (limite ? limite : "-1"),
-          orderBy ? orderBy.order : ''
-        );*/
-      /*
+      const response =
+        await ApiService.buscar_pieza_danada_registro_general(
+          (filtrar_fecha)? fecha_ini : '', 
+          (filtrar_fecha)? fecha_fin : '', 
+          codigo_registro, 
+          codigo_cirugia, 
+          activo,
+          referencia,
+          lote, 
+          (estatus? estatus.id_estatus:'0'), 
+          traspaso, 
+          orderBy?orderBy.order:'',
+           limite);
+      
       if (response.result === 'ok') {
         setSubmitting(false);
         //alert(JSON.stringify(response));
         const resultados_count = response.data_count;
-        setResultados_count(resultados_count);
         setResultados(response.data);
         if (resultados_count == 0) {
-          setSection_resultados_visible(false);
           //playErrorSound();
           setModal({
             visible: true,
@@ -324,18 +332,10 @@ export default function reporte_piezas_danadas_view_Screen() {
         }
         else {
           setExpandedSection(null);
-          setSection_resultados_visible(true);
           scrollRef.current?.scrollTo({ y: 10, animated: false });
-          //setExpandedSection('resultados');
-          //playSuccessSound();
-          // render respose.data
-
-          //alert(JSON.stringify(response));
         }
       }
       else {
-        setSection_resultados_visible(false);
-        //playErrorSound();
         setModal({
           visible: true,
           titulo: t('common.error'),
@@ -343,7 +343,7 @@ export default function reporte_piezas_danadas_view_Screen() {
           icon: 'alert-circle-outline',
           colorIcon: '#f56565'
         });
-      }*/
+      }
     } catch (e) {
       alert((e instanceof Error) ? e.message : String(e));
       setModal({

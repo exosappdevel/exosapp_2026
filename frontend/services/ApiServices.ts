@@ -300,7 +300,12 @@ class ApiService {
   static async piezas_danadas_reporte_estatus(show_todos:string){
     return await this.request("piezas_danadas_reporte_estatus", {show_todos});
   }
-  // En ApiService.ts
+
+  static async buscar_pieza_danada_registro_general( fecha_inicio: string, fecha_fin:string, codigo_registro:string, codigo_cirugia:string, codigo_activo:string, referencia:string, lote:string, pieza_estatus:string, codigo_traspaso:string, orderby:string, limite:string){
+    return await this.request("buscar_pieza_danada_registro_general", {fecha_inicio,fecha_fin,codigo_registro,codigo_cirugia,codigo_activo,referencia,lote,pieza_estatus,codigo_traspaso, orderby, limite});
+
+  }
+  
 }
 
 export default ApiService;

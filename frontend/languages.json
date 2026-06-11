@@ -189,7 +189,11 @@
       "search_success":"Reportes encontradao",
       "search_success_singular":"Reporte encontrado"  ,
       "estatus_title":"Estatus",
-      "estatus_text_All" : "Todas"
+      "estatus_text_All" : "Todas",
+      "codigo_cirugia_desc" : "Codigo cirugía más reciente",
+      "codigo_cirugia_asc" : "Codigo cirugía más antiguo",
+      "codigo_desc" : "Codigo registro más reciente",
+      "codigo_asc" : "Codigo registro más antiguo"
     }
   },
   "en": {

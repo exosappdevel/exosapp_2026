@@ -2,7 +2,8 @@ import { Children, Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
     View, ScrollView, Text, StyleSheet, TouchableOpacity, FlatList,
     Modal, Platform, Alert, Switch, TouchableWithoutFeedback,
-    Keyboard, Pressable, ImageBackground
+    Keyboard, Pressable, ImageBackground,
+    ViewStyle
 } from "react-native";
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -54,7 +55,7 @@ export const _DetalleMultiLinea = ({ label, value, label_style, value_style }: {
     return (
         <View style={styles.rowDetalleMulti}>
             <Text style={[styles.labelDetalleMulti, { color: theme.textSub }, label_style]}>{label}:</Text>
-            <View style={{ width: '50%', marginTop: 4 }}>
+            <View style={{ width: '100%', marginTop: 4 }}>
                 {lineas.length > 0 ? (
                     lineas.map((linea, index) => (
                         <Text key={index} style={[styles.valueDetalleMulti, { color: theme.accent }, value_style]}>
@@ -126,6 +127,63 @@ export const _Show_Cirugia_Report = ({ visible, titulo, onClose, item }: _Show_C
                                     value={`${item.last_update || ''} / ${item.last_updater || ''}`}
                                 />
                             </_Report>
+                        ) : ""}
+                        <TouchableOpacity
+                            style={[styles.btnCerrar, { backgroundColor: theme.accent }]}
+                            onPress={onClose}
+                        >
+                            <Text style={styles.btnText}>{t('common.close')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </ScrollView>
+        </Modal>
+    );
+};
+
+export interface _Show_Generic_ReportProps {
+    visible: boolean;
+    titulo: string;
+    icon?: string;
+    colorIcon?: string;
+    onClose: () => void;
+    item?: any;
+    items_fields?: any
+    children?: React.ReactNode
+    style_content?: ViewStyle
+}
+export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fields, children, style_content }: _Show_Generic_ReportProps) => {
+    const { theme, t } = useApp();
+    return (
+        <Modal visible={visible} animationType="fade" transparent={true} >
+
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+                <View style={[styles.modalOverlay,style_content]}>
+                    <View style={[
+                        styles.modalContent,
+                        { backgroundColor: theme.card, borderColor: theme.border }
+                    ]}>
+                        <Text style={[styles.titulo, { fontWeight: 'bold', textAlign: 'center' }]}>{titulo}</Text>
+                        {item ? (
+                            <_Report>
+                                {items_fields?.map((field: any, index: number) => {
+                                    return field.tipo_linea === "linea" ?(                                     
+                                        <_DetalleLinea
+                                            key={index} 
+                                            label={field.label}
+                                            value={field.value}
+                                        />
+                                    ):(                                        
+                                        <_DetalleMultiLinea
+                                            key={index} 
+                                            label={field.label}
+                                            value={field.value}
+                                        />
+                                    );                                    
+                                })}        
+                                {children}                         
+                            </_Report>
+
                         ) : ""}
                         <TouchableOpacity
                             style={[styles.btnCerrar, { backgroundColor: theme.accent }]}
