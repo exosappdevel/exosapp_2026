@@ -5,11 +5,11 @@ import {
   ScrollView, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useApp } from '../context/AppContext';
-import { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _MenuGrid, _MenuSection, _Background, _MenuLauncher } from '../components/elidev_components';
-import { iMenuItem, AddMenuItem } from '@/context/AppmenuItems';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useApp } from '../../context/AppContext';
+import { Soon_Modal } from '../../components/CustomModal';
+import { _Header, _Footer, _MenuGrid, _MenuSection, _Background, _MenuLauncher } from '../../components/elidev_components';
+import { Tabs_Allowed } from '@/context/AppmenuItems';
 import { AppmenuItems } from '@/context/AppmenuItems';
 import { PanResponder, Dimensions } from 'react-native';
 
@@ -17,6 +17,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { user, theme, t, isLoggedIn, appConfig } = useApp();
   const pageConfig = {
     name: t("app.name"),
@@ -26,62 +27,13 @@ export default function HomeScreen() {
     show_menu: true
   };
   const [show_soon, setShow_soon] = useState(false);
-  const menuItems: iMenuItem[] = [];
-  const menuItems_Almacen: iMenuItem[] = [];
-  const menuItems_Cirugias: iMenuItem[] = [];
-  const menuItems_Logistica: iMenuItem[] = [];
-  const menuItems_Favorites: iMenuItem[] = [];
-  const menuItems_Calidad: iMenuItem[] = [];
-
-  const Show_soonModal = () => {
-    setShow_soon(true);
-  }
-  // Función para verificar si un item está permitido en un menú específico
-  const isAllowed = (menuName: string, itemName: string): boolean => {
-    // Buscamos el menú en el arreglo de items del usuario
-    const userMenu = user.menu_items?.find(m => m.menu === menuName) || false;
-    if (!userMenu) return false;
-
-    // Los items vienen separados por ; según tu lógica de login    
-    const allowedItems = userMenu.items.split(';');
-    return allowedItems.includes(itemName);
-  };
-
-  // --- Almacen ---
-  if (isAllowed('menu_almacen', 'pickeo')) AddMenuItem(menuItems_Almacen, "screens.pickeo");
-  if (isAllowed('menu_almacen', 'inventario')) AddMenuItem(menuItems_Almacen, "screens.inventario");
-  if (isAllowed('menu_almacen', 'recepcion')) AddMenuItem(menuItems_Almacen, "screens.recepcion");
-  if (isAllowed('menu_almacen', 'entradas')) AddMenuItem(menuItems_Almacen, "screens.entradas");
-
-  // --- Cirugias ---
-  if (isAllowed('menu_cirugias', 'cirugias_programar')) AddMenuItem(menuItems_Cirugias, "screens.cirugias_programar");
-  if (isAllowed('menu_cirugias', 'cirugias_buscar')) AddMenuItem(menuItems_Cirugias, "screens.cirugias_buscar");
-  if (isAllowed('menu_cirugias', 'cirugias_vista_diario')) AddMenuItem(menuItems_Cirugias, "screens.cirugias_vista_diario");
-
-  // --- Logistica ---
-  if (isAllowed('menu_logistica', 'activos')) AddMenuItem(menuItems_Logistica, "screens.activos");
-  if (isAllowed('menu_logistica', 'carpetas')) AddMenuItem(menuItems_Logistica, "screens.carpetas");
-  if (isAllowed('menu_logistica', 'socios')) AddMenuItem(menuItems_Logistica, "screens.socios");
-
-  if (isAllowed('menu_calidad', 'reporte_piezas_danadas_view')) AddMenuItem(menuItems_Calidad, "screens.reporte_piezas_danadas_view");
-
-  // 1. Estado para la sección activa (por defecto Favoritos)
-  const [activeSection, setActiveSection] = useState('favorites');
-
-  // 2. Definición de las secciones para el lanzador
-  const favoriteItems = AppmenuItems.filter(item => user.menu_favorites?.includes(item.id));
   
-  // Solo agregamos a la visualización las secciones que terminaron con al menos un item
-  const allSections = [
-    { id: 'favorites', title: t('home.menu_favorites'), icon: 'star', data: favoriteItems },
-    { id: 'almacen', title: t('home.menu_almacen'), icon: 'warehouse', data: menuItems_Almacen },
-    { id: 'cirugias', title: t('home.menu_cirugias'), icon: 'medical-bag', data: menuItems_Cirugias },
-    { id: 'logistica', title: t('home.menu_logistica'), icon: 'truck-delivery', data: menuItems_Logistica },
-    { id: 'calidad', title: t('home.menu_calidad'), icon: 'shield-star-outline', data: menuItems_Calidad },
-  ].filter(section => (section.data.length > 0) || (section.id=='favorites')); // <-- FILTRO CRUCIAL
+  const allSections = Tabs_Allowed();
 
-  // 4. Obtener la sección que se debe renderizar en el "Widget"
+  const tab_name = params.tab_name as string;
+  const [activeSection, setActiveSection] = useState(tab_name);
   const currentSection = allSections.find(s => s.id === activeSection) || allSections[0];
+  
   // Lógica del PanResponder para detectar Swipe
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, gestureState) => {
@@ -129,7 +81,7 @@ export default function HomeScreen() {
           </ScrollView>
 
 
-          {/* AREA DE ICONOS (El lanzador tipo iPhone) */}
+          {/* AREA DE ICONOS (El lanzador tipo iPhone) 
           <View style={styles.fixedLauncherContainer}>
             <_MenuLauncher
               sections={allSections}
@@ -138,6 +90,7 @@ export default function HomeScreen() {
             />
 
           </View>
+          */}
 
           <_Footer />
         </View>
