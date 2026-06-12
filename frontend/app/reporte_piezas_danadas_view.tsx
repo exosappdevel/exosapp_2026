@@ -225,7 +225,7 @@ export default function reporte_piezas_danadas_view_Screen() {
           yoff={85 + (index * 80)}
         >
           <_Show_Generic_Report
-            titulo={'Detalle de la cirugia'}
+            titulo={'Detalle del Reporte'}
             visible={true}
             item={item}
             onClose={() => setExpandedSection(null)}

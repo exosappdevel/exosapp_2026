@@ -81,7 +81,7 @@ export const _HomeTemplate=({ tab_name }: HomeTemplateProps) => {
           </ScrollView>
 
 
-          {/* AREA DE ICONOS (El lanzador tipo iPhone) 
+          {/* AREA DE ICONOS (El lanzador tipo iPhone) */}
           <View style={styles.fixedLauncherContainer}>
             <_MenuLauncher
               sections={allSections}
@@ -89,8 +89,7 @@ export const _HomeTemplate=({ tab_name }: HomeTemplateProps) => {
               onSelect={(id) => setActiveSection(id)}
             />
 
-          </View>
-          */}
+          </View>          
 
           <_Footer />
         </View>
