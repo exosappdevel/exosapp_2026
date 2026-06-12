@@ -10,5 +10,6 @@ export * from './_MenuSection';
 export * from './_TouchableWithoutFeedback';
 export * from './_ZoomableView';
 export * from './_Report';
+export * from './_HomeTemplate';
 
 

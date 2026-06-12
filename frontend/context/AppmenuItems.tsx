@@ -1,6 +1,16 @@
-import React, { createContext, useState, useContext, useEffect, SetStateAction, Dispatch } from 'react';
+import React, { useState} from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView, Platform
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import translations from '../languages.json'
 import { useApp } from '../context/AppContext';
+import { PanResponder } from 'react-native';
+
+import { _Header, _Footer, _MenuGrid, _MenuSection, _Background, _MenuLauncher } from '../components/elidev_components';
+import { Soon_Modal } from '../components/CustomModal';
 
 export interface iMenuItem {
   id: string;
@@ -70,10 +80,12 @@ export const Tabs_Allowed =() => {
     return allowedItems.includes(itemName);
   };
 
-  const Add_Menu_Items = (menu: any, menu_name: string) => {
+  const Add_Menu_Items = (menu:any, menu_name: string):any => {    
+    if (Array.isArray(menu))
+      menu.length = 0;
     // --- Almacen ---
     if (menu_name == 'menu_almacen') {
-      if (isAllowed('menu_almacen', 'pickeo')) AddMenuItem(menu, "screens.pickeo");
+      if (isAllowed('menu_almacen', 'pickeo')) AddMenuItem(menu,"screens.pickeo");
       if (isAllowed('menu_almacen', 'inventario')) AddMenuItem(menu, "screens.inventario");
       if (isAllowed('menu_almacen', 'recepcion')) AddMenuItem(menu, "screens.recepcion");
       if (isAllowed('menu_almacen', 'entradas')) AddMenuItem(menu, "screens.entradas");
@@ -97,23 +109,33 @@ export const Tabs_Allowed =() => {
     // --- Calidad
     if (menu_name == 'menu_calidad') {
       if (isAllowed('menu_calidad', 'reporte_piezas_danadas_view')) AddMenuItem(menu, "screens.reporte_piezas_danadas_view");
-    }
+    }    
+    if (Array.isArray(menu))
+      return menu.length;
+    else
+      return 0;
   };
   
-    
-  AllTabs.map((tab: any, index: number) => {   
-    if (tab.id == 'favorites'){
-      tab.title =  t('home.menu_' + tab.id);
-      tab.data = AppmenuItems.filter(item => user.menu_favorites?.includes(item.id)).slice();
-    }
-    else{
-      const menu_name = 'menu_' + tab.id;
-      tab.title =  t('home.menu_' + tab.id);
-      Add_Menu_Items(tab.data, menu_name);
-    }    
-  });
+  if (Array.isArray(AllTabs)){
+    AllTabs.map((tab: any, index: number) => {   
+      if (tab.id == 'favorites'){
+        tab.title =  t('home.menu_' + tab.id);
+        tab.data = AppmenuItems.filter(item => user.menu_favorites?.includes(item.id)).slice();
+      }
+      else{
+        const menu_name = 'menu_' + tab.id;
+        tab.title =  t('home.menu_' + tab.id);
+        const n = Add_Menu_Items(tab.data, menu_name);      
+        console.log("menu " + menu_name + ": items count= " + String(n))      
+      }    
+    });
 
-  
-  return AllTabs.filter(section => (section.data.length > 0) || (section.id=='favorites'));  
+    
+    return AllTabs.filter(section => (section.data.length > 0) || (section.id=='favorites'));  
+  }
+  else
+    return [];
   
 }
+
+
