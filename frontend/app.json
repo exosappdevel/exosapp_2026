@@ -2,7 +2,7 @@
   "expo": {
     "name": "ExosApp",
     "slug": "exosapp",
-    "version": "1.0.1.20260611",
+    "version": "1.0.1.20260609",
     "orientation": "portrait",
     "icon": "./assets/images/icon-exorta.png",
     "scheme": "exosapp",
@@ -91,9 +91,7 @@
       "expo-video",
       "expo-font",
       "@react-native-community/datetimepicker",
-      "expo-image",
-      "expo-sharing",
-      "expo-status-bar"
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
