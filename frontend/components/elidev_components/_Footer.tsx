@@ -24,7 +24,7 @@ export const _Footer = ({
     const { theme, user } = useApp();
 
     // 1. Valor animado para la altura
-    const baseHeight = Show_Almacen ? 55 : 75; // Si es false, sube a 100 para dar espacio a los botones
+    const baseHeight = Show_Almacen ? 55 : 90; // Si es false, sube a 100 para dar espacio a los botones
     const maxHeight = Show_Almacen ? 90 : 110; // El límite de estiramiento también aumenta
     const footerHeight = useState(new Animated.Value(baseHeight))[0];
 
@@ -89,21 +89,21 @@ export const _Footer = ({
             style={[
                 styles.footerContainer,
                 {
-                    backgroundColor: hexToRGBA(theme.card, 0.5),
-                    borderTopColor: hexToRGBA(theme.border, 0.3),
+                    //backgroundColor: hexToRGBA(theme.card, 0),
+                    //borderTopColor: hexToRGBA(theme.border, 0.8),
                     height: footerHeight, // 3. Vincular altura animada
                     paddingBottom: Platform.OS === 'ios' ? 15 : 0 // Mejorar espacio táctil                    
                 }
             ]}
         >
             <TouchableOpacity
-                style={styles.footerTab}
+                style={[styles.footerTab,{backgroundColor:hexToRGBA(theme.iconColor_shadow,0.3) /* borderTopColor:hexToRGBA(theme.border,0.5)*/}]}
                 activeOpacity={0.7}
 
             >
                 <View style={[
                     styles.homeIndicator,
-                    { backgroundColor: theme.text, opacity: 0.3 }
+                    { backgroundColor: theme.iconTextColor, opacity: 0.8 }
                 ]} />
 
                 {Show_Almacen ? (
@@ -111,9 +111,9 @@ export const _Footer = ({
                         <MaterialCommunityIcons
                             name="warehouse"
                             size={22}
-                            color={hexToRGBA(theme.text, 0.8)}
+                            color={hexToRGBA(theme.iconTextColor, 0.8)}
                         />
-                        <Text style={[styles.footerText, { color: theme.text }]}>
+                        <Text style={[styles.footerText, { color: theme.iconTextColor }]}>
                             {user?.almacen_nombre || "Almacén"}
                         </Text>
                     </View>
@@ -128,17 +128,12 @@ export const _Footer = ({
 };
 
 const styles = StyleSheet.create({
-    footerContainer: {
-        borderTopWidth: 1,
+    footerContainer: {        
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        overflow: 'hidden',
-        ...({
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-        } as any),
+        overflow: 'hidden',    
     },
     footerTab: {
         alignItems: 'center',
@@ -147,7 +142,7 @@ const styles = StyleSheet.create({
         paddingTop: 5,
     },
     homeIndicator: {
-        width: 60,
+        width: '40%',
         height: 6,
         borderRadius: 2,
         marginTop: 2,

@@ -150,7 +150,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     "exodos": "https://exodos.exos.software/webservice"
   };
   
-  const backend_server = "local";
+  const backend_server = "exodos";
   
   const [appConfig] = useState<AppConfig>({
     passtrough_mode: false,

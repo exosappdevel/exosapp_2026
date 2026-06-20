@@ -22,7 +22,7 @@ import { _Background, _Footer, hexToRGBA, playSuccessSound, playErrorSound } fro
 
 interface Producto {
   id: string;
-  id_fragmento : string;
+  id_fragmento: string;
   descripcion: string;
   referencia: string;
   marca: string;
@@ -157,7 +157,7 @@ export default function PickeoScreen() {
             await AsyncStorage.removeItem(STORAGE_KEY);
             inicializarDatos(false);
           }
-          else{
+          else {
             playErrorSound();
           }
         } else {
@@ -191,9 +191,10 @@ export default function PickeoScreen() {
     });
 
   return (
-    <SafeAreaView style={[styles.container]}>
-      <_Background id_almacen={user?.id_almacen}>
-        
+    <_Background id_almacen={user?.id_almacen}>
+      <SafeAreaView style={[styles.container]}>
+
+
         <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.5) }]}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
@@ -215,9 +216,9 @@ export default function PickeoScreen() {
               />
             </TouchableOpacity>
           </View>
-          
+
         </View>
-        
+
 
         {loading ? (
           <ActivityIndicator size="large" color={theme.accent} style={{ flex: 1 }} />
@@ -270,8 +271,8 @@ export default function PickeoScreen() {
           />
         )}
 
-        
-        
+
+
 
         <Modal
           visible={modalCant.visible}
@@ -344,17 +345,19 @@ export default function PickeoScreen() {
             )}
           </TouchableOpacity>
         </_Footer>
-        
 
-      </_Background>
-    </SafeAreaView>
+
+
+      </SafeAreaView>
+    </_Background>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1,
+  container: {
+    flex: 1,
     marginBottom: Platform.OS === 'ios' ? -15 : -10
-   },
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -391,9 +394,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     ...({
-            backdropFilter: 'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)',
-        } as any),
+      backdropFilter: 'blur(5px)',
+      WebkitBackdropFilter: 'blur(5px)',
+    } as any),
   },
   dot: { width: 12, height: 12, borderRadius: 6, marginRight: 12 },
   itemInfo: { flex: 1 },
@@ -427,7 +430,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     borderRadius: 12,
     alignItems: "center",
-    width:160
+    width: 160
   },
   footerBtnText: {
     color: "white", fontWeight: "bold", fontSize: 13,

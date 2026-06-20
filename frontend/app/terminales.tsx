@@ -93,8 +93,9 @@ export default function TerminalesScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      <_Background id_almacen={user?.id_almacen}>
+    <_Background id_almacen={user?.id_almacen}>
+      <SafeAreaView style={[styles.container]}>
+
         <_Header page_info={pageConfig} />
 
         {/* Content */}
@@ -117,8 +118,9 @@ export default function TerminalesScreen() {
           />
         )}
         <_Footer />
-      </_Background>
-    </SafeAreaView>
+
+      </SafeAreaView>
+    </_Background>
   );
 }
 

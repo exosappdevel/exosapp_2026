@@ -131,13 +131,13 @@ export default function Cirugia_BuscarScreen() {
   const [showVendedorPicker, setShowVendedorPicker] = useState(false);
   const [showTecnicoPicker, setShowTecnicoPicker] = useState(false);
   const [showSubdistribuidorPicker, setShowSubdistribuidorPicker] = useState(false);
-  
+
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState<string | null>(null);
   const scrollRef = React.useRef<ScrollView>(null);
 
   const [section_resultados_visible, setSection_resultados_visible] = useState(false);
-  const [resultados, setResultados] = useState([]);  
+  const [resultados, setResultados] = useState([]);
   const [resultados_count, setResultados_count] = useState(0);
 
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
@@ -518,9 +518,8 @@ export default function Cirugia_BuscarScreen() {
 
   // 2. CUANDO TERMINA LA CARGA (Contenedor Principal)
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      {/* Header */}
-      <_Background id_almacen={user?.id_almacen}>
+    <_Background id_almacen={user?.id_almacen}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
         <_Header page_info={pageConfig} />
 
         <KeyboardAvoidingView
@@ -531,7 +530,7 @@ export default function Cirugia_BuscarScreen() {
 
           <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
-            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom:50 }]}>
+            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50 }]}>
 
 
               {/* SECCIÓN 1: parametros */}
@@ -948,8 +947,8 @@ export default function Cirugia_BuscarScreen() {
             )}
           </TouchableOpacity>
         </_Footer>
-      </_Background>
-    </SafeAreaView>
+      </SafeAreaView>
+    </_Background>
   );
 }
 

@@ -51,21 +51,22 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
         }
     };
     return (
-        <View style={[styles.header, { backgroundColor: hexToRGBA(theme.card, 0.5), borderBottomColor: hexToRGBA(theme.border, 0.5) }]}>
+        <View style={[styles.header]}>
             {/* Lado Izquierdo: Título de la página o Botón Atrás */}
             <View style={styles.headerLeft}>
                 {page_info.previous ? (
                     <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "" ? router.back() : router.replace({ pathname: page_info?.previous })}>
-                        <MaterialCommunityIcons name="arrow-left" size={20} color={theme.text} />
+                        <MaterialCommunityIcons name="arrow-left" size={20} color={theme.iconTextColor} />
                     </TouchableOpacity>
                 ) : null}
 
                 <MaterialCommunityIcons name={page_info?.icon} size={20} color={theme.accent} style={[{
-                    paddingLeft: 5, paddingRight: 5, textShadowColor: 'rgba(255,255,255, 0.2)',
+                    paddingLeft: 5, paddingRight: 5, 
+                    /*textShadowColor: 'rgba(255,255,255, 0.2)',
                     textShadowOffset: { width: 1, height: 1 },
-                    textShadowRadius: 2,
+                    textShadowRadius: 2,*/
                 }]} />
-                <Text style={[styles.pageTitle, { color: theme.text }]}>{page_info.name}</Text>
+                <Text style={[styles.pageTitle, { color: theme.iconTextColor }]}>{page_info.name}</Text>
             </View>
 
             {/* Lado Derecho: Menú de Usuario */}
@@ -73,14 +74,14 @@ export const _Header = ({ page_info }: { page_info: iPage }) => {
                 <TouchableOpacity onPress={() => setShowUserMenu(true)}>
                     <View style={styles.userInfo}>
                         <MaterialCommunityIcons name="account-circle" size={20} color={theme.accent} style={{
-                            textShadowColor: 'rgba(255, 255, 255, 0.3)',
+                            /*textShadowColor: 'rgba(255, 255, 255, 0.3)',
                             textShadowOffset: { width: 1, height: 1 },
-                            textShadowRadius: 2,
+                            textShadowRadius: 2,*/
                         }} />
-                        <Text style={[styles.userName, { color: theme.text }]} numberOfLines={1}>
+                        <Text style={[styles.userName, { color: theme.iconTextColor }]} numberOfLines={1}>
                             {user?.alias_usuario || 'Usuario'}
                         </Text>
-                        <MaterialCommunityIcons name="menu" size={20} color={theme.text} />
+                        <MaterialCommunityIcons name="menu" size={20} color={theme.iconTextColor} />
                     </View>
                 </TouchableOpacity>
             )}
@@ -142,15 +143,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 15,
-        paddingTop: Platform.OS === 'ios' ? 10 : 5, // Ajustado para Notch de iOS
+        paddingHorizontal: 5,
+        paddingTop: Platform.OS === 'ios' ? 5 : 5, // Ajustado para Notch de iOS
         paddingBottom: 3,
-        borderBottomWidth: 1,
+        /*borderBottomWidth: 1,
         elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 3,
+        shadowRadius: 3,*/
     },
     headerLeft: {
         flexDirection: 'row',
@@ -222,9 +223,9 @@ const styles = StyleSheet.create({
     pageTitle: {
         fontSize: 12,
         fontWeight: 'bold',
-        textShadowColor: 'rgba(255, 255, 255, 0.3)',
+       /* textShadowColor: 'rgba(255, 255, 255, 0.3)',
         textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
+        textShadowRadius: 2,*/
     },
     userInfo: {
         flexDirection: 'row',
@@ -236,9 +237,9 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginHorizontal: 8,
         maxWidth: 120, // Evita que nombres largos rompan el diseño
-        textShadowColor: 'rgba(255, 255, 255, 0.3)',
+        /*textShadowColor: 'rgba(255, 255, 255, 0.3)',
         textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
+        textShadowRadius: 2,*/
     },
      backButton: {
         marginRight: 10,

@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,17 +14,17 @@ import { Soon_Modal } from '../CustomModal';
 import { Tabs_Allowed } from '@/context/AppmenuItems';
 
 interface HomeTemplateProps {
-  tab_name:string;
+  tab_name: string;
 }
 
-export const _HomeTemplate=({ tab_name }: HomeTemplateProps) => {
-  const { user, t} = useApp();
-    
+export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
+  const { user, t } = useApp();
+
   const [activeSection, setActiveSection] = useState(tab_name);
 
   const allSections = Tabs_Allowed();
   const currentSection = allSections.find(s => s.id === activeSection) || allSections[0];
-  
+
   const pageConfig = {
     name: currentSection.title,
     icon: currentSection.icon,
@@ -33,7 +33,7 @@ export const _HomeTemplate=({ tab_name }: HomeTemplateProps) => {
     show_menu: true
   };
   const [show_soon, setShow_soon] = useState(false);
-  
+
   // Lógica del PanResponder para detectar Swipe
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, gestureState) => {
@@ -58,13 +58,13 @@ export const _HomeTemplate=({ tab_name }: HomeTemplateProps) => {
   });
 
   return (
-    <SafeAreaView style={[styles.container]}>
-      <_Background id_almacen={user?.id_almacen}>
+    <_Background id_almacen={user?.id_almacen}>
+      <SafeAreaView style={[styles.container]}>
 
         <_Header page_info={pageConfig} />
         {/* Envolvemos el ScrollView con el PanResponder */}
         <View style={{ flex: 1 }} {...panResponder.panHandlers}>
-          <ScrollView style={{ backgroundColor: 'transparent' }} scrollEnabled={true}>
+          <ScrollView style={{ borderWidth:0 }} scrollEnabled={true}>
 
             {/* AREA DE WIDGET (La sección expandida) */}
             {/* ÁREA DE WIDGET (Sección expandida arriba) */}
@@ -89,9 +89,10 @@ export const _HomeTemplate=({ tab_name }: HomeTemplateProps) => {
               onSelect={(id) => setActiveSection(id)}
             />
 
-          </View>          
+          </View>
 
-          <_Footer />
+          
+          
         </View>
 
 
@@ -100,9 +101,10 @@ export const _HomeTemplate=({ tab_name }: HomeTemplateProps) => {
           visible={show_soon}
           setVisible={setShow_soon}
         ></Soon_Modal>
-      </_Background>
-    </SafeAreaView>
-  );  
+      </SafeAreaView>
+      <_Footer/>
+    </_Background>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -112,10 +114,10 @@ const styles = StyleSheet.create({
   },
   fixedLauncherContainer: {
     paddingBottom: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    //borderTopWidth: 1,
+    //borderTopColor: 'rgba(255,255,255,0.1)',
     // Opcional: añadir un ligero desenfoque de fondo al dock
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    //backgroundColor: 'rgba(0,0,0,0.1)',
   },
   launcherHeader: {
     paddingHorizontal: 20,

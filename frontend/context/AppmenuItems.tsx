@@ -126,7 +126,7 @@ export const Tabs_Allowed =() => {
         const menu_name = 'menu_' + tab.id;
         tab.title =  t('home.menu_' + tab.id);
         const n = Add_Menu_Items(tab.data, menu_name);      
-        console.log("menu " + menu_name + ": items count= " + String(n))      
+        //console.log("menu " + menu_name + ": items count= " + String(n))      
       }    
     });
 

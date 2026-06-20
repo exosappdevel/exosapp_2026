@@ -104,12 +104,12 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      <_Background id_almacen={user?.id_almacen}>
+    <_Background id_almacen={user?.id_almacen}>
+      <SafeAreaView style={[styles.container, { }]}>
 
 
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: hexToRGBA(theme.card, 0.8), borderBottomColor: theme.border }]}>
+        <View style={[styles.header, { backgroundColor: hexToRGBA(theme.card, 0.3), borderBottomColor: theme.border }]}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
           </TouchableOpacity>
@@ -127,13 +127,13 @@ export default function ProfileScreen() {
 
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.text, fontSize:12, fontWeight:'normal', paddingLeft:30 }]}>{user.tipo_usuario}</Text>              
+              <Text style={[styles.userName, { color: theme.text, fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{user.tipo_usuario}</Text>
             </View>
-            <View style={styles.userInfo}>              
-              <Text style={[styles.userName, { color: theme.text+"90", fontSize:12, fontWeight:'normal', paddingLeft:30, paddingTop:10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}</Text>  
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}</Text>
             </View>
-            
-          </View>            
+
+          </View>
 
           {/* Almacen Selection */}
           <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
@@ -276,8 +276,9 @@ export default function ProfileScreen() {
           colorIcon={modal.colorIcon}
           onClose={() => setModal({ ...modal, visible: false })}
         />
-      </_Background>
-    </SafeAreaView>
+      </SafeAreaView>
+    </_Background>
+
   );
 }
 
@@ -290,8 +291,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
+    paddingVertical: 5,
+    
   },
   headerTitle: {
     fontSize: 18,

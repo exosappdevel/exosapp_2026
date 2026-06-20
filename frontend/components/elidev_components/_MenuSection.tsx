@@ -80,18 +80,18 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }
             <View style={[styles.listIconContainer, { backgroundColor: theme.iconColor + '80' }]}>
                 <MaterialCommunityIcons name={item.icon as any} size={24} color={theme.iconTextColor}
                     style={{
-                        textShadowColor: hexToRGBA(theme.iconColor_shadow ,0.5),
+                        /*textShadowColor: hexToRGBA(theme.iconColor_shadow ,0.5),
                         textShadowOffset: { width: 1, height: 3 },
-                        textShadowRadius: 4
+                        textShadowRadius: 4*/
                     }}
                 />
             </View>
 
             <View style={styles.listTextContainer}>
                 <Text style={[styles.listTitle, { color: theme.iconTextColor, 
-                            textShadowColor: hexToRGBA(theme.iconColor_shadow,0.5),
+                           /* textShadowColor: hexToRGBA(theme.iconColor_shadow,0.5),
                             textShadowOffset: { width: 1, height: 3 },
-                            textShadowRadius: 4
+                            textShadowRadius: 4*/
                  }]}>
                     {t(item.titleKey)}
                 </Text>
@@ -101,9 +101,9 @@ const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }
                     // Icono para ELIMINAR (Estrella rellena)
                     <TouchableOpacity onPress={removeFavorite} style={{ padding: 10 }}>
                         <MaterialCommunityIcons name="star" size={22} color={theme.iconColor} style={{
-                            textShadowColor: hexToRGBA(theme.iconColor_shadow,0.5),
+                            /*textShadowColor: hexToRGBA(theme.iconColor_shadow,0.5),
                             textShadowOffset: { width: 1, height: 3 },
-                            textShadowRadius: 4
+                            textShadowRadius: 4*/
                         }} />
                     </TouchableOpacity>
                 ) : (
@@ -138,7 +138,7 @@ export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon 
 
     return (
         <View style={[styles.iconGroup_Container,{
-                backgroundColor: hexToRGBA(theme.card,0.5),
+                backgroundColor: hexToRGBA(theme.card,0.4),
                 borderColor: hexToRGBA(theme.text,0.15),
 
         }]}>
@@ -149,14 +149,14 @@ export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon 
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <MaterialCommunityIcons name={icon} size={22} color={theme.iconTextColor} 
                             style={{ 
-                                textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
+                                /*textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
                                 textShadowOffset: { width: 1, height: 3 },
-                                textShadowRadius: 10,
+                                textShadowRadius: 10,*/
                             }} />
                     <Text style={[styles.iconGroup_Title, { color: theme.iconTextColor, marginLeft: 10,
-                        textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
+                        /*textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
                                 textShadowOffset: { width: 1, height: 3 },
-                                textShadowRadius: 10,
+                                textShadowRadius: 10,*/
                      }]}>{title}</Text>
                 </View>
                 {/* 
@@ -244,10 +244,10 @@ const styles = StyleSheet.create({
 
         // 2. Sombras
         elevation: 0,
-        shadowColor: '#000',
+        /*shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowRadius: 8,*/
         overflow: 'hidden',
 
         // 3. Hack para Web sin errores de TypeScript
@@ -266,9 +266,9 @@ const styles = StyleSheet.create({
     iconGroup_Title: {
         fontSize: 18,
         fontWeight: 'bold',
-        textShadowColor: 'rgba(0, 0, 0, 0.75)', // Sombra negra con 75% opacidad
+       /* textShadowColor: 'rgba(0, 0, 0, 0.75)', // Sombra negra con 75% opacidad
         textShadowOffset: { width: 0, height: 1 }, // Desplazamiento mínimo hacia abajo
-        textShadowRadius: 3, // Difuminado de la sombra
+        textShadowRadius: 3, // Difuminado de la sombra*/
     },
     itemsWrapper: {
         paddingTop: 5,

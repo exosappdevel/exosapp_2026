@@ -4,7 +4,7 @@ import {
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
-import {hexToRGBA} from './_Functions'
+import { hexToRGBA } from './_Functions'
 
 interface MenuLauncherProps {
     sections: { title: string; icon: string; id: string }[];
@@ -34,38 +34,37 @@ export const _MenuLauncher = ({ sections, activeId, onSelect }: MenuLauncherProp
                         style={styles.launcherItem}
                         onPress={() => onSelect(section.id)}
                     >
-                        <View style={[
-                            styles.launcherIconBox,
-                            {
-                                backgroundColor: baseColor,
-                                borderColor: borderColor
-                            },
-                            isActive && {
-                                backgroundColor: activeColor,
-                                borderWidth: 2,
-                                borderColor: theme.accent // Borde sólido del color de acento
+                        
+                            <View style={[
+                                styles.launcherIconBox,
+                                {
+                                    backgroundColor: baseColor,
+                                    borderColor: borderColor
+                                },
+                                isActive && {
+                                    backgroundColor: activeColor,
+                                    borderWidth: 2,
+                                    borderColor: theme.accent // Borde sólido del color de acento
 
-                            }
-                        ]}>
-                            <MaterialCommunityIcons
-                                name={section.icon as any}
-                                size={32}
-                                // El icono cambia según el tema o puedes dejarlo fijo
-                                color={isActive ? theme.iconTextColor : theme.iconTextColor}
-                                style={{ 
-                                textShadowColor: iconTextColor_shadow,
-                                textShadowOffset: { width: 1, height: 3 },
-                                textShadowRadius: 10,
-                            }} 
-                            />
-                        </View>
-                        <Text style={[styles.launcherText, { color:theme.iconColor_shadow,
-                                textShadowColor: textColor,
-                                textShadowOffset: { width: 1, height: 1 },
-                                textShadowRadius: 5,
-                         }]}>
-                            {section.title}
-                        </Text>
+                                }
+                            ]}>
+                                <MaterialCommunityIcons
+                                    name={section.icon as any}
+                                    size={32}
+                                    // El icono cambia según el tema o puedes dejarlo fijo
+                                    color={isActive ? theme.iconTextColor : theme.iconTextColor}
+                                    style={{
+                                        textShadowColor: iconTextColor_shadow,
+                                        textShadowOffset: { width: 1, height: 3 },
+                                        textShadowRadius: 10,
+                                    }}
+                                />
+                            </View>
+                            <Text style={[styles.launcherText, {
+                                color: theme.iconTextColor                                
+                            }]}>
+                                {section.title}
+                            </Text>                        
                     </TouchableOpacity>
                 );
             })}
@@ -73,20 +72,34 @@ export const _MenuLauncher = ({ sections, activeId, onSelect }: MenuLauncherProp
     );
 };
 
-const styles = StyleSheet.create({    
+const styles = StyleSheet.create({
     launcherContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'flex-start', // Alineado a la izquierda para que parezcan apps
         paddingHorizontal: '3%',
         marginTop: 15,
-        marginBottom:50
+        marginBottom: 50,               
     },
     launcherItem: {
         width: '25%', // 4 iconos por fila para que se vea más como iOS
         alignItems: 'center',
         marginBottom: 0,
-        paddingBottom:10
+        paddingBottom: 10
+    },
+    launcherBox: {
+        width: 80,
+        height:95,
+        borderRadius: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 5,
+       
     },
     launcherIconBox: {
         width: 62,
@@ -100,19 +113,16 @@ const styles = StyleSheet.create({
         textShadowColor: 'rgba(0, 0, 0, 0.8)',
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 5,
-        ...({
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-        } as any),
+        
     },
     launcherText: {
-        fontSize: 14,
+        fontSize: 13,
         marginTop: 6,
         textAlign: 'center',
         fontWeight: '700',
-        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+       /* textShadowColor: 'rgba(0, 0, 0, 0.8)',
         textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
+        textShadowRadius: 2,*/
     },
-        
+
 });

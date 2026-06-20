@@ -5,6 +5,7 @@ import { AppProvider } from '../context/AppContext';
 import { _ActivityTrackerWrapper } from "../components/elidev_components/_ActivityTrackerWrapper"
 import { LogBox } from 'react-native';
 
+
 export default function RootLayout() {
   // Silencia advertencias específicas que inundan la consola
   LogBox.ignoreLogs([
@@ -14,7 +15,7 @@ export default function RootLayout() {
   return (
     <AppProvider>
       <_ActivityTrackerWrapper>
-        <StatusBar style="auto" />
+        <StatusBar style="light" translucent backgroundColor="transparent" />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />

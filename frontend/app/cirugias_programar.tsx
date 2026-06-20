@@ -330,7 +330,7 @@ export default function ProgramaCirugiaScreen() {
     const materialesSeleccionados = Object.keys(selectedSubcats).filter(id => selectedSubcats[id]);
     console.log("IDs a enviar al servidor:", materialesSeleccionados);
   };
-const Clean_form =()=>{
+  const Clean_form = () => {
     setFecha(formatDate(new Date()));
     setHora('');
     setEstado(null);
@@ -350,12 +350,12 @@ const Clean_form =()=>{
     setTecnico2(null);
 
     if (Array.isArray(vendedores) && (vendedores.length == 1)) {
-          setVendedor(vendedores[0]);
-          if (Array.isArray(tecnicos)) {
-            setTecnico1(tecnicos[0]);
-            setTecnico2(tecnicos[0]);
-          }
-        }
+      setVendedor(vendedores[0]);
+      if (Array.isArray(tecnicos)) {
+        setTecnico1(tecnicos[0]);
+        setTecnico2(tecnicos[0]);
+      }
+    }
 
     return null;
   };
@@ -637,8 +637,8 @@ const Clean_form =()=>{
 
   // 2. CUANDO TERMINA LA CARGA (Contenedor Principal)
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      <_Background id_almacen={user?.id_almacen}>
+    <_Background id_almacen={user?.id_almacen}>
+      <SafeAreaView style={[styles.container]}>
         {/* Header */}
         <_Header page_info={pageConfig} />
         <KeyboardAvoidingView
@@ -647,9 +647,9 @@ const Clean_form =()=>{
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 40} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} style={[styles.content,{maxHeight:'90%'}]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
-            <View style={[styles.formCard]}>
+            <View style={[styles.formCard,{borderWidth:0}]}>
 
               {/* SECCIÓN 1: PROGRAMACIÓN */}
               <_AccordionSection
@@ -1258,7 +1258,7 @@ const Clean_form =()=>{
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: theme.accent, marginLeft:30 }]}
+            style={[styles.submitButton, { backgroundColor: theme.accent, marginLeft: 30 }]}
             onPress={Clean_form}
             disabled={submitting}
           >
@@ -1370,9 +1370,9 @@ const Clean_form =()=>{
         />
 
 
+      </SafeAreaView>
 
-      </_Background>
-    </SafeAreaView>
+    </_Background>
   );
 }
 
