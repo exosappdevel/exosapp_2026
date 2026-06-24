@@ -30,7 +30,8 @@ export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
     icon: currentSection.icon,
     previous: "",
     show_user: true,
-    show_menu: true
+    show_menu: true,
+    show_in_recent: false
   };
   const [show_soon, setShow_soon] = useState(false);
 
@@ -101,8 +102,8 @@ export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
           visible={show_soon}
           setVisible={setShow_soon}
         ></Soon_Modal>
-      </SafeAreaView>
       <_Footer/>
+      </SafeAreaView>
     </_Background>
   );
 }

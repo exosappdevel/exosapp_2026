@@ -22,12 +22,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
-import { _TouchableWithoutFeedback } from '../components/elidev_components';
-import CustomModal, { Soon_Modal } from '../components/CustomModal';
-import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report } from '../components/elidev_components';
+import { _TouchableWithoutFeedback } from '../../components/elidev_components';
+import CustomModal, { Soon_Modal } from '../../components/CustomModal';
+import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report } from '../../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 
 
@@ -113,7 +113,8 @@ export default function ProgramaCirugiaScreen() {
     icon: "calendar-plus",
     previous: "/home",
     show_user: true,
-    show_menu: true
+    show_menu: true,
+    show_in_recent: true
   };
 
   const [appReady, setAppReady] = useState(false);
@@ -579,7 +580,7 @@ export default function ProgramaCirugiaScreen() {
       <_Background id_almacen={user?.id_almacen}>
         <View style={[styles.loadingDataContainer, { backgroundColor: hexToRGBA(theme.bg, 0.5) }]}>
           <Image
-            source={require('../assets/images/loading_blue_circle.gif')} // <-- MODIFICADO: Ruta a tu GIF
+            source={require('../../assets/images/loading_blue_circle.gif')} // <-- MODIFICADO: Ruta a tu GIF
             style={styles.loadingGif}
             resizeMode="contain"
           />
@@ -647,9 +648,9 @@ export default function ProgramaCirugiaScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 40} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={[styles.content,{maxHeight:'90%'}]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} style={[styles.content, { maxHeight: '85%' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
-            <View style={[styles.formCard,{borderWidth:0}]}>
+            <View style={[styles.formCard, { borderWidth: 0 }]}>
 
               {/* SECCIÓN 1: PROGRAMACIÓN */}
               <_AccordionSection
@@ -1243,6 +1244,7 @@ export default function ProgramaCirugiaScreen() {
         </KeyboardAvoidingView>
         <_Footer Show_Almacen={false}>
           {/* Submit Button */}
+
           <TouchableOpacity
             style={[styles.submitButton, { backgroundColor: theme.accent }]}
             onPress={handleSubmit}
@@ -1258,7 +1260,7 @@ export default function ProgramaCirugiaScreen() {
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: theme.accent, marginLeft: 30 }]}
+            style={[styles.submitButton, { backgroundColor: theme.accent, marginLeft: 20 }]}
             onPress={Clean_form}
             disabled={submitting}
           >
@@ -1271,6 +1273,7 @@ export default function ProgramaCirugiaScreen() {
               </>
             )}
           </TouchableOpacity>
+
         </_Footer>
 
 
@@ -1462,10 +1465,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 5,
+    paddingVertical: 8,
     borderRadius: 12,
     marginTop: -5,
-    paddingHorizontal: 10
+    paddingHorizontal: 20
   },
   submitButtonText: {
     color: '#fff',

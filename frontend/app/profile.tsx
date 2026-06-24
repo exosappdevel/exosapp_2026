@@ -15,6 +15,8 @@ import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
 import { _Footer, _Background, hexToRGBA } from '@/components/elidev_components';
+import Constants from 'expo-constants';
+
 
 const themeOptions = [
   { id: 'light', color: '#f5f5f5', borderColor: '#e2e8f0' },
@@ -130,7 +132,7 @@ export default function ProfileScreen() {
               <Text style={[styles.userName, { color: theme.text, fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{user.tipo_usuario}</Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}</Text>
+              <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}  - {Constants.expoConfig?.version || "1.0.0"}</Text>              
             </View>
 
           </View>

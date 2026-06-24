@@ -35,7 +35,7 @@ export const AppmenuItems: iMenuItem[] = [
   { id: '4', titleKey: "screens.cirugias_programar", icon: "calendar-check", color: "#3182ce", href: '/cirugias_programar' },
   { id: '5', titleKey: "screens.recepcion", icon: "clipboard-list", color: "#48bb78", href: null },
   { id: '6', titleKey: "screens.carpetas", icon: "folder-account", color: "#beb535", href: null },
-  { id: '7', titleKey: "screens.pickeo", icon: "hospital", color: "#3182ce", href: '/terminales' },
+  { id: '7', titleKey: "screens.pickeo", icon: "hospital", color: "#3182ce", href: '/pickeo' },
   { id: '8', titleKey: "screens.inventario", icon: "format-list-checks", color: "#ecc94b", href: null },
   { id: '9', titleKey: "screens.entradas", icon: "home-import-outline", color: "#48bb78", href: null },
   { id: '10', titleKey: "screens.salidas", icon: "home-export-outline", color: "#e53e3e", href: null },

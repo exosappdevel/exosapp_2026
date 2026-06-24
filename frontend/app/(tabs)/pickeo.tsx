@@ -15,10 +15,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useApp } from "../context/AppContext";
-import ApiService from "../services/ApiServices";
-import { calcularPrioridad } from "../utils/PickeoUtils";
-import { _Background, _Footer, hexToRGBA, playSuccessSound, playErrorSound } from "@/components/elidev_components";
+import { useFocusEffect } from 'expo-router';
+import { useApp } from "../../context/AppContext";
+import ApiService from "../../services/ApiServices";
+import { calcularPrioridad } from "../../utils/PickeoUtils";
+import { _Background, _Header, _Footer, hexToRGBA, playSuccessSound, playErrorSound } from "@/components/elidev_components";
 
 interface Producto {
   id: string;
@@ -35,10 +36,19 @@ interface Producto {
 }
 
 export default function PickeoScreen() {
+
   const router = useRouter();
   const params = useLocalSearchParams();
   const { user, theme, t, appConfig } = useApp();
   const inputRef = useRef<TextInput>(null);
+  const pageConfig = {
+    name: t("screens.pickeo"),
+    icon: "desktop-tower-monitor",
+    previous: "terminales",
+    show_user: true,
+    show_menu: true,
+    show_in_recent: true
+  };
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,14 +62,31 @@ export default function PickeoScreen() {
     esResta: false,
   });
 
-  const id_terminal = params.id_terminal as string;
-  const terminal_nombre = params.terminal_nombre as string;
+
+
+
+  const terminalSeleccionada = !!user.local_terminal?.selected;
+  const id_terminal = user.local_terminal?.id;
+  const terminal_nombre = user.local_terminal?.nombre;
+  /*const id_terminal = params.id_terminal as string;
+  const terminal_nombre = params.terminal_nombre as string;*/
   const STORAGE_KEY = `@pickeo_storage_term_${id_terminal}`;
 
+  // Redirección si no hay terminal — SIEMPRE se declara, la condición va adentro
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!terminalSeleccionada) {
+        router.replace('/terminales');
+      }
+    }, [terminalSeleccionada])
+  );
+
+  // Carga de datos — solo si hay terminal
   useEffect(() => {
+    if (!terminalSeleccionada) return;
     ApiService.init(appConfig);
     inicializarDatos(true);
-  }, [id_terminal]);
+  }, [id_terminal, terminalSeleccionada]);
 
   useEffect(() => {
     if (modalCant.visible) {
@@ -190,18 +217,26 @@ export default function PickeoScreen() {
       return (a.referencia || "").localeCompare(b.referencia || "");
     });
 
+  if (!terminalSeleccionada) {
+    return <_Background id_almacen={user?.id_almacen}><View /></_Background>;
+  }
+
   return (
     <_Background id_almacen={user?.id_almacen}>
       <SafeAreaView style={[styles.container]}>
+        <_Header page_info={pageConfig} >
+          
+        </_Header>
 
 
         <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.5) }]}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <MaterialCommunityIcons name="arrow-left" size={28} color={theme.text} />
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
+          <TouchableOpacity onPress={() => router.replace('/terminales')} style={styles.header} >
+            <MaterialCommunityIcons name="desktop-classic" size={24} color={theme.text} />
+          
+          <Text style={[styles.title, { color: theme.text, marginLeft:10 }]} numberOfLines={1}>
             {user.almacen_codigo} - {terminal_nombre}
           </Text>
+          </TouchableOpacity>
           <View style={styles.headerActions}>
             <TouchableOpacity onPress={() => inicializarDatos(true)} style={styles.headerBtn}>
               <MaterialCommunityIcons name="refresh" size={24} color={theme.accent} />
@@ -223,52 +258,55 @@ export default function PickeoScreen() {
         {loading ? (
           <ActivityIndicator size="large" color={theme.accent} style={{ flex: 1 }} />
         ) : (
-          <FlatList
-            data={listaRender}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => (
-              <View
-                style={[
-                  styles.itemRow,
-                  { backgroundColor: hexToRGBA(theme.card, 0.7), borderColor: theme.border },
-                ]}
-              >
-                <View style={[styles.dot, { backgroundColor: item.color }]} />
-                <View style={styles.actionsContainer}>
-                  <TouchableOpacity
-                    onPress={() => aplicarPick(item, "1", false)}
-                    style={styles.btnQuick}
-                  >
-                    <MaterialCommunityIcons name="flash" size={24} color={item.color} />
-                  </TouchableOpacity>
+          <View style={{ height: '80%' }}>
+            <FlatList
+              data={listaRender}
+
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.listContent}
+              renderItem={({ item }) => (
+                <View
+                  style={[
+                    styles.itemRow,
+                    { backgroundColor: hexToRGBA(theme.card, 0.7), borderColor: theme.border },
+                  ]}
+                >
+                  <View style={[styles.dot, { backgroundColor: item.color }]} />
+                  <View style={styles.actionsContainer}>
+                    <TouchableOpacity
+                      onPress={() => aplicarPick(item, "1", false)}
+                      style={styles.btnQuick}
+                    >
+                      <MaterialCommunityIcons name="flash" size={24} color={item.color} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.itemInfo}>
+                    <Text style={[styles.textMain, { color: theme.text }]} numberOfLines={2}>
+                      {item.descripcion}
+                    </Text>
+                    <Text style={styles.textSub}>{item.referencia}</Text>
+                    <Text style={[styles.textStatus, { color: item.color }]}>
+                      {item.cantidad_recolectada} / {item.cantidad_solicitada}
+                    </Text>
+                  </View>
+                  <View style={styles.actionsContainer}>
+                    <TouchableOpacity
+                      style={[styles.btnAction, { backgroundColor: item.color }]}
+                      onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: false })}
+                    >
+                      <MaterialCommunityIcons name="plus" size={20} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.btnAction, { backgroundColor: item.color, marginLeft: 8 }]}
+                      onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: true })}
+                    >
+                      <MaterialCommunityIcons name="minus" size={20} color="white" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <View style={styles.itemInfo}>
-                  <Text style={[styles.textMain, { color: theme.text }]} numberOfLines={2}>
-                    {item.descripcion}
-                  </Text>
-                  <Text style={styles.textSub}>{item.referencia}</Text>
-                  <Text style={[styles.textStatus, { color: item.color }]}>
-                    {item.cantidad_recolectada} / {item.cantidad_solicitada}
-                  </Text>
-                </View>
-                <View style={styles.actionsContainer}>
-                  <TouchableOpacity
-                    style={[styles.btnAction, { backgroundColor: item.color }]}
-                    onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: false })}
-                  >
-                    <MaterialCommunityIcons name="plus" size={20} color="white" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.btnAction, { backgroundColor: item.color, marginLeft: 8 }]}
-                    onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: true })}
-                  >
-                    <MaterialCommunityIcons name="minus" size={20} color="white" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          />
+              )}
+            />
+          </View>
         )}
 
 
@@ -326,9 +364,11 @@ export default function PickeoScreen() {
             style={[styles.footerBtn, { backgroundColor: "#4a5568" }]}
             onPress={() => setMostrarCompletos(!mostrarCompletos)}
           >
-            <Text style={styles.footerBtnText}>
-              {mostrarCompletos ? t('pickeo.hideComplete') : t('pickeo.showAll')}
-            </Text>
+            <View style={[styles.checkoutContent, { paddingVertical: 2 }]}>
+              <Text style={styles.footerBtnText}>
+                {mostrarCompletos ? t('pickeo.hideComplete') : t('pickeo.showAll')}
+              </Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.footerBtn, { backgroundColor: "#48bb78" }]}
@@ -356,7 +396,7 @@ export default function PickeoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginBottom: Platform.OS === 'ios' ? -15 : -10
+    marginBottom: Platform.OS === 'ios' ? -15 : -10,
   },
   header: {
     flexDirection: "row",
@@ -369,12 +409,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "bold",
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 10,
-    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    //flex: 1,
+    textAlign: 'left',
+    //marginHorizontal: 10,
+    /*textShadowColor: 'rgba(255, 255, 255, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 2,*/
   },
   headerActions: {
     flexDirection: 'row',

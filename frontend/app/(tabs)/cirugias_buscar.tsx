@@ -19,11 +19,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../../context/AppContext';
 import ApiService from '@/services/ApiServices';
-import { _TouchableWithoutFeedback } from '../components/elidev_components';
-import CustomModal from '../components/CustomModal';
-import { _Header, _Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../components/elidev_components';
+import { _TouchableWithoutFeedback } from '../../components/elidev_components';
+import CustomModal from '../../components/CustomModal';
+import { _Header, _Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../../components/elidev_components';
 import { addMonths } from 'date-fns';
 
 
@@ -75,7 +75,8 @@ export default function Cirugia_BuscarScreen() {
     icon: "magnify",
     previous: "/home",
     show_user: true,
-    show_menu: true
+    show_menu: true,
+    show_in_recent: true
   };
 
   const [appReady, setAppReady] = useState(false);
@@ -493,7 +494,7 @@ export default function Cirugia_BuscarScreen() {
     return (
       <View style={[styles.loadingDataContainer, { backgroundColor: theme.bg }]}>
         <Image
-          source={require('../assets/images/loading_blue_circle.gif')} // <-- MODIFICADO: Ruta a tu GIF
+          source={require('../../assets/images/loading_blue_circle.gif')} // <-- MODIFICADO: Ruta a tu GIF
           style={styles.loadingGif}
           resizeMode="contain"
         />
@@ -519,7 +520,7 @@ export default function Cirugia_BuscarScreen() {
   // 2. CUANDO TERMINA LA CARGA (Contenedor Principal)
   return (
     <_Background id_almacen={user?.id_almacen}>
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
+      <SafeAreaView style={[styles.container]}>
         <_Header page_info={pageConfig} />
 
         <KeyboardAvoidingView
@@ -528,9 +529,9 @@ export default function Cirugia_BuscarScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} style={[styles.content,{maxHeight:'85%'}]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
-            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50 }]}>
+            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50}]}>
 
 
               {/* SECCIÓN 1: parametros */}
@@ -955,6 +956,7 @@ export default function Cirugia_BuscarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    height:'80%'
   },
   header: {
     flexDirection: 'row',
@@ -970,7 +972,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 3,
+    padding: 3  
   },
   formCard: {
     borderRadius: 0,
@@ -1037,9 +1039,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 5,
     borderRadius: 12,
-    marginTop: 10,
+    marginTop: 3,
     paddingHorizontal: 10
   },
   submitButtonText: {

@@ -27,6 +27,9 @@ export const _Background = ({ children, id_almacen }: { children: any, id_almace
             <View style={styles.content}>
                 {children}
             </View>
+            {/*<View style={[{position:'absolute', bottom: 0,   left: 0,   right: 0, height:16, width:'100%', backgroundColor:hexToRGBA(theme.iconColor_shadow,0.3)}]}>
+
+            </View>*/}
         </View>
     );
 };

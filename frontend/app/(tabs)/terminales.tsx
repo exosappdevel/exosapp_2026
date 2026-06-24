@@ -11,8 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useApp } from '../context/AppContext';
-import ApiService from '../services/ApiServices';
+import { useApp } from '../../context/AppContext';
+import ApiService from '../../services/ApiServices';
 import { _Header, _Footer, _Background, hexToRGBA } from '@/components/elidev_components';
 
 interface Terminal {
@@ -23,13 +23,14 @@ interface Terminal {
 
 export default function TerminalesScreen() {
   const router = useRouter();
-  const { user, theme, t, appConfig } = useApp();
+  const { user,setUser, theme, t, appConfig } = useApp();
   const pageConfig = {
     name: t("screens.terminales"),
     icon: "desktop-tower-monitor",
     previous: "home",
     show_user: true,
-    show_menu: true
+    show_menu: true,
+    show_in_recent: false
   };
 
   const [terminales, setTerminales] = useState<Terminal[]>([]);
@@ -54,12 +55,21 @@ export default function TerminalesScreen() {
   };
 
   const handleTerminalPress = (terminal: Terminal) => {
+    setUser(prev => ({
+        ...prev,
+        local_terminal:{
+          selected:true,
+          id:terminal.id_terminal,
+          nombre: terminal.nombre
+        }        
+      }));
+    
     router.push({
       pathname: '/pickeo',
-      params: {
+     /* params: {
         id_terminal: terminal.id_terminal,
         terminal_nombre: terminal.nombre
-      }
+      }*/
     });
   };
 

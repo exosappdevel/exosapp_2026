@@ -19,12 +19,8 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />
-          <Stack.Screen name="home" />
-          <Stack.Screen name="profile" />
-          <Stack.Screen name="terminales" />
-          <Stack.Screen name="pickeo" />
-          <Stack.Screen name="cirugias_programar" />
-          <Stack.Screen name="cirugias_buscar" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="profile" />          
           <Stack.Screen name="reporte_piezas_danadas_view"/>          
         </Stack>
       </_ActivityTrackerWrapper>

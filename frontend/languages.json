@@ -12,7 +12,7 @@
       "menu_almacen" :"Almacén",
       "menu_cirugias" : "Cirugías",
       "menu_logistica" : "Logística",
-      "menu_calidad" : "Calidad"  
+      "menu_calidad" : "Calidad"        
     },
     "screens":{
       "home":"Inicio",
@@ -64,6 +64,7 @@
       "theme": "Tema",
       "warehouse": "Almacén",
       "language": "Idioma",    
+      "openTabs" : "Apps recientes",
       "themes": {
         "light": "Claro",
         "dark": "Oscuro",
@@ -131,7 +132,7 @@
       "notas" : "Observaciones adicionales...",
       "success_title":"Cirugía Programada con éxito",
       "success":"La cirugía ha sido programada exitosamente.",
-      "submit_button" :"PROGRAMAR CIRUGÍA",
+      "submit_button" :"Programar Cirugía",
       "lugar_fecha":"Lugar y Fecha",
       "fecha":"Fecha",
       "hora":"Hora",

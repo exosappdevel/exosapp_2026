@@ -179,7 +179,8 @@ export default function LoginScreen() {
           chat_client_coonnected : response.chat_client_connected == 1,
           chat_client_appID : response.chat_client_appid,
           chat_client_appKey : response.chat_client_api_key,
-          chat_client_token : response.chat_client_stream_token
+          chat_client_token : response.chat_client_stream_token,
+          local_terminal: {selected:false, id:'',nombre:''}
         };
         //alert(JSON.stringify(fav.split(';').filter((item: String) => item !== "")));
         setUser(userData);

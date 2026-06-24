@@ -6,10 +6,22 @@ import { hexToRGBA } from '@/components/elidev_components/_Functions';
 type Language = 'es' | 'en';
 type ThemeType = 'light' | 'dark' | 'blue' | 'pink';
 
+export interface OpenTab {
+  path: string;
+  name: string;
+  icon: string;
+}
+
 export interface Menu_item {
   menu: string;
   items: string;
 }
+export interface Terminal_Data{
+  selected : boolean;
+  id:string;
+  nombre:string;
+}
+
 interface User {
   id_usuario_app: string;
   id_usuario: string;
@@ -27,6 +39,8 @@ interface User {
   chat_client_appID: string;
   chat_client_appKey: string;
   chat_client_token: string;
+  /* ****  Local session **** */ 
+  local_terminal : Terminal_Data;
 }
 
 interface AppConfig {
@@ -67,7 +81,10 @@ interface AppContextType {
   setIsLoggedIn: (value: boolean) => Promise<void>;
   logout: () => Promise<void>;
   menuFav_str: () => string;
-  menuFav_set: (value: any) => void
+  menuFav_set: (value: any) => void;
+  openTabs: OpenTab[];
+  addOpenTab: (tab: OpenTab) => void;
+  closeOpenTab: (path: string) => void;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -176,7 +193,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     chat_client_coonnected: false,
     chat_client_appID: "",
     chat_client_appKey: "",
-    chat_client_token: "",
+    chat_client_token: "",    
+    local_terminal:{selected:false, id:'',nombre:''}    
   });
 
   const setIsLoggedIn = async (value: boolean) => {
@@ -266,7 +284,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       chat_client_coonnected: false,
       chat_client_appID: "",
       chat_client_appKey: "",
-      chat_client_token: ""      
+      chat_client_token: "" ,
+      local_terminal:{selected:false, id:'',nombre:''}
     });
     await setIsLoggedIn(false); // Añade el await aquí    
     try {
@@ -305,6 +324,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const [openTabs, setOpenTabs] = useState<OpenTab[]>([]);
+
+  const addOpenTab = (tab: OpenTab) => {
+  setOpenTabs(prev => {
+    const exists = prev.find(t => t.path === tab.path);
+    if (exists) {
+      // lo movemos al final (más reciente) sin duplicar
+      return [...prev.filter(t => t.path !== tab.path), tab];
+    }
+    return [...prev, tab];
+  });
+};
+
+const closeOpenTab = (path: string) => {
+  setOpenTabs(prev => prev.filter(t => t.path !== path));
+};
+
   return (
     <AppContext.Provider value={{
       appConfig,
@@ -318,7 +354,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsLoggedIn,
       logout,
       menuFav_str,
-      menuFav_set
+      menuFav_set,
+      openTabs,
+      addOpenTab,
+      closeOpenTab
     }}>
       {children}
     </AppContext.Provider>

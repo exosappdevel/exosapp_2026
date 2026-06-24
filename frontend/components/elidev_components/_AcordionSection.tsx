@@ -115,11 +115,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 12,
         marginBottom: 12,
-        overflow: 'hidden',
-        ...({
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-        } as any),
+        overflow: 'hidden',        
     },
     accordionHeader: {
         flexDirection: 'row',

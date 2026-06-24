@@ -60,7 +60,7 @@ export default function Index() {
       // Lógica original de navegación (con el delay que ya tenías)
       setTimeout(() => {
         if (isLoggedIn) {
-          router.replace('/home');
+          router.replace('/(tabs)/home');
         } else {
           router.replace('/login');
         }

@@ -24,7 +24,7 @@ export const _Footer = ({
     const { theme, user } = useApp();
 
     // 1. Valor animado para la altura
-    const baseHeight = Show_Almacen ? 55 : 90; // Si es false, sube a 100 para dar espacio a los botones
+    const baseHeight = Show_Almacen ? 65 : 100; // Si es false, sube a 100 para dar espacio a los botones
     const maxHeight = Show_Almacen ? 90 : 110; // El límite de estiramiento también aumenta
     const footerHeight = useState(new Animated.Value(baseHeight))[0];
 
@@ -37,7 +37,7 @@ export const _Footer = ({
 
     const handleNavigation = () => {
         // ... (tu lógica de navegación actual se mantiene igual)
-        router.replace('/home' as any);
+        router.push('/home' as any);
     };
 
     const footerPanResponder = PanResponder.create({
@@ -97,7 +97,7 @@ export const _Footer = ({
             ]}
         >
             <TouchableOpacity
-                style={[styles.footerTab,{backgroundColor:hexToRGBA(theme.iconColor_shadow,0.3) /* borderTopColor:hexToRGBA(theme.border,0.5)*/}]}
+                style={[styles.footerTab,{borderTopColor:hexToRGBA(theme.iconTextColor,0.2),  borderTopWidth:1 /*backgroundColor:hexToRGBA(theme.iconColor_shadow,0.3)*/ /* borderTopColor:hexToRGBA(theme.border,0.5)*/}]}
                 activeOpacity={0.7}
 
             >
@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 1,
-        height: 50
+        height: 50,
+        paddingHorizontal:5
     },
 });
