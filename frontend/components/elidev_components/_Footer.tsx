@@ -1,4 +1,4 @@
-import {  useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
     View, Text, StyleSheet, TouchableOpacity, Platform
 } from "react-native";
@@ -7,7 +7,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { useRouter } from 'expo-router';
 import { PanResponder, Animated } from 'react-native';
-import {hexToRGBA} from './_Functions'
+import { hexToRGBA } from './_Functions'
+import { _UserMenu } from './_UserMenu';
 
 interface FooterProps {
     Show_Almacen?: boolean;
@@ -22,10 +23,12 @@ export const _Footer = ({
 }: FooterProps) => {
     const router = useRouter();
     const { theme, user } = useApp();
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+    const triggerRef = useRef<View>(null);
 
-    // 1. Valor animado para la altura
-    const baseHeight = Show_Almacen ? 65 : 100; // Si es false, sube a 100 para dar espacio a los botones
-    const maxHeight = Show_Almacen ? 90 : 110; // El límite de estiramiento también aumenta
+    const baseHeight = Show_Almacen ? 65 : 100;
+    const maxHeight = Show_Almacen ? 90 : 110;
     const footerHeight = useState(new Animated.Value(baseHeight))[0];
 
     useEffect(() => {
@@ -35,47 +38,44 @@ export const _Footer = ({
         }).start();
     }, [Show_Almacen]);
 
-    const handleNavigation = () => {
-        // ... (tu lógica de navegación actual se mantiene igual)
-        router.push('/home' as any);
+    const openUserMenu = () => {
+        if (triggerRef.current) {
+            triggerRef.current.measureInWindow((x, y, width, height) => {
+                setAnchorPos({ x, y, width, height });
+                setShowUserMenu(true);
+            });
+        } else {
+            setShowUserMenu(true);
+        }
     };
 
     const footerPanResponder = PanResponder.create({
         onMoveShouldSetPanResponder: (_, gestureState) => {
-            // Detectar movimiento vertical hacia arriba
             return Math.abs(gestureState.dy) > Math.abs(gestureState.dx) && gestureState.dy < -10;
         },
         onPanResponderMove: (_, gestureState) => {
             if (gestureState.dy < 0) {
-                // Calculamos la nueva altura: base + el arrastre (dy es negativo, por eso se resta)
                 const newHeight = baseHeight - gestureState.dy;
-
-                // Limitamos la altura máxima para el efecto visual
                 if (newHeight <= maxHeight) {
                     footerHeight.setValue(newHeight);
                 }
             }
         },
         onPanResponderRelease: (_, gestureState) => {
-            // 1. Gesto hacia ARRIBA -> Ir a Home
             if (gestureState.dy < -60) {
                 router.replace('/home' as any);
             }
-            // 2. Gesto hacia la IZQUIERDA -> Back (atrás)
             else if (gestureState.dx < -60) {
                 router.back();
             }
-
-            // Siempre regresamos a la altura original con una animación suave (efecto resorte)
             Animated.spring(footerHeight, {
                 toValue: baseHeight,
-                useNativeDriver: false, // La altura no es compatible con native driver
+                useNativeDriver: false,
                 friction: 5,
                 tension: 40
             }).start();
         },
         onPanResponderTerminate: () => {
-            // Regresar a base si el gesto se cancela
             Animated.spring(footerHeight, {
                 toValue: baseHeight,
                 useNativeDriver: false
@@ -84,56 +84,74 @@ export const _Footer = ({
     });
 
     return (
-        <Animated.View // 2. Convertir a Animated.View
-            {...footerPanResponder.panHandlers}
-            style={[
-                styles.footerContainer,
-                {
-                    //backgroundColor: hexToRGBA(theme.card, 0),
-                    //borderTopColor: hexToRGBA(theme.border, 0.8),
-                    height: footerHeight, // 3. Vincular altura animada
-                    paddingBottom: Platform.OS === 'ios' ? 15 : 0 // Mejorar espacio táctil                    
-                }
-            ]}
-        >
-            <TouchableOpacity
-                style={[styles.footerTab,{borderTopColor:hexToRGBA(theme.iconTextColor,0.2),  borderTopWidth:1 /*backgroundColor:hexToRGBA(theme.iconColor_shadow,0.3)*/ /* borderTopColor:hexToRGBA(theme.border,0.5)*/}]}
-                activeOpacity={0.7}
-
+        <>
+            <Animated.View
+                {...footerPanResponder.panHandlers}
+                style={[
+                    styles.footerContainer,
+                    {
+                        height: footerHeight,
+                        paddingBottom: Platform.OS === 'ios' ? 15 : 0
+                    }
+                ]}
             >
-                <View style={[
-                    styles.homeIndicator,
-                    { backgroundColor: theme.iconTextColor, opacity: 0.8 }
-                ]} />
+                <TouchableOpacity
+                    style={[styles.footerTab, { borderTopColor: hexToRGBA(theme.iconTextColor, 0.2), borderTopWidth: 1 }]}
+                    activeOpacity={0.7}
+                >
+                    <View style={[
+                        styles.homeIndicator,
+                        { backgroundColor: theme.iconTextColor, opacity: 0.8 }
+                    ]} />
 
-                {Show_Almacen ? (
-                    <View style={styles.footerContentRow}>
+                    <TouchableOpacity
+                        ref={triggerRef}
+                        style={styles.userMenuTrigger}
+                        onPress={openUserMenu}
+                    >
                         <MaterialCommunityIcons
-                            name="warehouse"
+                            name="menu"
                             size={22}
-                            color={hexToRGBA(theme.iconTextColor, 0.8)}
+                            color={hexToRGBA(theme.iconTextColor, 0.9)}
                         />
-                        <Text style={[styles.footerText, { color: theme.iconTextColor }]}>
-                            {user?.almacen_nombre || "Almacén"}
-                        </Text>
-                    </View>
-                ) : (
-                    <View style={[styles.footerContentChildreen]}>
-                        {children}
-                    </View>
-                )}
-            </TouchableOpacity>
-        </Animated.View>
+                    </TouchableOpacity>
+
+                    {Show_Almacen ? (
+                        <View style={styles.footerContentRow}>
+                            <MaterialCommunityIcons
+                                name="warehouse"
+                                size={22}
+                                color={hexToRGBA(theme.iconTextColor, 0.8)}
+                            />
+                            <Text style={[styles.footerText, { color: theme.iconTextColor }]}>
+                                {user?.almacen_nombre || "Almacén"}
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={[styles.footerContentChildreen]}>
+                            {children}
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </Animated.View>
+
+            <_UserMenu
+                visible={showUserMenu}
+                onClose={() => setShowUserMenu(false)}
+                anchorPosition={anchorPos}
+                direction="up"
+            />
+        </>
     );
 };
 
 const styles = StyleSheet.create({
-    footerContainer: {        
+    footerContainer: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        overflow: 'hidden',    
+        overflow: 'hidden',
     },
     footerTab: {
         alignItems: 'center',
@@ -147,6 +165,13 @@ const styles = StyleSheet.create({
         borderRadius: 2,
         marginTop: 2,
         marginBottom: 2,
+    },
+    userMenuTrigger: {
+        position: 'absolute',
+        left: 12,
+        top: 8,
+        padding: 4,
+        zIndex: 10,
     },
     footerContentRow: {
         flexDirection: 'row',
@@ -168,6 +193,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 1,
         height: 50,
-        paddingHorizontal:5
+        paddingHorizontal: 5
     },
 });

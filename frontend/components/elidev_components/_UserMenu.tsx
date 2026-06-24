@@ -1,21 +1,32 @@
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from "react-native";
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Platform, Alert, Dimensions } from "react-native";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { useRouter, usePathname } from 'expo-router';
 
+interface AnchorPosition {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 interface UserMenuProps {
     visible: boolean;
     onClose: () => void;
+    anchorPosition?: AnchorPosition | null;
+    direction?: 'up' | 'down'; // hacia dónde se abre el popover respecto al ancla
 }
 
-export const _UserMenu = ({ visible, onClose }: UserMenuProps) => {
+const MENU_WIDTH = 220;
+const SCREEN = Dimensions.get('window');
+
+export const _UserMenu = ({ visible, onClose, anchorPosition, direction = 'up' }: UserMenuProps) => {
     const router = useRouter();
     const pathname = usePathname();
     const { theme, t, logout, openTabs, closeOpenTab } = useApp();
 
     const handleLogout = async () => {
         onClose();
-
         if (Platform.OS === 'web') {
             const confirmar = window.confirm(t("userMenu.confirm_logout"));
             if (confirmar) {
@@ -39,6 +50,33 @@ export const _UserMenu = ({ visible, onClose }: UserMenuProps) => {
         }
     };
 
+    // Calculamos la posición del popover en base al ancla
+    let popoverStyle: any = {};
+    if (anchorPosition) {
+        let left = anchorPosition.x;
+        // Evitar que se salga por la derecha
+        if (left + MENU_WIDTH > SCREEN.width - 10) {
+            left = SCREEN.width - MENU_WIDTH - 10;
+        }
+        if (left < 10) left = 10;
+
+        if (direction === 'up') {
+            // El menú abre hacia ARRIBA del ancla (caso footer)
+            popoverStyle = {
+                position: 'absolute',
+                left,
+                bottom: SCREEN.height - anchorPosition.y + 8,
+            };
+        } else {
+            // El menú abre hacia ABAJO del ancla (caso header)
+            popoverStyle = {
+                position: 'absolute',
+                left,
+                top: anchorPosition.y + anchorPosition.height + 8,
+            };
+        }
+    }
+    //console.log('anchorPosition recibido:', anchorPosition, 'popoverStyle:', popoverStyle);
     return (
         <Modal
             visible={visible}
@@ -51,7 +89,13 @@ export const _UserMenu = ({ visible, onClose }: UserMenuProps) => {
                 activeOpacity={1}
                 onPress={onClose}
             >
-                <View style={[styles.userMenuContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                <View
+                    style={[
+                        styles.userMenuContainer,
+                        { backgroundColor: theme.card, borderColor: theme.border, width: MENU_WIDTH },
+                        popoverStyle,
+                    ]}
+                >
                     <TouchableOpacity
                         style={styles.userMenuItem}
                         onPress={() => {
@@ -125,15 +169,10 @@ const styles = StyleSheet.create({
     menuOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-start',
-        alignItems: 'flex-end',
-        paddingTop: 30,
-        paddingRight: 5,
     },
     userMenuContainer: {
         borderRadius: 12,
         padding: 10,
-        minWidth: 180,
         borderWidth: 1,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },

@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
-    View, Text, StyleSheet, TouchableOpacity, Platform
+    View, Text, StyleSheet, TouchableOpacity, Platform,
 } from "react-native";
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -23,6 +23,19 @@ export const _Header = ({ page_info, children }: { page_info: iPage, children?: 
     const pathname = usePathname();
     const { theme, user, addOpenTab } = useApp();
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+    const triggerRef = useRef<any>(null);
+
+    const openUserMenu = () => {
+        if (triggerRef.current) {
+            triggerRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
+                setAnchorPos({ x, y, width, height });
+                setShowUserMenu(true);
+            });
+        } else {
+            setShowUserMenu(true);
+        }
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -46,7 +59,7 @@ export const _Header = ({ page_info, children }: { page_info: iPage, children?: 
             </View>
 
             {page_info.show_user && (
-                <TouchableOpacity onPress={() => setShowUserMenu(true)}>
+                <TouchableOpacity ref={triggerRef} onPress={openUserMenu}>
                     <View style={styles.userInfo}>
                         <MaterialCommunityIcons name="account-circle" size={20} color={theme.accent} />
                         <Text style={[styles.userName, { color: theme.iconTextColor }]} numberOfLines={1}>
@@ -63,7 +76,12 @@ export const _Header = ({ page_info, children }: { page_info: iPage, children?: 
                 </View>
             )}
 
-            <_UserMenu visible={showUserMenu} onClose={() => setShowUserMenu(false)} />
+            <_UserMenu
+                visible={showUserMenu}
+                onClose={() => setShowUserMenu(false)}
+                anchorPosition={anchorPos}
+                direction="down"
+            />
         </View>
     );
 };
