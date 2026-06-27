@@ -956,7 +956,7 @@ export default function Cirugia_BuscarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    height:'80%'
+    height:'85%'
   },
   header: {
     flexDirection: 'row',

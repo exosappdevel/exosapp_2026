@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
     },
     userMenuTrigger: {
         position: 'absolute',
-        left: 12,
-        top: 8,
+        left: 6,
+        top: -3,
         padding: 4,
         zIndex: 10,
     },

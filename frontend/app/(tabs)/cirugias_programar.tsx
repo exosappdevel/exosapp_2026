@@ -1465,10 +1465,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: 5,
     borderRadius: 12,
-    marginTop: -5,
-    paddingHorizontal: 20
+    marginTop: 2,
+    paddingHorizontal: 10
   },
   submitButtonText: {
     color: '#fff',

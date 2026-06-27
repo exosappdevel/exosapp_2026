@@ -461,12 +461,13 @@ const styles = StyleSheet.create({
   btnQuick: { padding: 8, marginRight: 5 },
   footer: {
     flexDirection: "row",
-    padding: 5,
+    padding: 6,
     borderTopWidth: 0,
   },
   footerBtn: {
     flex: 1,
-    padding: 8,
+    padding: 7,
+    marginTop:3,
     marginHorizontal: 5,
     borderRadius: 12,
     alignItems: "center",
