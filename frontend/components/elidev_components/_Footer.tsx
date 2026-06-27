@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import {
-    View, Text, StyleSheet, TouchableOpacity, Platform
+    View, Text, StyleSheet, TouchableOpacity
 } from "react-native";
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { useRouter } from 'expo-router';
 import { PanResponder, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { hexToRGBA } from './_Functions'
 import { _UserMenu } from './_UserMenu';
 
@@ -23,6 +24,7 @@ export const _Footer = ({
 }: FooterProps) => {
     const router = useRouter();
     const { theme, user } = useApp();
+    const insets = useSafeAreaInsets();
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const triggerRef = useRef<View>(null);
@@ -91,7 +93,7 @@ export const _Footer = ({
                     styles.footerContainer,
                     {
                         height: footerHeight,
-                        paddingBottom: Platform.OS === 'ios' ? 15 : 0
+                        paddingBottom: insets.bottom
                     }
                 ]}
             >
