@@ -153,14 +153,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    width: '100%'    
+    width: '100%',    
+
   },
   shotWrapper: {
     width: '100%',
-    overflow: 'hidden', // Crucial: Mantiene el contenido ampliado dentro de los límites del componente
+    overflow: 'hidden', // Crucial: Mantiene el contenido ampliado dentro de los límites del componente   
+     backgroundColor:'#fff' ,
+     borderRadius:40, 
   },
   zoomBox: {
-    width: '100%',
+    width: '100%',        
+    borderRadius:40, 
+    backgroundColor:'#fff'
   },
   shareButton: {
     position: 'absolute',

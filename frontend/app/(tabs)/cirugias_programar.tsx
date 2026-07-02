@@ -16,7 +16,8 @@ import {
   Switch,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard, useWindowDimensions
+  
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,9 +28,8 @@ import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../../components/CustomModal';
-import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report } from '../../components/elidev_components';
+import { _Header, _Footer,  _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report } from '../../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
-
 
 // Sample data based on the HTML form
 const horasData = [
@@ -101,8 +101,6 @@ interface iSubdistribuidor {
   subdistribuidor: string;
   no_registrado: string;
 }
-
-
 
 
 export default function ProgramaCirugiaScreen() {
@@ -179,7 +177,11 @@ export default function ProgramaCirugiaScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [expandedCats, setExpandedCats] = useState({}); // Para manejar acordeones anidados
-  const scrollRef = React.useRef<ScrollView>(null);
+  const scrollRef = React.useRef<ScrollView>(null);  
+  
+  const { height } = useWindowDimensions();
+  const margin_height = 45;    
+  const _ClientHeight = height - 130 - margin_height;
 
 
   const validaData = async (response: any) => {
@@ -648,7 +650,7 @@ export default function ProgramaCirugiaScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 40} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={[styles.content, { maxHeight: '85%' }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} style={[styles.content, { maxHeight: _ClientHeight }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
             <View style={[styles.formCard, { borderWidth: 0 }]}>
 
@@ -1465,14 +1467,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingVertical: 15,
+    borderRadius: 20,
     marginTop: 2,
-    paddingHorizontal: 10
+    paddingHorizontal: 20
   },
   submitButtonText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: 'bold',
     marginLeft: 10,
   },

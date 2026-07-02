@@ -3,7 +3,7 @@ import {
     View, ScrollView, Text, StyleSheet, TouchableOpacity, FlatList,
     Modal, Platform, Alert, Switch, TouchableWithoutFeedback,
     Keyboard, Pressable, ImageBackground,
-    ViewStyle
+    ViewStyle, useWindowDimensions
 } from "react-native";
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ import { PanResponder, Animated } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { hexToRGBA } from './_Functions'
 import { _ZoomableView } from "./_ZoomableView";
+import { Background } from "@react-navigation/elements";
 
 interface ReportProps {
     children: React.ReactNode;
@@ -83,11 +84,13 @@ export interface _Show_Cirugia_ReportProps {
 
 export const _Show_Cirugia_Report = ({ visible, titulo, onClose, item }: _Show_Cirugia_ReportProps) => {
     const { theme, t } = useApp();
+    const { height } = useWindowDimensions();
+    {/*<Modal visible={visible} animationType="fade" transparent={true}>*/ }
+    {<View style={{position: 'absolute', width: '100%', left: 0, top: 0}}></View>}
     return (
         <Modal visible={visible} animationType="fade" transparent={true}>
-
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
-                <View style={styles.modalOverlay}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} style={{ maxHeight: height }} >
+                <View style={[styles.modalOverlay, { backgroundColor: hexToRGBA('#000000', 0.7), paddingVertical: 30 }]}>
                     <View style={[
                         styles.modalContent,
                         { backgroundColor: theme.card, borderColor: theme.border }
@@ -129,15 +132,15 @@ export const _Show_Cirugia_Report = ({ visible, titulo, onClose, item }: _Show_C
                             </_Report>
                         ) : ""}
                         <TouchableOpacity
-                            style={[styles.btnCerrar, { backgroundColor: theme.accent }]}
+                            style={[styles.btnCerrar, { backgroundColor: theme.card, borderColor: theme.border }]}
                             onPress={onClose}
                         >
-                            <Text style={styles.btnText}>{t('common.close')}</Text>
+                            <MaterialCommunityIcons name="close" size={24} color={theme.text} />
                         </TouchableOpacity>
                     </View>
                 </View>
             </ScrollView>
-        </Modal>
+        </Modal>        
     );
 };
 
@@ -158,7 +161,7 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
         <Modal visible={visible} animationType="fade" transparent={true} >
 
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
-                <View style={[styles.modalOverlay,style_content]}>
+                <View style={[styles.modalOverlay, style_content]}>
                     <View style={[
                         styles.modalContent,
                         { backgroundColor: theme.card, borderColor: theme.border }
@@ -167,21 +170,21 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
                         {item ? (
                             <_Report>
                                 {items_fields?.map((field: any, index: number) => {
-                                    return field.tipo_linea === "linea" ?(                                     
+                                    return field.tipo_linea === "linea" ? (
                                         <_DetalleLinea
-                                            key={index} 
+                                            key={index}
                                             label={field.label}
                                             value={field.value}
                                         />
-                                    ):(                                        
+                                    ) : (
                                         <_DetalleMultiLinea
-                                            key={index} 
+                                            key={index}
                                             label={field.label}
                                             value={field.value}
                                         />
-                                    );                                    
-                                })}        
-                                {children}                         
+                                    );
+                                })}
+                                {children}
                             </_Report>
 
                         ) : ""}
@@ -189,7 +192,7 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
                             style={[styles.btnCerrar, { backgroundColor: theme.accent }]}
                             onPress={onClose}
                         >
-                            <Text style={styles.btnText}>{t('common.close')}</Text>
+                            <MaterialCommunityIcons name="close" size={22} color={theme.text} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -200,9 +203,10 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
 
 const styles = StyleSheet.create({
     detalleContainer: {
-        paddingVertical: 5,
+        paddingVertical: 15,
         paddingHorizontal: 10,
         width: '100%',
+        marginBottom: 30
     },
     rowDetalle: {
         flexDirection: 'row',
@@ -243,7 +247,7 @@ const styles = StyleSheet.create({
     shareButton: {
         position: 'absolute',
         top: -35,
-        right: 5,
+        right: 30,
     },
     divisor: {
         height: 1,
@@ -252,13 +256,12 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: "rgba(0,0,0,0.85)",
         justifyContent: "center",
         alignItems: "center",
     },
     modalContent: {
         width: "100%",
-        borderRadius: 20,
+        borderRadius: 30,
         padding: 5,
         alignItems: "center",
         borderWidth: 1,
@@ -276,11 +279,22 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
     btnCerrar: {
-        width: "100%",
         padding: 15,
-        borderRadius: 12,
         alignItems: "center",
         marginTop: 10,
+        position: 'absolute',
+        top: 3,
+        left: 20,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        borderWidth: 2,
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4,
     },
     btnText: {
         color: "white",

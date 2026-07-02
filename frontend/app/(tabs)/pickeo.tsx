@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 25,
     borderWidth: 1,
     ...({
       backdropFilter: 'blur(5px)',
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   actionsContainer: { flexDirection: "row", alignItems: "center" },
-  btnAction: { padding: 8, borderRadius: 8 },
+  btnAction: { padding: 8, borderRadius: 20 },
   btnQuick: { padding: 8, marginRight: 5 },
   footer: {
     flexDirection: "row",
@@ -466,15 +466,16 @@ const styles = StyleSheet.create({
   },
   footerBtn: {
     flex: 1,
-    padding: 7,
+    paddingVertical: 13,
+    paddingHorizontal:7,
     marginTop:3,
     marginHorizontal: 5,
-    borderRadius: 12,
+    borderRadius: 20,
     alignItems: "center",
     width: 160
   },
   footerBtnText: {
-    color: "white", fontWeight: "bold", fontSize: 13,
+    color: "white", fontWeight: "bold", fontSize: 15,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,

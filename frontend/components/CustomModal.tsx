@@ -81,8 +81,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "80%",
-    borderRadius: 20,
-    padding: 25,
+    borderRadius: 40,
+    padding: 35,
     alignItems: "center",
     borderWidth: 1,
   },
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   btnCerrar: {
     width: "100%",
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 20,
     alignItems: "center",
     marginTop: 10,
   },

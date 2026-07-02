@@ -113,14 +113,15 @@ export const _AccordionSection = ({
 const styles = StyleSheet.create({
     accordionContainer: {
         borderWidth: 1,
-        borderRadius: 12,
+        borderRadius: 30,
         marginBottom: 12,
         overflow: 'hidden',        
     },
     accordionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        padding: 15,
+        paddingVertical: 15,
+        paddingHorizontal:25,
         alignItems: 'center',
         minHeight: 54,
     },

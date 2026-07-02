@@ -108,12 +108,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingLeft: 10,
+        paddingRight:30,
     },
     userName: {
         fontSize: 12,
         fontWeight: '600',
         marginHorizontal: 8,
         maxWidth: 120,
+        paddingRight:5
     },
     backButton: {
         marginRight: 10,

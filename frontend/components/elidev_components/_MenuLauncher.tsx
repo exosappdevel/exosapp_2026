@@ -5,6 +5,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { hexToRGBA } from './_Functions'
+import { _footer_baseHeight } from "./_Footer";
 
 interface MenuLauncherProps {
     sections: { title: string; icon: string; id: string }[];
@@ -16,7 +17,7 @@ export const _MenuLauncher = ({ sections, activeId, onSelect }: MenuLauncherProp
     const { theme } = useApp();
 
     return (
-        <View style={styles.launcherContainer}>
+        <View style={[styles.launcherContainer,{marginBottom: _footer_baseHeight(true) }]}>
             {sections.map((section) => {
                 const isActive = activeId === section.id;
 
@@ -78,8 +79,7 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'flex-start', // Alineado a la izquierda para que parezcan apps
         paddingHorizontal: '3%',
-        marginTop: 15,
-        marginBottom: 50,               
+        marginTop: 15,                       
     },
     launcherItem: {
         width: '25%', // 4 iconos por fila para que se vea más como iOS
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     launcherBox: {
         width: 80,
         height:95,
-        borderRadius: 10,
+        borderRadius: 15,
         backgroundColor: 'rgba(255, 255, 255, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     launcherIconBox: {
         width: 62,
         height: 62,
-        borderRadius: 15,
+        borderRadius: 30,
         backgroundColor: 'rgba(255, 255, 255, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',

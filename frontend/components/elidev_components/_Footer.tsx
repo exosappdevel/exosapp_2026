@@ -15,12 +15,24 @@ interface FooterProps {
     Show_Almacen?: boolean;
     Main_action?: 'home' | 'back';
     children?: React.ReactNode;
+    Show_Usermenu?: boolean;
 }
+
+export const _footer_baseHeight =(Show_Almacen:boolean)=>{
+    return Show_Almacen ? 100 : 130;
+};
+
+export const _footer_maxHeight =(Show_Almacen:boolean)=>{
+    return Show_Almacen ? 130 : 170;
+};
+
+
 
 export const _Footer = ({
     Show_Almacen = true,
     Main_action = 'home',
-    children
+    children,
+    Show_Usermenu = true
 }: FooterProps) => {
     const router = useRouter();
     const { theme, user } = useApp();
@@ -29,8 +41,8 @@ export const _Footer = ({
     const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const triggerRef = useRef<View>(null);
 
-    const baseHeight = Show_Almacen ? 65 : 100;
-    const maxHeight = Show_Almacen ? 90 : 110;
+    const baseHeight = _footer_baseHeight(Show_Almacen);
+    const maxHeight = _footer_maxHeight(Show_Almacen);
     const footerHeight = useState(new Animated.Value(baseHeight))[0];
 
     useEffect(() => {
@@ -106,6 +118,8 @@ export const _Footer = ({
                         { backgroundColor: theme.iconTextColor, opacity: 0.8 }
                     ]} />
 
+                    { Show_Usermenu && (
+
                     <TouchableOpacity
                         ref={triggerRef}
                         style={styles.userMenuTrigger}
@@ -116,10 +130,11 @@ export const _Footer = ({
                             size={22}
                             color={hexToRGBA(theme.iconTextColor, 0.9)}
                         />
-                    </TouchableOpacity>
+                    </TouchableOpacity> 
+                    )}
 
                     {Show_Almacen ? (
-                        <View style={styles.footerContentRow}>
+                        <View style={[styles.footerContentRow]}>
                             <MaterialCommunityIcons
                                 name="warehouse"
                                 size={22}
@@ -170,7 +185,7 @@ const styles = StyleSheet.create({
     },
     userMenuTrigger: {
         position: 'absolute',
-        left: 6,
+        left: 50,
         top: -3,
         padding: 4,
         zIndex: 10,
@@ -179,10 +194,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 2,
+        marginTop: 30,
     },
     footerText: {
-        fontSize: 12,
+        fontSize: 15,
         fontWeight: 'bold',
         marginLeft: 10,
         textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -193,7 +208,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 1,
+        marginTop: 25,
         height: 50,
         paddingHorizontal: 5
     },

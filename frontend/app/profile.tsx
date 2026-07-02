@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
-import { _Footer, _Background, hexToRGBA } from '@/components/elidev_components';
+import { _Footer, _Header, _Background, hexToRGBA } from '@/components/elidev_components';
 import Constants from 'expo-constants';
 
 
@@ -34,6 +34,15 @@ interface Almacen {
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, setUser, theme, t, language, setLanguage, appConfig, menuFav_str } = useApp();
+
+  const pageConfig = {
+    name: t('screens.perfil'),
+    icon: "account-circle",
+    previous: "home",
+    show_user: false,
+    show_menu: false,
+    show_in_recent: false
+  };
 
   const [selectedTheme, setSelectedTheme] = useState(user.tema);
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
@@ -108,16 +117,19 @@ export default function ProfileScreen() {
   return (
     <_Background id_almacen={user?.id_almacen}>
       <SafeAreaView style={[styles.container, { }]}>
+        <_Header  page_info={pageConfig}>
+
+        </_Header>
 
 
-        {/* Header */}
+        {/* Header
         <View style={[styles.header, { backgroundColor: hexToRGBA(theme.card, 0.3), borderBottomColor: theme.border }]}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialCommunityIcons name="arrow-left" size={24} color={theme.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.text }]}>{t('screens.perfil')}</Text>
           <View style={{ width: 28 }} />
-        </View>
+        </View> */}
 
         <ScrollView style={styles.content}>
           {/* User Info */}
@@ -223,7 +235,7 @@ export default function ProfileScreen() {
 
 
         </ScrollView>
-        <_Footer Show_Almacen={false}>
+        <_Footer Show_Almacen={false} Show_Usermenu={false}>
           <TouchableOpacity
             style={[styles.saveButton, { backgroundColor: theme.accent }]}
             onPress={handleSave}
@@ -305,7 +317,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   section: {
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 10,
     marginBottom: 15,
     borderWidth: 1,
@@ -314,6 +326,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 12,
+    paddingLeft:8
   },
   userInfo: {
     flexDirection: 'row',
@@ -332,7 +345,7 @@ const styles = StyleSheet.create({
   themeOption: {
     width: '48%',
     height: 50,
-    borderRadius: 12,
+    borderRadius: 20,
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
@@ -376,14 +389,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   saveButton: {
-    borderRadius: 12,
-    paddingVertical: 10,
+    borderRadius: 17,
+    paddingVertical: 15,
+    paddingHorizontal:10,
     alignItems: 'center',
     marginTop: 5,
     marginBottom: 1,
   },
   saveButtonText: {
-    color: "white", fontWeight: "bold", fontSize: 13,
+    color: "white", fontWeight: "bold", fontSize: 15,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,

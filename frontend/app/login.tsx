@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     color: "white"
   },
   formContainer: {
-    borderRadius: 20,
+    borderRadius: 35,
     padding: 25,
     borderWidth: 1,
   },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 15,
     paddingHorizontal: 15,
     marginBottom: 15,
     borderWidth: 1,
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   loginButton: {
-    borderRadius: 12,
+    borderRadius: 20,
     paddingVertical: 10,
     alignItems: 'center',
     marginTop: 10,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 20,
     borderWidth: 2,
   },
   faceIdButtonText: {

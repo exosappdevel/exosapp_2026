@@ -146,7 +146,7 @@ export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon 
                 style={styles.groupHeader}
                 onPress={onToggle} // Ahora llama a la función del padre
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft:15 }}>
                     <MaterialCommunityIcons name={icon} size={22} color={theme.iconTextColor} 
                             style={{ 
                                 /*textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     sectionContainer: {
         marginHorizontal: 16,
         marginBottom: 12,
-        borderRadius: 16,
+        borderRadius: 20,
         borderWidth: 1,
         overflow: 'hidden',
     },
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     iconGroup_Container: {
         width: '94%',
         alignSelf: 'center',
-        borderRadius: 20,
+        borderRadius: 50,
         marginVertical: 12,
         padding: 15,
         borderWidth:1,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     listIconContainer: {
         width: 45,
         height: 45,
-        borderRadius: 12,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,

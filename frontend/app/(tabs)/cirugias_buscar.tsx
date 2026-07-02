@@ -13,7 +13,7 @@ import {
   LayoutAnimation,
   UIManager,
   Image,
-  KeyboardAvoidingView,
+  KeyboardAvoidingView,useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -140,6 +140,13 @@ export default function Cirugia_BuscarScreen() {
   const [section_resultados_visible, setSection_resultados_visible] = useState(false);
   const [resultados, setResultados] = useState([]);
   const [resultados_count, setResultados_count] = useState(0);
+  const [resultado_item, setResultadoItem] = useState(null);
+  const [resultado_item_visible, setResultadoItemVisible] = useState(false);
+
+    const { height } = useWindowDimensions();
+    const margin_height = 45;    
+    const _ClientHeight = height - 130 - margin_height;
+  
 
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
   useEffect(() => {
@@ -289,16 +296,10 @@ export default function Cirugia_BuscarScreen() {
             </View>
           }
           isOpen={expandedSection === `res_${index}`}
-          onPress={() => setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)}
+          onPress={() => { setResultadoItem(item); setResultadoItemVisible(true); } /*setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)*/}
           yoff={85 + (index * 80)}
-        >
-          <_Show_Cirugia_Report
-            titulo={'Detalle de la cirugia'}
-            visible={true}
-            item={item}
-            onClose={() => setExpandedSection(null)}
-          />
-
+        >       
+        <View></View>   
         </_AccordionSection>
 
       );
@@ -529,7 +530,7 @@ export default function Cirugia_BuscarScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={[styles.content,{maxHeight:'85%'}]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} style={[styles.content,{maxHeight:_ClientHeight}]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
             <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50}]}>
 
@@ -931,7 +932,13 @@ export default function Cirugia_BuscarScreen() {
           colorIcon={modal.colorIcon}
           onClose={() => setModal({ ...modal, visible: false })}
         />
-        <_Footer Show_Almacen={false} >
+        <_Show_Cirugia_Report
+            titulo={'Detalle de la cirugia'}
+            visible={resultado_item_visible}
+            item={resultado_item}
+            onClose={() => setResultadoItemVisible(false)}
+          />
+        <_Footer Show_Almacen={false} Show_Usermenu={false} >
           {/* Submit Button */}
           <TouchableOpacity
             style={[styles.submitButton, { backgroundColor: theme.accent }]}
@@ -1039,10 +1046,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingVertical: 15,
+    borderRadius: 20,
     marginTop: 3,
-    paddingHorizontal: 10
+    paddingHorizontal: 20
   },
   submitButtonText: {
     color: '#fff',
@@ -1196,7 +1203,7 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     top: -50,                   // Reducido un poco para que no choque con los bordes del acordeón
-    left: 5,
+    left: 20,
   },
   value_bold: {
     fontWeight: 'bold'
