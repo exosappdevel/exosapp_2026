@@ -1,23 +1,9 @@
-import { Children, Dispatch, SetStateAction, useEffect, useState } from "react";
-import {
-    View, ScrollView, Text, StyleSheet, TouchableOpacity, FlatList,
-    Modal, Platform, Alert, Switch, TouchableWithoutFeedback,
-    Keyboard, Pressable, ImageBackground,
-    ViewStyle, useWindowDimensions
-} from "react-native";
-
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ViewStyle, useWindowDimensions } from "react-native";
+import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
-import { useRouter } from 'expo-router';
-import CustomModal from '../../components/CustomModal';
-import { Href } from 'expo-router';
-import { iMenuItem } from "@/context/AppmenuItems";
-import ApiService from "../../services/ApiServices";
-import { PanResponder, Animated } from 'react-native';
-import * as FileSystem from 'expo-file-system';
 import { hexToRGBA } from './_Functions'
 import { _ZoomableView } from "./_ZoomableView";
-import { Background } from "@react-navigation/elements";
 
 interface ReportProps {
     children: React.ReactNode;
@@ -83,19 +69,35 @@ export interface _Show_Cirugia_ReportProps {
 }
 
 export const _Show_Cirugia_Report = ({ visible, titulo, onClose, item }: _Show_Cirugia_ReportProps) => {
-    const { theme, t } = useApp();
-    const { height } = useWindowDimensions();
-    {/*<Modal visible={visible} animationType="fade" transparent={true}>*/ }
-    {<View style={{position: 'absolute', width: '100%', left: 0, top: 0}}></View>}
+    const { theme } = useApp();
+
     return (
         <Modal visible={visible} animationType="fade" transparent={true}>
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} style={{ maxHeight: height }} >
-                <View style={[styles.modalOverlay, { backgroundColor: hexToRGBA('#000000', 0.7), paddingVertical: 30 }]}>
-                    <View style={[
-                        styles.modalContent,
-                        { backgroundColor: theme.card, borderColor: theme.border }
-                    ]}>
-                        <Text style={[styles.titulo, { fontWeight: 'bold', textAlign: 'center' }]}>{titulo}</Text>
+            {/* GestureHandlerRootView dentro del Modal para que los gestos funcionen */}
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <View style={[StyleSheet.absoluteFillObject, { backgroundColor: hexToRGBA('#000000', 0.7) }]} />
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingVertical: 30
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                        <View style={styles.modalHeader}>
+                            <TouchableOpacity
+                                style={[styles.btnCerrar, { backgroundColor: theme.accent }]}
+                                onPress={onClose}
+                            >
+                                <MaterialCommunityIcons name="close" size={20} color="#fff" />
+                            </TouchableOpacity>
+                            <Text style={[styles.titulo, { color: theme.text }]}>{titulo}</Text>
+                            <View style={{ width: 36 }} />
+                        </View>
                         {item ? (
                             <_Report>
                                 <_DetalleLinea label="Codigo" value={item.codigo} />
@@ -138,9 +140,10 @@ export const _Show_Cirugia_Report = ({ visible, titulo, onClose, item }: _Show_C
                             <MaterialCommunityIcons name="close" size={24} color={theme.text} />
                         </TouchableOpacity>
                     </View>
-                </View>
-            </ScrollView>
-        </Modal>        
+
+                </ScrollView>
+            </GestureHandlerRootView>
+        </Modal>
     );
 };
 
@@ -158,15 +161,32 @@ export interface _Show_Generic_ReportProps {
 export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fields, children, style_content }: _Show_Generic_ReportProps) => {
     const { theme, t } = useApp();
     return (
-        <Modal visible={visible} animationType="fade" transparent={true} >
-
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
-                <View style={[styles.modalOverlay, style_content]}>
-                    <View style={[
-                        styles.modalContent,
-                        { backgroundColor: theme.card, borderColor: theme.border }
-                    ]}>
-                        <Text style={[styles.titulo, { fontWeight: 'bold', textAlign: 'center' }]}>{titulo}</Text>
+        <Modal visible={visible} animationType="fade" transparent={true}>
+            {/* GestureHandlerRootView dentro del Modal para que los gestos funcionen */}
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <View style={[StyleSheet.absoluteFillObject, { backgroundColor: hexToRGBA('#000000', 0.7) }]} />
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingVertical: 30
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                        <View style={styles.modalHeader}>
+                            <TouchableOpacity
+                                style={[styles.btnCerrar, { backgroundColor: theme.accent }]}
+                                onPress={onClose}
+                            >
+                                <MaterialCommunityIcons name="close" size={20} color="#fff" />
+                            </TouchableOpacity>
+                            <Text style={[styles.titulo, { color: theme.text }]}>{titulo}</Text>
+                            <View style={{ width: 36 }} />
+                        </View>
                         {item ? (
                             <_Report>
                                 {items_fields?.map((field: any, index: number) => {
@@ -195,8 +215,8 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
                             <MaterialCommunityIcons name="close" size={22} color={theme.text} />
                         </TouchableOpacity>
                     </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </GestureHandlerRootView>
         </Modal>
     );
 };
@@ -246,8 +266,8 @@ const styles = StyleSheet.create({
     },
     shareButton: {
         position: 'absolute',
-        top: -35,
-        right: 30,
+        top: -50,
+        right: 20,
     },
     divisor: {
         height: 1,
@@ -278,27 +298,29 @@ const styles = StyleSheet.create({
         marginVertical: 15,
         lineHeight: 22,
     },
+    btnText: {
+        color: "white",
+        fontWeight: "bold",
+        fontSize: 16,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingHorizontal: 15,
+        paddingVertical: 12,
+    },
     btnCerrar: {
-        padding: 15,
-        alignItems: "center",
-        marginTop: 10,
-        position: 'absolute',
-        top: 3,
-        left: 20,
         width: 36,
         height: 36,
         borderRadius: 18,
-        borderWidth: 2,
         justifyContent: 'center',
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
         elevation: 4,
-    },
-    btnText: {
-        color: "white",
-        fontWeight: "bold",
-        fontSize: 16,
     },
 });

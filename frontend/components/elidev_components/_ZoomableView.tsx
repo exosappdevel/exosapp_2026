@@ -39,19 +39,23 @@ export const _ZoomableView = ({ children, showShare = false, shareButtonStyle }:
 
   // 2. GESTO DE PAN (ARRASTRE / MOVIMIENTO)
   const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      // Solo permitimos mover el contenido si el usuario ha hecho zoom (escala > 1)
+    .manualActivation(true) // 👈 clave: nosotros decidimos cuándo activar
+    .onTouchesMove((e, manager) => {
       if (scale.value > 1) {
-        translateX.value = savedTranslateX.value + event.translationX;
-        translateY.value = savedTranslateY.value + event.translationY;
+        manager.activate(); // hay zoom → pan activo
+      } else {
+        manager.fail(); // sin zoom → el ScrollView toma el control
       }
+    })
+    .onUpdate((event) => {
+      translateX.value = savedTranslateX.value + event.translationX;
+      translateY.value = savedTranslateY.value + event.translationY;
     })
     .onEnd(() => {
       if (scale.value > 1) {
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
       } else {
-        // Si el usuario regresa al tamaño 1, reseteamos la posición suavemente
         translateX.value = withTiming(0);
         translateY.value = withTiming(0);
         savedTranslateX.value = 0;
@@ -153,23 +157,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    width: '100%',    
+    width: '100%',
 
   },
   shotWrapper: {
     width: '100%',
     overflow: 'hidden', // Crucial: Mantiene el contenido ampliado dentro de los límites del componente   
-     backgroundColor:'#fff' ,
-     borderRadius:40, 
+    backgroundColor: '#fff',
+    borderRadius: 40,
   },
   zoomBox: {
-    width: '100%',        
-    borderRadius:40, 
-    backgroundColor:'#fff'
+    width: '100%',
+    borderRadius: 40,
+    backgroundColor: '#fff'
   },
   shareButton: {
     position: 'absolute',
-    top: -18,
+    top: -30,
     right: 5,
     width: 36,
     height: 36,

@@ -938,7 +938,7 @@ export default function Cirugia_BuscarScreen() {
             item={resultado_item}
             onClose={() => setResultadoItemVisible(false)}
           />
-        <_Footer Show_Almacen={false} Show_Usermenu={false} >
+        <_Footer Show_Almacen={false} Show_Usermenu={true} >
           {/* Submit Button */}
           <TouchableOpacity
             style={[styles.submitButton, { backgroundColor: theme.accent }]}
