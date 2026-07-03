@@ -1,7 +1,6 @@
 import {
     View, Text, StyleSheet, TouchableOpacity
 } from "react-native";
-
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { hexToRGBA } from './_Functions'
@@ -30,11 +29,13 @@ export const _MenuLauncher = ({ sections, activeId, onSelect }: MenuLauncherProp
                 const iconTextColor_shadow = hexToRGBA(theme.iconTextColor_shadow, 0.3); // Borde basado en el color del texto
 
                 return (
+                    
                     <TouchableOpacity
                         key={section.id}
                         style={styles.launcherItem}
                         onPress={() => onSelect(section.id)}
                     >
+
                         
                             <View style={[
                                 styles.launcherIconBox,

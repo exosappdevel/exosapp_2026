@@ -10,6 +10,7 @@ import { Href } from 'expo-router';
 import { iMenuItem } from "@/context/AppmenuItems";
 import ApiService from "../../services/ApiServices";
 import {hexToRGBA} from './_Functions'
+import { BlurView } from 'expo-blur';
 
 const _MenuListItem = ({ item, onSoon }: { item: iMenuItem, onSoon: () => void }) => {
     const { theme, t, user, setUser, language } = useApp(); // Extraemos user y setUser
@@ -137,16 +138,17 @@ export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon 
     const { theme } = useApp();
 
     return (
-        <View style={[styles.iconGroup_Container,{
+        <BlurView 
+            intensity={30}
+            style={[styles.iconGroup_Container,{
                 backgroundColor: hexToRGBA(theme.card,0.4),
-                borderColor: hexToRGBA(theme.text,0.15),
-
+                borderColor: hexToRGBA(theme.text,0.15),            
         }]}>
             <TouchableOpacity
                 style={styles.groupHeader}
                 onPress={onToggle} // Ahora llama a la función del padre
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft:15 }}>
+                <View  style={{ flexDirection: 'row', alignItems: 'center', paddingLeft:15 }}>
                     <MaterialCommunityIcons name={icon} size={22} color={theme.iconTextColor} 
                             style={{ 
                                 /*textShadowColor: hexToRGBA(theme.iconColor_shadow,0.8),
@@ -186,7 +188,7 @@ export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon 
                     </View>
                 </View>
             )}
-        </View>
+        </BlurView>
     );
 };
 

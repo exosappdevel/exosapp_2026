@@ -20,6 +20,7 @@ import { useApp } from "../../context/AppContext";
 import ApiService from "../../services/ApiServices";
 import { calcularPrioridad } from "../../utils/PickeoUtils";
 import { _Background, _Header, _Footer, hexToRGBA, playSuccessSound, playErrorSound } from "@/components/elidev_components";
+import { BlurView } from 'expo-blur';
 
 interface Producto {
   id: string;
@@ -229,7 +230,7 @@ export default function PickeoScreen() {
         </_Header>
 
 
-        <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.5) }]}>
+        <BlurView intensity={70} style={[styles.header, { borderBottomColor: theme.border, /*backgroundColor: hexToRGBA(theme.card, 0.5) */}]}>
           <TouchableOpacity onPress={() => router.replace('/terminales')} style={styles.header} >
             <MaterialCommunityIcons name="desktop-classic" size={24} color={theme.text} />
           
@@ -239,7 +240,7 @@ export default function PickeoScreen() {
           </TouchableOpacity>
           <View style={styles.headerActions}>
             <TouchableOpacity onPress={() => inicializarDatos(true)} style={styles.headerBtn}>
-              <MaterialCommunityIcons name="refresh" size={24} color={theme.accent} />
+              <MaterialCommunityIcons name="refresh" size={24} color={theme.text} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setSortBy(sortBy === "prioridad" ? "referencia" : "prioridad")}
@@ -247,12 +248,12 @@ export default function PickeoScreen() {
               <MaterialCommunityIcons
                 name={sortBy === "prioridad" ? "sort-numeric-ascending" : "sort-alphabetical-ascending"}
                 size={24}
-                color={theme.accent}
+                color={theme.text}
               />
             </TouchableOpacity>
           </View>
 
-        </View>
+        </BlurView>
 
 
         {loading ? (
@@ -265,7 +266,7 @@ export default function PickeoScreen() {
               keyExtractor={(item) => item.id.toString()}
               contentContainerStyle={styles.listContent}
               renderItem={({ item }) => (
-                <View
+                <View                  
                   style={[
                     styles.itemRow,
                     { backgroundColor: hexToRGBA(theme.card, 0.7), borderColor: theme.border },
@@ -432,11 +433,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 15,
     borderRadius: 25,
-    borderWidth: 1,
-    ...({
-      backdropFilter: 'blur(5px)',
-      WebkitBackdropFilter: 'blur(5px)',
-    } as any),
+    borderWidth: 1,    
   },
   dot: { width: 12, height: 12, borderRadius: 6, marginRight: 12 },
   itemInfo: { flex: 1 },

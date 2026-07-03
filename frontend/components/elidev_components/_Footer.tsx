@@ -41,8 +41,8 @@ export const _Footer = ({
     const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const triggerRef = useRef<View>(null);
 
-    const baseHeight = _footer_baseHeight(Show_Almacen);
-    const maxHeight = _footer_maxHeight(Show_Almacen);
+    const baseHeight = _footer_baseHeight(Show_Almacen) + insets.bottom;
+    const maxHeight  = _footer_maxHeight(Show_Almacen)  + insets.bottom;
     const footerHeight = useState(new Animated.Value(baseHeight))[0];
 
     useEffect(() => {
@@ -105,7 +105,6 @@ export const _Footer = ({
                     styles.footerContainer,
                     {
                         height: footerHeight,
-                        paddingBottom: insets.bottom
                     }
                 ]}
             >
