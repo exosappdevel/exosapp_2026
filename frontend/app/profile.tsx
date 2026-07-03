@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     borderRadius: 17,
-    paddingVertical: 15,
+    paddingVertical: 0,
     paddingHorizontal:10,
     alignItems: 'center',
     marginTop: 5,
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
     paddingHorizontal: 15,
-    paddingVertical: 1
+    paddingVertical: 10
   },
   codeButton: {
     flexDirection: 'row',

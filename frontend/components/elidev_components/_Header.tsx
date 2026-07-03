@@ -52,7 +52,7 @@ export const _Header = ({ page_info, children }: { page_info: iPage, children?: 
                     <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "" ? router.back() : router.replace({ pathname: page_info?.previous })}>
                         <MaterialCommunityIcons name="arrow-left" size={20} color={theme.iconTextColor} />
                     </TouchableOpacity>
-                ) : null}
+                ) : <View style={[styles.backButton]}></View>}
 
                 <MaterialCommunityIcons name={page_info?.icon} size={20} color={theme.accent} style={{ paddingLeft: 5, paddingRight: 5 }} />
                 <Text style={[styles.pageTitle, { color: theme.iconTextColor }]}>{page_info.name}</Text>
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     },
     pageTitle: {
         fontSize: 12,
-        fontWeight: 'bold',
+        fontWeight: 'bold',        
     },
     userInfo: {
         flexDirection: 'row',
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 1,
+        marginTop: 0,
         height: 50,
         paddingHorizontal: 5
     },

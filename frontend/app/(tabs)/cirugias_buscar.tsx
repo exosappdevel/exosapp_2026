@@ -13,7 +13,7 @@ import {
   LayoutAnimation,
   UIManager,
   Image,
-  KeyboardAvoidingView,useWindowDimensions
+  KeyboardAvoidingView, useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -23,7 +23,7 @@ import { useApp } from '../../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../../components/elidev_components';
 import CustomModal from '../../components/CustomModal';
-import { _Header, _Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../../components/elidev_components';
+import { _Header,_DatePicker, _Report, _PickerModal, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../../components/elidev_components';
 import { addMonths } from 'date-fns';
 
 
@@ -143,10 +143,10 @@ export default function Cirugia_BuscarScreen() {
   const [resultado_item, setResultadoItem] = useState(null);
   const [resultado_item_visible, setResultadoItemVisible] = useState(false);
 
-    const { height } = useWindowDimensions();
-    const margin_height = 45;    
-    const _ClientHeight = height - 130 - margin_height;
-  
+  const { height } = useWindowDimensions();
+  const margin_height = 45;
+  const _ClientHeight = height - 130 - margin_height;
+
 
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
   useEffect(() => {
@@ -298,8 +298,8 @@ export default function Cirugia_BuscarScreen() {
           isOpen={expandedSection === `res_${index}`}
           onPress={() => { setResultadoItem(item); setResultadoItemVisible(true); } /*setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)*/}
           yoff={85 + (index * 80)}
-        >       
-        <View></View>   
+        >
+          <View></View>
         </_AccordionSection>
 
       );
@@ -425,58 +425,6 @@ export default function Cirugia_BuscarScreen() {
 
   };
 
-  const renderPickerModal = (
-    visible: boolean,
-    onClose: () => void,
-    data: string[] | iEstatusList[] | PickerOption[] | iVendedor[] | iTecnico[] | iHospital[] | iMedico[] | iSubdistribuidor[] | iOrderList[],
-    key_name: string = "id",
-    onSelect: (item: any) => void,
-    title: string
-  ) => (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.pickerOverlay}>
-        <View style={[styles.pickerContainer, { backgroundColor: theme.card }]}>
-          <View style={[styles.pickerHeader, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.pickerTitle, { color: theme.text }]}>
-              {title}
-            </Text>
-            <TouchableOpacity onPress={onClose}>
-              <MaterialCommunityIcons name="close" size={24} color={theme.text} />
-            </TouchableOpacity>
-          </View>
-
-          <FlatList
-            data={data as any[]}
-            keyExtractor={(item, index) => {
-              if (typeof item === 'string') {
-                return `str-${index}`;
-              }
-              // Accedemos al VALOR de la propiedad dinámica y le sumamos el index por seguridad
-              const idValue = item[key_name] || index;
-              return `${key_name}-${idValue}`;
-            }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.pickerItem, { borderBottomColor: theme.border }]}
-                onPress={() => {
-                  onSelect(item);
-                  onClose();
-                }}
-              >
-                <Text style={[styles.pickerItemText, { color: theme.text }]}>
-                  {typeof item === 'string'
-                    ? item
-                    : (item.text || item.nombre || item.subdistribuidor || 'Sin nombre')}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-
-
   const [expandedSection, setExpandedSection] = useState<string | null>('parametros');
 
   const toggleSection = (section: string) => {
@@ -530,9 +478,9 @@ export default function Cirugia_BuscarScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={[styles.content,{maxHeight:_ClientHeight}]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} style={[styles.content, { maxHeight: _ClientHeight }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
-            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50}]}>
+            <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50 }]}>
 
 
               {/* SECCIÓN 1: parametros */}
@@ -566,140 +514,21 @@ export default function Cirugia_BuscarScreen() {
                   {filtrar_fecha && (
                     /* Contenedor de Inputs (Se atenúa si está deshabilitado) */
                     <View style={{ opacity: filtrar_fecha ? 1 : 0.4, marginTop: 10 }} pointerEvents={filtrar_fecha ? 'auto' : 'none'}>
+                      
+                      <_DatePicker
+                        label="Fecha de inicio"
+                        required
+                        value={fecha_ini}
+                        onChange={setFecha_ini}
+                        disabled={!filtrar_fecha}
+                      />
 
-                      {/* Fecha ini */}
-                      <View style={styles.fieldContainer}>
-                        <Text style={[styles.label, { color: theme.text }]}>
-                          {t('cirugias_programar.fecha_ini')}
-                        </Text>
-
-                        {Platform.OS === 'web' ? (
-                          <View style={[
-                            styles.selector,
-                            { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                          ]}>
-                            <input
-                              type="date"
-                              disabled={!filtrar_fecha}
-                              value={(() => {
-                                const partes = fecha_ini.split('/');
-                                if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
-                                return "";
-                              })()}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val) {
-                                  const [year, month, day] = val.split('-').map(Number);
-                                  onDateChange_ini({ type: 'set' } as any, new Date(year, month - 1, day));
-                                }
-                              }}
-                              style={{
-                                flex: 1,
-                                border: 'none',
-                                outline: 'none',
-                                background: 'transparent',
-                                color: theme.text,
-                                fontSize: 16,
-                                fontFamily: 'inherit',
-                                cursor: filtrar_fecha ? 'pointer' : 'default'
-                              }}
-                            />
-                            <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                          </View>
-                        ) : (
-                          <>
-                            <TouchableOpacity
-                              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                              onPress={() => setShowDatePicker('inicio')}
-                              disabled={!filtrar_fecha}
-                            >
-                              <Text style={[styles.selectorText, { color: fecha_ini ? theme.text : theme.textSub }]}>
-                                {fecha_ini || 'DD/MM/YYYY'}
-                              </Text>
-                              <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                            </TouchableOpacity>
-
-                            {showDatePicker === 'inicio' && filtrar_fecha && (
-                              <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
-                                <DateTimePicker
-                                  value={parseDate(fecha_ini)}
-                                  key="dtFechaIni"
-                                  mode="date"
-                                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                  onChange={onDateChange_ini}
-                                />
-                              </View>
-                            )}
-                          </>
-                        )}
-                      </View>
-
-                      {/* Fecha fin */}
-                      <View style={styles.fieldContainer}>
-                        <Text style={[styles.label, { color: theme.text }]}>
-                          {t('cirugias_programar.fecha_fin')}
-                        </Text>
-
-                        {Platform.OS === 'web' ? (
-                          <View style={[
-                            styles.selector,
-                            { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                          ]}>
-                            <input
-                              type="date"
-                              disabled={!filtrar_fecha}
-                              value={(() => {
-                                const partes = fecha_fin.split('/');
-                                if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
-                                return "";
-                              })()}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val) {
-                                  const [year, month, day] = val.split('-').map(Number);
-                                  onDateChange_fin({ type: 'set' } as any, new Date(year, month - 1, day));
-                                }
-                              }}
-                              style={{
-                                flex: 1,
-                                border: 'none',
-                                outline: 'none',
-                                background: 'transparent',
-                                color: theme.text,
-                                fontSize: 16,
-                                fontFamily: 'inherit',
-                                cursor: filtrar_fecha ? 'pointer' : 'default'
-                              }}
-                            />
-                            <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                          </View>
-                        ) : (
-                          <>
-                            <TouchableOpacity
-                              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                              onPress={() => setShowDatePicker('fin')}
-                              disabled={!filtrar_fecha}
-                            >
-                              <Text style={[styles.selectorText, { color: fecha_fin ? theme.text : theme.textSub }]}>
-                                {fecha_fin || 'DD/MM/YYYY'}
-                              </Text>
-                              <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                            </TouchableOpacity>
-
-                            {showDatePicker === 'fin' && filtrar_fecha && (
-                              <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
-                                <DateTimePicker
-                                  value={parseDate(fecha_fin)}
-                                  key="dtFechaFin"
-                                  mode="date"
-                                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                  onChange={onDateChange_fin}
-                                />
-                              </View>
-                            )}
-                          </>
-                        )}
-                      </View>
+                      <_DatePicker
+                        label="Fecha fin"
+                        value={fecha_fin}
+                        onChange={setFecha_fin}
+                        disabled={!filtrar_fecha}
+                      />
 
                     </View>
                   )}
@@ -855,76 +684,71 @@ export default function Cirugia_BuscarScreen() {
 
 
         {/* Picker Modals */}
-        {
-          renderPickerModal(
-            showEstatusPicker,
-            () => setShowEstatusPicker(false),
-            Estatus_list,
-            "estatus",
-            (item: iEstatusList) => setEstatus(item),
-            'Estatus'
-          )}
-        {
-          renderPickerModal(
-            showOrderPicker,
-            () => setShowOrderPicker(false),
-            Order_list,
-            "order",
-            (item: iOrderList) => setOrderBy(item),
-            'Ordenar por:'
-          )}
-        {
-          renderPickerModal(
-            showVendedorPicker,
-            () => setShowVendedorPicker(false),
-            vendedores,
-            "id_vendedor",
-            (item: iVendedor) => setVendedor(item),
-            'Seleccionar Vendedor'
-          )}
-        {
-          renderPickerModal(
-            showTecnicoPicker,
-            () => setShowTecnicoPicker(false),
-            tecnicos,
-            "id_tecnico",
-            (item: iTecnico) => setTecnico(item),
-            'Seleccionar Técnico'
-          )}
+        <_PickerModal
+          key="picker-estatus"
+          visible={showEstatusPicker}
+          onClose={() => setShowEstatusPicker(false)}
+          data={Estatus_list}
+          key_name="estatus"
+          onSelect={(item: iEstatusList) => setEstatus(item)}
+          title="Estatus"
+        />
+        <_PickerModal
+          key="picker-order"
+          visible={showOrderPicker}
+          onClose={() => setShowOrderPicker(false)}
+          data={Order_list}
+          key_name="order"
+          onSelect={(item: iOrderList) => setOrderBy(item)}
+          title='Ordenar por:'
+        />
+        <_PickerModal
+          key="picker-vendedor"
+          visible={showVendedorPicker}
+          onClose={() => setShowVendedorPicker(false)}
+          data={vendedores}
+          key_name="id_vendedor"
+          onSelect={(item: iVendedor) => setVendedor(item)}
+          title='Seleccionar Vendedor'
+        />
+        <_PickerModal
+          key="picker-tecnicos"
+          visible={showTecnicoPicker}
+          onClose={() => setShowTecnicoPicker(false)}
+          data={tecnicos}
+          key_name="id_vendedor"
+          onSelect={(item: iTecnico) => setTecnico(item)}
+          title='Seleccionar Técnico'
+        />
+        <_PickerModal
+          key="picker-subs"
+          visible={showSubdistribuidorPicker}
+          onClose={() => setShowSubdistribuidorPicker(false)}
+          data={subdistribuidores}
+          key_name="id_subdistribuidor"
+          onSelect={(item: iSubdistribuidor) => setSubdistribuidor(item)}
+          title='Seleccionar Subdistribuidor'
+        />
+        <_PickerModal
+          key="picker-hospital"
+          visible={showHospitalPicker}
+          onClose={() => setShowHospitalPicker(false)}
+          data={hospitales}
+          key_name="id_hospital"
+          onSelect={(item: iHospital) => setHospital(item)}
+          title='Seleccionar hospital'
+        />
+        <_PickerModal
+          key="picker-medico"
+          visible={showMedicoPicker}
+          onClose={() => setShowMedicoPicker(false)}
+          data={medicos}
+          key_name="id_medico"
+          onSelect={(item: iMedico) => setMedico(item)}
+          title='Seleccionar Medico'
+        />
 
-        {
-          renderPickerModal(
-            showSubdistribuidorPicker,
-            () => setShowSubdistribuidorPicker(false),
-            subdistribuidores,
-            "id_subdistribuidor",
-            (item: iSubdistribuidor) => setSubdistribuidor(item),
-            'Seleccionar Subdistribuidor'
-          )}
-
-        {
-          renderPickerModal(
-            showHospitalPicker,
-            () => setShowHospitalPicker(false),
-            hospitales,
-            "id_hospital",
-            (item: iHospital) => setHospital(item),
-            'Seleccionar hospital'
-          )}
-        {
-          renderPickerModal(
-            showMedicoPicker,
-            () => setShowMedicoPicker(false),
-            medicos,
-            "id_medico",
-            (item: iMedico) => setMedico(item),
-            'Seleccionar Medico'
-          )}
-
-
-
-
-        <CustomModal
+        <CustomModal        
           visible={modal.visible}
           titulo={modal.titulo}
           mensaje={modal.mensaje}
@@ -933,11 +757,11 @@ export default function Cirugia_BuscarScreen() {
           onClose={() => setModal({ ...modal, visible: false })}
         />
         <_Show_Cirugia_Report
-            titulo={'Detalle de la cirugia'}
-            visible={resultado_item_visible}
-            item={resultado_item}
-            onClose={() => setResultadoItemVisible(false)}
-          />
+          titulo={'Detalle de la cirugia'}
+          visible={resultado_item_visible}
+          item={resultado_item}
+          onClose={() => setResultadoItemVisible(false)}
+        />
         <_Footer Show_Almacen={false} Show_Usermenu={true} >
           {/* Submit Button */}
           <TouchableOpacity
@@ -963,7 +787,7 @@ export default function Cirugia_BuscarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    height:'85%'
+    height: '85%'
   },
   header: {
     flexDirection: 'row',
@@ -979,7 +803,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 3  
+    padding: 3
   },
   formCard: {
     borderRadius: 0,

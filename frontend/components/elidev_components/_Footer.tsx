@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import {
     View, Text, StyleSheet, TouchableOpacity
 } from "react-native";
-
+import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { useRouter } from 'expo-router';
@@ -18,11 +18,11 @@ interface FooterProps {
     Show_Usermenu?: boolean;
 }
 
-export const _footer_baseHeight =(Show_Almacen:boolean)=>{
+export const _footer_baseHeight = (Show_Almacen: boolean) => {
     return Show_Almacen ? 100 : 130;
 };
 
-export const _footer_maxHeight =(Show_Almacen:boolean)=>{
+export const _footer_maxHeight = (Show_Almacen: boolean) => {
     return Show_Almacen ? 130 : 170;
 };
 
@@ -109,47 +109,53 @@ export const _Footer = ({
                     }
                 ]}
             >
-                <TouchableOpacity
-                    style={[styles.footerTab, { borderTopColor: hexToRGBA(theme.iconTextColor, 0.2), borderTopWidth: 1 }]}
-                    activeOpacity={0.7}
+                <BlurView
+                    intensity={60}
+                    tint={user.tema ? 'dark' : 'light'}   // ajusta según tu tema
+                    style={[styles.blurContainer, { paddingBottom: insets.bottom }]}
                 >
-                    <View style={[
-                        styles.homeIndicator,
-                        { backgroundColor: theme.iconTextColor, opacity: 0.8 }
-                    ]} />
-
-                    { Show_Usermenu && (
-
                     <TouchableOpacity
-                        ref={triggerRef}
-                        style={styles.userMenuTrigger}
-                        onPress={openUserMenu}
+                        style={[styles.footerTab, { borderTopColor: hexToRGBA(theme.iconTextColor, 0.2), borderTopWidth: 1 }]}
+                        activeOpacity={0.7}
                     >
-                        <MaterialCommunityIcons
-                            name="menu"
-                            size={22}
-                            color={hexToRGBA(theme.iconTextColor, 0.9)}
-                        />
-                    </TouchableOpacity> 
-                    )}
+                        <View style={[
+                            styles.homeIndicator,
+                            { backgroundColor: theme.iconTextColor, opacity: 0.8 }
+                        ]} />
 
-                    {Show_Almacen ? (
-                        <View style={[styles.footerContentRow]}>
-                            <MaterialCommunityIcons
-                                name="warehouse"
-                                size={22}
-                                color={hexToRGBA(theme.iconTextColor, 0.8)}
-                            />
-                            <Text style={[styles.footerText, { color: theme.iconTextColor }]}>
-                                {user?.almacen_nombre || "Almacén"}
-                            </Text>
-                        </View>
-                    ) : (
-                        <View style={[styles.footerContentChildreen]}>
-                            {children}
-                        </View>
-                    )}
-                </TouchableOpacity>
+                        {Show_Usermenu && (
+
+                            <TouchableOpacity
+                                ref={triggerRef}
+                                style={styles.userMenuTrigger}
+                                onPress={openUserMenu}
+                            >
+                                <MaterialCommunityIcons
+                                    name="menu"
+                                    size={22}
+                                    color={hexToRGBA(theme.iconTextColor, 0.9)}
+                                />
+                            </TouchableOpacity>
+                        )}
+
+                        {Show_Almacen ? (
+                            <View style={[styles.footerContentRow]}>
+                                <MaterialCommunityIcons
+                                    name="warehouse"
+                                    size={22}
+                                    color={hexToRGBA(theme.iconTextColor, 0.8)}
+                                />
+                                <Text style={[styles.footerText, { color: theme.iconTextColor }]}>
+                                    {user?.almacen_nombre || "Almacén"}
+                                </Text>
+                            </View>
+                        ) : (
+                            <View style={[styles.footerContentChildreen]}>
+                                {children}
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </BlurView>
             </Animated.View>
 
             <_UserMenu
@@ -194,7 +200,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 30,
+        marginTop: 25,
     },
     footerText: {
         fontSize: 15,
@@ -208,8 +214,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 25,
+        marginTop: 20,
         height: 50,
         paddingHorizontal: 5
+    },
+    blurContainer: {
+        flex: 1,
+        width: '100%',
+        overflow: 'hidden',  // necesario para que el blur respete el borderRadius si lo tienes
     },
 });

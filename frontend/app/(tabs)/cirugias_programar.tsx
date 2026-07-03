@@ -28,7 +28,7 @@ import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../../components/CustomModal';
-import { _Header, _Footer, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report } from '../../components/elidev_components';
+import { _Header, _Footer,_DatePicker, _PickerModal, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report } from '../../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 import { Int32 } from 'react-native/Libraries/Types/CodegenTypes';
 
@@ -206,30 +206,15 @@ export default function ProgramaCirugiaScreen() {
   const [showTecnico2Picker, setShowTecnico2Picker] = useState(false);
   const [showSubdistribuidorPicker, setShowSubdistribuidorPicker] = useState(false);
 
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const [expandedCats, setExpandedCats] = useState({}); // Para manejar acordeones anidados
+  const [tempHora, setTempHora] = useState(new Date()); // hora temporal
+  
   const scrollRef = React.useRef<ScrollView>(null);
 
   const { height } = useWindowDimensions();
-  const margin_height = 45;
+  const margin_height = 70;
   const _ClientHeight = height - 130 - margin_height;
 
-
-  const validaData = async (response: any) => {
-    try {
-      if (Array.isArray(response)) {
-        return response;
-      }
-      else return []
-    } catch (e) {
-      console.log('Error loading service:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
   useEffect(() => {
     let isMounted = true;
@@ -296,31 +281,14 @@ export default function ProgramaCirugiaScreen() {
   }, []); // <-- DEJAMOS EL ARRAY VACÍO PARA QUE SOLO CORRA AL INICIO
 
 
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    // En iOS, el picker puede quedarse abierto, en Android se cierra solo
-    setShowDatePicker(false);
 
-    if (event.type === 'set' && selectedDate) {
-      // 1. Actualizamos el objeto Date para el componente interno
-      setDate(selectedDate);
-
-      // 2. Formateamos la fecha para mostrarla en el campo de texto
-      const day = selectedDate.getDate().toString().padStart(2, '0');
-      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-      const year = selectedDate.getFullYear();
-      const formattedDate = `${day}/${month}/${year}`;
-
-      // 3. ¡CRUCIAL!: Actualizamos el estado que lee el <Text> del selector
-      setFecha(formattedDate);
-    } else {
-      // Si el usuario cancela, cerramos el picker
-      setShowDatePicker(false);
-    }
+  const confirmHora = () => {
+    const h = tempHora.getHours().toString().padStart(2, '0');
+    const m = tempHora.getMinutes().toString().padStart(2, '0');
+    setHora(`${h}:${m}`);
+    setShowHoraPicker(false);
   };
 
-  const showPicker = () => {
-    setShowDatePicker(true);
-  };
 
   const [modal, setModal] = useState({
     visible: false,
@@ -329,7 +297,7 @@ export default function ProgramaCirugiaScreen() {
     icon: 'alert-circle-outline',
     colorIcon: '#f56565'
   });
-  const [show_modal, setShowModal] = useState(false);
+  
 
   const get_subcat_selected = (tipo: string): string => {
     // 1. Obtenemos todas las llaves del objeto (ej: ["ins_24", "ep_10", "ins_45"])
@@ -502,94 +470,6 @@ export default function ProgramaCirugiaScreen() {
 
   };
 
-  const PickerModal = ({
-    visible, onClose, data, key_name = "id", onSelect, title
-  }: {
-    visible: boolean;
-    onClose: () => void;
-    data: any[];
-    key_name?: string;
-    onSelect: (item: any) => void;
-    title: string;
-  }) => {
-    const [query, setQuery] = useState('');
-
-    // Limpiar búsqueda al abrir
-    useEffect(() => {
-      if (visible) setQuery('');
-    }, [visible]);
-
-    const getLabel = (item: any): string => {
-      if (typeof item === 'string') return item;
-      return item.nombre || item.subdistribuidor || 'Sin nombre';
-    };
-
-    const filtered = data.filter(item =>
-      getLabel(item).toLowerCase().includes(query.toLowerCase())
-    );
-
-    return (
-      <Modal visible={visible} transparent animationType="slide">
-        <View style={styles.pickerOverlay}>
-          <View style={[styles.pickerContainer, { backgroundColor: theme.card }]}>
-
-            {/* Header */}
-            <View style={[styles.pickerHeader, { borderBottomColor: theme.border }]}>
-              <Text style={[styles.pickerTitle, { color: theme.text }]}>{title}</Text>
-              <TouchableOpacity onPress={onClose}>
-                <MaterialCommunityIcons name="close" size={24} color={theme.text} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Buscador */}
-            <View style={[styles.searchContainer, { borderBottomColor: theme.border, backgroundColor: theme.inputBg }]}>
-              <MaterialCommunityIcons name="magnify" size={20} color={theme.textSub} />
-              <TextInput
-                style={[styles.searchInput, { color: theme.text }]}
-                placeholder="Buscar..."
-                placeholderTextColor={theme.textSub}
-                value={query}
-                onChangeText={setQuery}
-                autoCorrect={false}
-                clearButtonMode="while-editing"
-              />
-              {query.length > 0 && (
-                <TouchableOpacity onPress={() => setQuery('')}>
-                  <MaterialCommunityIcons name="close-circle" size={18} color={theme.textSub} />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {/* Lista filtrada */}
-            <FlatList
-              data={filtered}
-              keyExtractor={(item, index) => {
-                if (typeof item === 'string') return `str-${index}`;
-                return `${key_name}-${item[key_name] || index}`;
-              }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.pickerItem, { borderBottomColor: theme.border }]}
-                  onPress={() => { onSelect(item); onClose(); }}
-                >
-                  <Text style={[styles.pickerItemText, { color: theme.text }]}>
-                    {getLabel(item)}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <Text style={[styles.pickerItemText, { color: theme.textSub, textAlign: 'center', padding: 20 }]}>
-                  Sin resultados
-                </Text>
-              }
-              keyboardShouldPersistTaps="handled"
-            />
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-
   const [expandedSection, setExpandedSection] = useState<string | null>('lugar');
 
   const toggleSection = (section: string) => {
@@ -737,72 +617,13 @@ export default function ProgramaCirugiaScreen() {
               >
 
                 {/* Fecha */}
-                <View style={styles.fieldContainer}>
-                  <Text style={[styles.label, { color: theme.text }]}>
-                    {t('cirugias_programar.fecha')} <Text style={styles.required}>*</Text>
-                  </Text>
-
-                  {Platform.OS === 'web' ? (
-                    /* --- VISTA PARA WEB --- */
-                    <View style={[
-                      styles.selector,
-                      { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                    ]}>
-                      <input
-                        type="date"
-                        // HTML5 requiere YYYY-MM-DD para el valor interno del input
-                        value={date instanceof Date && !isNaN(date.getTime())
-                          ? date.toISOString().split('T')[0]
-                          : ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val) {
-                            const [year, month, day] = val.split('-').map(Number);
-                            const selectedDate = new Date(year, month - 1, day);
-
-                            // Llamamos a tu función para actualizar el estado 'fecha' (texto) y 'date' (objeto)
-                            onDateChange({ type: 'set' } as any, selectedDate);
-                          }
-                        }}
-                        style={{
-                          flex: 1,
-                          border: 'none',
-                          outline: 'none',
-                          background: 'transparent',
-                          color: date ? theme.text : theme.textSub,
-                          fontSize: 16,
-                          fontFamily: 'inherit',
-                          cursor: 'pointer'
-                        }}
-                      />
-                      <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                    </View>
-                  ) : (
-                    /* --- VISTA PARA MÓVIL (iOS/Android) --- */
-                    <>
-                      <TouchableOpacity
-                        style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                        onPress={showPicker}
-                      >
-                        <Text style={[styles.selectorText, { color: fecha ? theme.text : theme.textSub }]}>
-                          {fecha || 'DD/MM/YYYY'}
-                        </Text>
-                        <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                      </TouchableOpacity>
-
-                      {showDatePicker && (
-                        <DateTimePicker
-                          value={date}
-                          mode="date"
-                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                          onChange={onDateChange}
-                          minimumDate={new Date()}
-                        />
-                      )}
-                    </>
-                  )}
-
-                </View>
+                <_DatePicker
+                  label={t('cirugias_programar.fecha')}
+                  required
+                  value={fecha}
+                  onChange={setFecha}
+                  minimumDate={new Date()}
+                />
 
                 {/* Hora */}
                 <View style={styles.fieldContainer}>
@@ -829,36 +650,22 @@ export default function ProgramaCirugiaScreen() {
                       />
                       <MaterialCommunityIcons name="clock-outline" size={20} color={theme.textSub} />
                     </View>
-                  ) : Platform.OS === 'ios' ? (
-                    // iOS: spinner inline, sin modal
-                    <View style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
-                      <DateTimePicker
-                        value={hora ? (() => {
-                          const [h, m] = hora.split(':').map(Number);
-                          const d = new Date();
-                          d.setHours(h, m, 0, 0);
-                          return d;
-                        })() : new Date()}
-                        mode="time"
-                        display="spinner"
-                        minuteInterval={30}
-                        onChange={(event, selectedDate) => {
-                          if (selectedDate) {
-                            const h = selectedDate.getHours().toString().padStart(2, '0');
-                            const m = selectedDate.getMinutes().toString().padStart(2, '0');
-                            setHora(`${h}:${m}`);
-                          }
-                        }}
-                        style={{ flex: 1 }}
-                        textColor={theme.text}
-                      />
-                    </View>
                   ) : (
-                    // Android: botón que abre el picker nativo
+                    // iOS y Android: botón que muestra la hora y abre el picker con confirmación
                     <>
                       <TouchableOpacity
                         style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                        onPress={() => setShowHoraPicker(true)}
+                        onPress={() => {
+                          if (hora) {
+                            const [h, m] = hora.split(':').map(Number);
+                            const d = new Date();
+                            d.setHours(h, m, 0, 0);
+                            setTempHora(d);
+                          } else {
+                            setTempHora(new Date());
+                          }
+                          setShowHoraPicker(true);
+                        }}
                       >
                         <Text style={[styles.selectorText, { color: hora ? theme.text : theme.textSub }]}>
                           {hora || 'Seleccione hora...'}
@@ -867,25 +674,43 @@ export default function ProgramaCirugiaScreen() {
                       </TouchableOpacity>
 
                       {showHoraPicker && (
-                        <DateTimePicker
-                          value={hora ? (() => {
-                            const [h, m] = hora.split(':').map(Number);
-                            const d = new Date();
-                            d.setHours(h, m, 0, 0);
-                            return d;
-                          })() : new Date()}
-                          mode="time"
-                          display="default"
-                          minuteInterval={30}
-                          onChange={(event, selectedDate) => {
-                            setShowHoraPicker(false);
-                            if (event.type === 'set' && selectedDate) {
-                              const h = selectedDate.getHours().toString().padStart(2, '0');
-                              const m = selectedDate.getMinutes().toString().padStart(2, '0');
-                              setHora(`${h}:${m}`);
-                            }
-                          }}
-                        />
+                        <>
+                          <DateTimePicker
+                            value={tempHora}
+                            mode="time"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            minuteInterval={30}
+                            onChange={(event, selectedDate) => {
+                              if (Platform.OS === 'android') {
+                                setShowHoraPicker(false);
+                                if (event.type === 'set' && selectedDate) {
+                                  const h = selectedDate.getHours().toString().padStart(2, '0');
+                                  const m = selectedDate.getMinutes().toString().padStart(2, '0');
+                                  setHora(`${h}:${m}`);
+                                }
+                              } else {
+                                if (selectedDate) setTempHora(selectedDate);
+                              }
+                            }}
+                            textColor={theme.text}
+                          />
+                          {Platform.OS === 'ios' && (
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, paddingTop: 4 }}>
+                              <TouchableOpacity
+                                onPress={() => setShowHoraPicker(false)}
+                                style={[styles.pickerBtn, { borderColor: theme.border }]}
+                              >
+                                <Text style={{ color: theme.textSub }}>Cancelar</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                onPress={confirmHora}
+                                style={[styles.pickerBtn, { backgroundColor: theme.accent }]}
+                              >
+                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Confirmar</Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
+                        </>
                       )}
                     </>
                   )}
@@ -1444,7 +1269,8 @@ export default function ProgramaCirugiaScreen() {
 
         {/* Picker Modals */}
 
-        <PickerModal
+        <_PickerModal
+          key="picker-Estado"
           visible={showEstadoPicker}
           onClose={() => setShowEstadoPicker(false)}
           data={estados}
@@ -1452,7 +1278,8 @@ export default function ProgramaCirugiaScreen() {
           onSelect={(item: iEstado) => setEstado(item)}
           title="Seleccionar Estado"
         />
-        <PickerModal
+        <_PickerModal
+          key="picker-vendedor"
           visible={showVendedorPicker}
           onClose={() => setShowVendedorPicker(false)}
           data={vendedores}
@@ -1460,7 +1287,8 @@ export default function ProgramaCirugiaScreen() {
           onSelect={(item: iVendedor) => setVendedor(item)}
           title="Seleccionar Vendedor"
         />
-        <PickerModal
+        <_PickerModal
+          key="picker-tecnico1"
           visible={showTecnico1Picker}
           onClose={() => setShowTecnico1Picker(false)}
           data={tecnicos}
@@ -1468,7 +1296,8 @@ export default function ProgramaCirugiaScreen() {
           onSelect={(item: iTecnico) => setTecnico1(item)}
           title="Seleccionar Técnico"
         />
-        <PickerModal
+        <_PickerModal
+          key="picker-tecnico2"
           visible={showTecnico2Picker}
           onClose={() => setShowTecnico2Picker(false)}
           data={tecnicos}
@@ -1476,15 +1305,17 @@ export default function ProgramaCirugiaScreen() {
           onSelect={(item: iTecnico) => setTecnico2(item)}
           title="Seleccionar Técnico"
         />
-        <PickerModal
+        <_PickerModal
           visible={showSubdistribuidorPicker}
+          key="picker-subs"
           onClose={() => setShowSubdistribuidorPicker(false)}
           data={subdistribuidores}
           key_name="id_subdistribuidor"
           onSelect={(item: iSubdistribuidor) => setSubdistribuidor(item)}
           title="Seleccionar Subdistribuidor"
         />
-        <PickerModal
+        <_PickerModal
+          key="picker-hospital"
           visible={showHospitalPicker}
           onClose={() => setShowHospitalPicker(false)}
           data={hospitales}
@@ -1492,7 +1323,8 @@ export default function ProgramaCirugiaScreen() {
           onSelect={(item: iHospital) => setHospital(item)}
           title="Seleccionar Hospital"
         />
-        <PickerModal
+        <_PickerModal 
+          key="picker-medico"
           visible={showMedicoPicker}
           onClose={() => setShowMedicoPicker(false)}
           data={medicos}
@@ -1501,7 +1333,7 @@ export default function ProgramaCirugiaScreen() {
           title="Seleccionar Medico"
         />
 
-        <CustomModal
+        <CustomModal          
           visible={modal.visible}
           titulo={modal.titulo}
           mensaje={modal.mensaje}
@@ -1599,7 +1431,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderWidth: 1,
     borderRadius: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 5,
     paddingVertical: 14,
   },
   selectorText: {
@@ -1609,16 +1441,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 15,
+    paddingVertical: 10,
     borderRadius: 20,
     marginTop: 2,
-    paddingHorizontal: 20
+    paddingHorizontal: 10
   },
   submitButtonText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: 'bold',
     marginLeft: 10,
+    paddingTop:0
   },
   footer: {
     flexDirection: 'row',
@@ -1632,34 +1465,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  pickerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-start',    
-  },
-  pickerContainer: {
-    maxHeight: '80%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-  },
-  pickerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  pickerItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-  },
-  pickerItemText: {
-    fontSize: 14,
-  },
+
   inputGroup: { marginBottom: 15 },
   checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   checkLabel: { marginLeft: 10, fontSize: 15 },
@@ -1711,17 +1517,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#ccc'
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
+  pickerBtn: {
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
 });
