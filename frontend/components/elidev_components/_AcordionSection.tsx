@@ -41,7 +41,7 @@ export const _AccordionSection = ({
     const { theme } = useApp();
     
     if (!visible) return null;
-    const containerBg = backgroundColor || hexToRGBA(theme.card, 0.5);
+    const containerBg = backgroundColor || hexToRGBA(theme.card, 0.3);
 
     const handlePress = () => {                
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -68,8 +68,8 @@ export const _AccordionSection = ({
             <TouchableOpacity
                 style={[
                     styles.accordionHeader,
-                    { 
-                        backgroundColor: isOpen ? 'rgba(255,255,255,0.3)' : 'transparent',
+                    {                         
+                        backgroundColor: backgroundColor? backgroundColor :  (isOpen ?  'rgba(255,255,255,0.3)' : 'transparent'),
                         // Si el título se oculta, justificamos al final para que el ícono se quede a la derecha
                         justifyContent: mostrarTitulo ? 'space-between' : 'flex-end'
                     }

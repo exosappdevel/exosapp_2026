@@ -67,6 +67,7 @@ interface Theme {
   iconColor_shadow: string;
   iconTextColor: string;
   iconTextColor_shadow: string;
+  accordion_checked : string;
 }
 
 interface AppContextType {
@@ -105,7 +106,8 @@ const themes: Record<ThemeType, Theme> = {
     accent: "#3182ce",
     iconColor: "#3182ce",
     iconTextColor: "#ffffff",
-    iconTextColor_shadow: "#444444"
+    iconTextColor_shadow: "#444444",
+    accordion_checked:"#00ff00b2"
   },
   dark: {
     bg: "#121212",
@@ -122,7 +124,8 @@ const themes: Record<ThemeType, Theme> = {
     accent: "#63b3ed",
     iconColor: "#000000",
     iconTextColor: "#fbfbfb",
-    iconTextColor_shadow: "#000000"
+    iconTextColor_shadow: "#000000",
+    accordion_checked:"#00ff00b2"
   },
   blue: {
     bg: "#e3f2fd",
@@ -139,7 +142,8 @@ const themes: Record<ThemeType, Theme> = {
     accent: "#1976d2",
     iconColor: "#1976d2",
     iconTextColor: "#154883",
-    iconTextColor_shadow: "#000000"
+    iconTextColor_shadow: "#000000",
+    accordion_checked:"#00ff00b2"
   },
   pink: {
     bg: "#fce4ec",
@@ -156,7 +160,8 @@ const themes: Record<ThemeType, Theme> = {
     accent: "#e91e63",
     iconColor: "#f062915e",
     iconTextColor: "#b1427a",
-    iconTextColor_shadow: "#000000"
+    iconTextColor_shadow: "#000000",
+    accordion_checked:"#00ff00b2"
   }
 };
 

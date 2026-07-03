@@ -132,13 +132,7 @@ export const _Show_Cirugia_Report = ({ visible, titulo, onClose, item }: _Show_C
                                     value={`${item.last_update || ''} / ${item.last_updater || ''}`}
                                 />
                             </_Report>
-                        ) : ""}
-                        <TouchableOpacity
-                            style={[styles.btnCerrar, { backgroundColor: theme.card, borderColor: theme.border }]}
-                            onPress={onClose}
-                        >
-                            <MaterialCommunityIcons name="close" size={24} color={theme.text} />
-                        </TouchableOpacity>
+                        ) : ""}                        
                     </View>
 
                 </ScrollView>
@@ -208,12 +202,7 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
                             </_Report>
 
                         ) : ""}
-                        <TouchableOpacity
-                            style={[styles.btnCerrar, { backgroundColor: theme.accent }]}
-                            onPress={onClose}
-                        >
-                            <MaterialCommunityIcons name="close" size={22} color={theme.text} />
-                        </TouchableOpacity>
+                        
                     </View>
                 </ScrollView>
             </GestureHandlerRootView>
