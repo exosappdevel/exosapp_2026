@@ -98,7 +98,7 @@
       "yes":"Si",
       "no":"No",
       "comingSoon":"Próximamente",
-      "save":"GUARDAR",
+      "save":"Guardar",
       "featureNotAvailable": "Esta función estará disponible pronto",
       "connectionError": "No se pudo conectar con el servidor.",
       "loadError": "No se pudieron obtener los productos del servidor.",

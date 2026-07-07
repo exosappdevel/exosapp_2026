@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
-import { _Footer, _Header, _Background, hexToRGBA } from '@/components/elidev_components';
+import { _Footer, _Header, _Background, _PickerModal, hexToRGBA } from '@/components/elidev_components';
 import Constants from 'expo-constants';
 
 
@@ -38,7 +38,7 @@ export default function ProfileScreen() {
   const pageConfig = {
     name: t('screens.perfil'),
     icon: "account-circle",
-    previous: "home",
+    previous: "",
     show_user: false,
     show_menu: false,
     show_in_recent: false
@@ -81,6 +81,9 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleClose = async () => {
+    router.back();
+  };
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -116,8 +119,8 @@ export default function ProfileScreen() {
 
   return (
     <_Background id_almacen={user?.id_almacen}>
-      <SafeAreaView style={[styles.container, { }]}>
-        <_Header  page_info={pageConfig}>
+      <SafeAreaView style={[styles.container, {}]}>
+        <_Header page_info={pageConfig}>
 
         </_Header>
 
@@ -144,7 +147,7 @@ export default function ProfileScreen() {
               <Text style={[styles.userName, { color: theme.text, fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{user.tipo_usuario}</Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}  - {Constants.expoConfig?.version || "1.0.0"}</Text>              
+              <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}  - {Constants.expoConfig?.version || "1.0.0"}</Text>
             </View>
 
           </View>
@@ -247,10 +250,22 @@ export default function ProfileScreen() {
               <Text style={styles.saveButtonText}>{t('common.save')}</Text>
             )}
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: theme.accent, marginLeft: 40 }]}
+            onPress={handleClose}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>{t('common.close')}</Text>
+            )}
+          </TouchableOpacity>
         </_Footer>
 
         {/* Almacen Picker Modal */}
-        {showAlmacenPicker && (
+        {/*showAlmacenPicker && (
           <View style={styles.pickerOverlay}>
             <View style={[styles.pickerContainer, { backgroundColor: theme.card }]}>
               <View style={styles.pickerHeader}>
@@ -280,15 +295,24 @@ export default function ProfileScreen() {
               </ScrollView>
             </View>
           </View>
-        )}
+        )*/}
 
-        <CustomModal
+        {/*<CustomModal
           visible={modal.visible}
           titulo={modal.titulo}
           mensaje={modal.mensaje}
           icon={modal.icon}
           colorIcon={modal.colorIcon}
           onClose={() => setModal({ ...modal, visible: false })}
+        />*/}
+        <_PickerModal
+          key="picker-almacen"
+          visible={showAlmacenPicker}
+          onClose={() => setShowAlmacenPicker(false)}
+          data={almacenes}
+          key_name="id_almacen"
+          onSelect={(item: Almacen) => { setSelectedAlmacen(item);setShowAlmacenPicker(false); }}
+          title="Seleccionar Técnico"
         />
       </SafeAreaView>
     </_Background>
@@ -306,7 +330,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 5,
-    
+
   },
   headerTitle: {
     fontSize: 18,
@@ -326,7 +350,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 12,
-    paddingLeft:8
+    paddingLeft: 8
   },
   userInfo: {
     flexDirection: 'row',
@@ -391,7 +415,7 @@ const styles = StyleSheet.create({
   saveButton: {
     borderRadius: 17,
     paddingVertical: 0,
-    paddingHorizontal:10,
+    paddingHorizontal: 10,
     alignItems: 'center',
     marginTop: 5,
     marginBottom: 1,
