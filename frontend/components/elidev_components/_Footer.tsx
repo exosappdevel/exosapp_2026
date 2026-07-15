@@ -109,12 +109,14 @@ export const _Footer = ({
                 ]}
             >
                 <BlurView
-                    intensity={60}
+                    intensity={20}
                     tint={user.tema ? 'dark' : 'light'}   // ajusta según tu tema
-                    style={[styles.blurContainer, { paddingBottom: insets.bottom }]}
+                    style={[styles.blurContainer, { paddingBottom: insets.bottom, 
+                        backgroundColor: hexToRGBA(theme.card,0.4),
+                                    borderColor: hexToRGBA(theme.text,0.15) }]}                    
                 >
                     <TouchableOpacity
-                        style={[styles.footerTab, { borderTopColor: hexToRGBA(theme.iconTextColor, 0.2), borderTopWidth: 1 }]}
+                        style={[styles.footerTab, { borderTopColor: hexToRGBA(theme.iconTextColor, 0.5), borderTopWidth: 1 }]}
                         activeOpacity={0.7}
                     >
                         <View style={[

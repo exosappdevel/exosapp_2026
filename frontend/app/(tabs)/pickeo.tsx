@@ -9,7 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-  Platform
+  Platform, useWindowDimensions
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -63,8 +63,9 @@ export default function PickeoScreen() {
     esResta: false,
   });
 
-
-
+  const { height } = useWindowDimensions();
+  const margin_height = 80;
+  const _ClientHeight = height - 130 - margin_height;
 
   const terminalSeleccionada = !!user.local_terminal?.selected;
   const id_terminal = user.local_terminal?.id;
@@ -259,7 +260,7 @@ export default function PickeoScreen() {
         {loading ? (
           <ActivityIndicator size="large" color={theme.accent} style={{ flex: 1 }} />
         ) : (
-          <View style={{ height: '80%' }}>
+          <View style={{ height: _ClientHeight}}>
             <FlatList
               data={listaRender}
 
@@ -269,7 +270,7 @@ export default function PickeoScreen() {
                 <View                  
                   style={[
                     styles.itemRow,
-                    { backgroundColor: hexToRGBA(theme.card, 0.7), borderColor: theme.border },
+                    { backgroundColor: hexToRGBA(theme.card, 0.9), borderColor: theme.border },
                   ]}
                 >
                   <View style={[styles.dot, { backgroundColor: item.color }]} />
@@ -285,7 +286,7 @@ export default function PickeoScreen() {
                     <Text style={[styles.textMain, { color: theme.text }]} numberOfLines={2}>
                       {item.descripcion}
                     </Text>
-                    <Text style={styles.textSub}>{item.referencia}</Text>
+                    <Text style={[styles.textMain,{color:theme.accent}]}>{item.referencia}</Text>
                     <Text style={[styles.textStatus, { color: item.color }]}>
                       {item.cantidad_recolectada} / {item.cantidad_solicitada}
                     </Text>

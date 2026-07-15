@@ -106,7 +106,8 @@
       "submit":"Enviar",
       "requerido":"Requerido",
       "close":"Cerrar",
-      "clean_form": "Limpiar"
+      "clean_form": "Limpiar",
+      "confirm_clean_form": "¿Está seguro de que desea limpiar el formulario?"
     },
     "cirugias_programar":{
       "new_title":" Programar cirugía",

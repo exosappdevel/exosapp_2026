@@ -11,7 +11,7 @@ const localBackgrounds: { [key: string]: any } = {
 
 export const _Background = ({ children, id_almacen }: { children: any, id_almacen: string }) => {
     const { theme } = useApp();
-    const source = Platform.OS === 'web'?localBackgrounds['default']: localBackgrounds[id_almacen] || localBackgrounds['default'];
+    const source = Platform.OS === 'web'?localBackgrounds[id_almacen]: localBackgrounds[id_almacen] || localBackgrounds['default'];
 
     return (
         <View style={[styles.root,Platform.OS === 'web' && { height: '100vh' as any, minHeight: '100vh' as any }]}>

@@ -2,7 +2,7 @@
   "expo": {
     "name": "ExosApp",
     "slug": "exosapp",
-    "version": "1.0.1.20260703",
+    "version": "26.07.13",
     "orientation": "portrait",
     "icon": "./assets/images/favicon.png",
     "scheme": "exosapp",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "newArchEnabled": true,
-      "bundleIdentifier": "com.exos.exosapp",
+      "bundleIdentifier": "com.esdimed.exosapp",
       "infoPlist": {
         "NSCameraUsageDescription": "Scanea QR y codigo de barras",
         "NSLocationWhenInUseUsageDescription": "Trackea localidad del warehouse",

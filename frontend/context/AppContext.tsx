@@ -67,7 +67,8 @@ interface Theme {
   iconColor_shadow: string;
   iconTextColor: string;
   iconTextColor_shadow: string;
-  accordion_checked : string;
+  markup_complete : string;
+  markup_incomplete : string;
 }
 
 interface AppContextType {
@@ -107,7 +108,8 @@ const themes: Record<ThemeType, Theme> = {
     iconColor: "#3182ce",
     iconTextColor: "#ffffff",
     iconTextColor_shadow: "#444444",
-    accordion_checked:"#00ff00b2"
+    markup_complete: "#00ff00b2",
+    markup_incomplete: "#ff0000b2"
   },
   dark: {
     bg: "#121212",
@@ -125,7 +127,8 @@ const themes: Record<ThemeType, Theme> = {
     iconColor: "#000000",
     iconTextColor: "#fbfbfb",
     iconTextColor_shadow: "#000000",
-    accordion_checked:"#00ff00b2"
+    markup_complete: "#00ff00b2",
+    markup_incomplete: "#ff0000b2"
   },
   blue: {
     bg: "#e3f2fd",
@@ -143,7 +146,8 @@ const themes: Record<ThemeType, Theme> = {
     iconColor: "#1976d2",
     iconTextColor: "#154883",
     iconTextColor_shadow: "#000000",
-    accordion_checked:"#00ff00b2"
+    markup_complete: "#00ff00b2",
+    markup_incomplete: "#ff0000b2"
   },
   pink: {
     bg: "#fce4ec",
@@ -161,7 +165,8 @@ const themes: Record<ThemeType, Theme> = {
     iconColor: "#f062915e",
     iconTextColor: "#b1427a",
     iconTextColor_shadow: "#000000",
-    accordion_checked:"#00ff00b2"
+    markup_complete: "#00ff00b2",
+    markup_incomplete: "#ff0000b2"
   }
 };
 

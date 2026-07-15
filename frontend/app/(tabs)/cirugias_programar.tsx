@@ -16,7 +16,8 @@ import {
   Switch,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
-  Keyboard, useWindowDimensions
+  Keyboard, useWindowDimensions,
+  Alert
 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,7 +29,7 @@ import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../../components/elidev_components';
 import CustomModal, { Soon_Modal } from '../../components/CustomModal';
-import { _Header, _Footer,_DatePicker, _PickerModal, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report } from '../../components/elidev_components';
+import { _Header, _Footer,_DatePicker, _PickerModal, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report, _SuccessCheck } from '../../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 import { Int32 } from 'react-native/Libraries/Types/CodegenTypes';
 
@@ -115,6 +116,7 @@ export default function ProgramaCirugiaScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [report_visible, setReportVisible] = useState(false);
   const [report_data, setReportData] = useState(null);
+  const [showSuccessAnim, setShowSuccessAnim] = useState(false);
 
   // Form fields
   const [fecha, setFecha] = useState(formatDate(new Date()));
@@ -163,7 +165,7 @@ export default function ProgramaCirugiaScreen() {
       sub => !!selectedSubcats[`materiales_${categoriaId}/${sub.id_set_subcategoria}`]
     ).length;
     return count > 0
-      ? hexToRGBA(theme.accordion_checked, 0.3)
+      ? hexToRGBA(theme.markup_complete, 0.3)
       : (isopen ? hexToRGBA(theme.card, 0.3) : 'transparent')
   };
 
@@ -176,7 +178,7 @@ export default function ProgramaCirugiaScreen() {
 
     const hasSelected = (countMap[categoria] ?? 0) > 0;
 
-    if (hasSelected) return hexToRGBA(theme.accordion_checked, 0.3);
+    if (hasSelected) return hexToRGBA(theme.markup_complete, 0.3);
     return isOpen ? hexToRGBA(theme.card, 0.3) : 'transparent';
   };
 
@@ -191,8 +193,8 @@ export default function ProgramaCirugiaScreen() {
     };
 
     const done = complete[section] ?? false;
-    if (done) return hexToRGBA(theme.accordion_checked, 0.3);
-    return isOpen ? hexToRGBA(theme.card, 0.3) : 'transparent';
+    if (done) return hexToRGBA(theme.markup_complete, 0.3);
+    return isOpen ? hexToRGBA(theme.card, 0.3) : hexToRGBA(theme.markup_incomplete, 0.3);
   };
 
 
@@ -334,7 +336,18 @@ export default function ProgramaCirugiaScreen() {
     const materialesSeleccionados = Object.keys(selectedSubcats).filter(id => selectedSubcats[id]);
     console.log("IDs a enviar al servidor:", materialesSeleccionados);
   };
+  const confirm_Clean_form = () => {
+    if (Platform.OS === "web") {
+          if (confirm(t('common.confirm_clean_form'))) Clean_form();
+        } else {
+          Alert.alert(t('common.clean_form'), t('common.confirm_clean_form'), [
+            { text: t('common.no') },
+            { text: t('common.yes'), onPress: Clean_form },
+          ]);
+        }
+  };
   const Clean_form = () => {
+    
     setFecha(formatDate(new Date()));
     setHora('');
     setEstado(null);
@@ -443,8 +456,8 @@ export default function ProgramaCirugiaScreen() {
         setSubmitting(false);
         playSuccessSound();
         setReportData(response.get_cirugia_report);
-        setReportVisible(true);
         Clean_form();
+        setShowSuccessAnim(true);
       }
       else {
         playErrorSound();
@@ -1009,7 +1022,7 @@ export default function ProgramaCirugiaScreen() {
                       !!selectedSubcats[`materiales_${cat.id_set_categoria}/${sub.id_set_subcategoria}`]
                     )
                   );
-                  if (hasAny) return hexToRGBA(theme.accordion_checked, 0.3);
+                  if (hasAny) return hexToRGBA(theme.markup_complete, 0.3);
                   return isOpen ? hexToRGBA(theme.card, 0.3) : 'transparent';
                 })()}
               >
@@ -1220,12 +1233,14 @@ export default function ProgramaCirugiaScreen() {
                   </View>
                 </_TouchableWithoutFeedback>
               </_AccordionSection>
+              {/*
               <View style={{ backgroundColor: hexToRGBA(theme.card, 0.9), borderRadius: 30, marginTop: 20 }}>
 
                 <View style={[styles.fieldContainer, { alignContent: 'center' }]}>
                   <Text style={[styles.required, { marginLeft: 20, marginTop: 15, fontWeight: 'bold' }]}>* {t("common.requerido")}</Text>
                 </View>
               </View>
+              */}
             </View>
           </ScrollView>
 
@@ -1234,7 +1249,7 @@ export default function ProgramaCirugiaScreen() {
           {/* Submit Button */}
 
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: theme.accent }]}
+            style={[styles.submitButton, { backgroundColor: theme.markup_complete }]}
             onPress={handleSubmit}
             disabled={submitting}
           >
@@ -1248,8 +1263,8 @@ export default function ProgramaCirugiaScreen() {
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: theme.accent, marginLeft: 20 }]}
-            onPress={Clean_form}
+            style={[styles.submitButton, { backgroundColor: theme.markup_incomplete, marginLeft: 20 }]}
+            onPress={confirm_Clean_form}
             disabled={submitting}
           >
             {submitting ? (
@@ -1346,6 +1361,13 @@ export default function ProgramaCirugiaScreen() {
           visible={report_visible}
           item={report_data}
           onClose={() => setReportVisible(false)}
+        />
+        <_SuccessCheck
+          visible={showSuccessAnim}
+          onFinish={() => {
+            setShowSuccessAnim(false);
+            setReportVisible(true);
+          }}
         />
 
 

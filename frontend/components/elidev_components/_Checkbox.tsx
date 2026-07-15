@@ -29,7 +29,7 @@ export const _checkBox = ({ key_id, text, use_switch, value, setValue }: checkBo
                     key={key_id}
                     value={value}
                     onValueChange={setValue}
-                    trackColor={{ false: theme.textSub, true: theme.text }}
+                    trackColor={{ false: theme.textSub, true: theme.markup_complete }}
                 />
             </View>
         );
