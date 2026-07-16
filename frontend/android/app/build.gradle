@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.elidev.exosapp'
+    namespace 'com.esdimed.exosapp'
     defaultConfig {
-        applicationId 'com.elidev.exosapp'
+        applicationId 'com.esdimed.exosapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

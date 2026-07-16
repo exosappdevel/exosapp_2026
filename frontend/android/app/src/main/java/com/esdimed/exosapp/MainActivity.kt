@@ -1,4 +1,4 @@
-package com.elidev.exosapp
+package com.esdimed.exosapp
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

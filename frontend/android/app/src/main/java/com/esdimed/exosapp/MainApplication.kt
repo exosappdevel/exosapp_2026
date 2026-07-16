@@ -1,4 +1,4 @@
-package com.elidev.exosapp
+package com.esdimed.exosapp
 
 import android.app.Application
 import android.content.res.Configuration
