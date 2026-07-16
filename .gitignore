@@ -35,6 +35,8 @@ dist
 
 *token.json*
 *credentials.json*
+*service-account*.json
+google-services.json
 
 # Logs and debug files
 npm-debug.log*

@@ -42,7 +42,7 @@
           "backgroundColor": "#000000"
         }
       },
-      "package": "com.elidev.exosapp",
+      "package": "com.esdimed.exosapp",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.ACCESS_FINE_LOCATION",
