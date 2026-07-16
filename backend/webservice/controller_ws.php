@@ -31,6 +31,7 @@ class WebServiceController
     private $implemented;
     private $result;
     private $is_debuging=false;
+    private $use_xml_envelope = true;
 
     /**
      * Mapa de metadatos para el Auditor de Métodos
@@ -185,6 +186,7 @@ class WebServiceController
     {
         $this->exosApp = new ExosApp_WS();        
         $this->implemented = false;
+        $this->use_xml_envelope = true;
         $this->result = [null];
         $this->run();
     }
@@ -194,7 +196,9 @@ class WebServiceController
         $action = isset($_REQUEST["action"]) ? $_REQUEST["action"] : null;
         $subAction = isset($_REQUEST["sub_action"]) ? $_REQUEST["sub_action"] : null;
         $this->is_debuging = isset($_REQUEST["debug"]) ? $_REQUEST["debug"]=='on' : false;
+        $this->use_xml_envelope = isset($_REQUEST["json"]) ? false : true;
         $this->exosApp->is_debuging = $this->is_debuging;
+        $this->exosApp->use_xml_envelope = $this->use_xml_envelope;
 
         if (!$action) {
             $this->sendError("Acción no especificada.");
@@ -269,7 +273,10 @@ class WebServiceController
         )
             ExecuteSQL_WS($sSQL);
         //$data["SQL"] = $sSQL;
-        XML_Envelope($data);
+        if (!$this->use_xml_envelope) 
+            JSON_Envelope($data);        
+        else
+            XML_Envelope($data);
     }
     private function DatosIncorrectos()
     {

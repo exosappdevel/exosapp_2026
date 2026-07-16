@@ -30,6 +30,7 @@ class ExosApp_WS
      * @return boolean
      */
     public $is_debuging=false;
+    public $use_xml_envelope = true;
 
     public function Implemented($method_name)
     {

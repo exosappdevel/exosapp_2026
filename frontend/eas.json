@@ -25,7 +25,8 @@
     "production": {
       "android": {
         "serviceAccountKeyPath": "/home/jonatan/Documentos/code/publish_info/esdimed-exosapp-1f74691d9d2a.json",
-        "track": "production"
+        "track": "production",
+        "releaseStatus": "draft"
       }
     }
   }
