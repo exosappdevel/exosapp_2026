@@ -9,8 +9,10 @@ require_once __DIR__ . '/../includes/layout_header.php';
   <div class="panel-header">
     <h1>Usuarios</h1>
   </div>
-
-  <div id="listMessage" class="list-message" style="display:none;"></div>
+  
+  <div style="height: 50px;">     
+      <div id="listMessage" class="list-message" style="display:none;"></div>
+   </div>
 
   <div class="search-box">
     <input type="text" id="usuariosSearch" placeholder="Buscar usuario por nombre…">

@@ -11,7 +11,9 @@ require_once __DIR__ . '/../includes/layout_header.php';
     <button id="btnNuevoPerfil" class="btn btn-primary">+ Nuevo perfil</button>
   </div>
 
-  <div id="listMessage" class="list-message" style="display:none;"></div>
+   <div style="height: 50px;">     
+      <div id="listMessage" class="list-message" style="display:none;"></div>
+   </div>
 
   <div class="search-box">
     <input type="text" id="perfilesSearch" placeholder="Buscar perfil por nombre…">

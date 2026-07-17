@@ -96,6 +96,8 @@ $(function () {
         .on('click', function () { abrirUsuariosPerfil(p.id_perfil, p.nombre); }));
       $actions.append($('<button>').addClass('btn btn-small btn-outline').text('Editar')
         .on('click', function () { openEditarPerfil(p.id_perfil); }));
+      $actions.append($('<button>').addClass('btn btn-small btn-outline').text('Clonar')
+        .on('click', function () { confirmarClonarPerfil(p.id_perfil, p.nombre); }));
       $actions.append($('<button>').addClass('btn btn-small btn-danger').text('Eliminar')
         .on('click', function () { confirmarEliminarPerfil(p.id_perfil, p.nombre); }));
 
@@ -215,6 +217,24 @@ $(function () {
       alert('Error de conexión con el servidor.');
     });
   }
+  // ---------------------------------------------------------------------
+  // Clonar perfil
+  // ---------------------------------------------------------------------
+  function confirmarClonarPerfil(idPerfil, nombre) {
+    if (!confirm('¿Clonar el perfil "' + nombre + '"? Se creará un nuevo perfil con el mismo nombre y permisos.')) {
+      return;
+    }
+    apiPost('app_perfiles_clone', { id_perfil: idPerfil }).done(function (resp) {
+      if (!resp || resp.result !== 'ok') {
+        alert((resp && resp.result_text) || 'No se pudo clonar el perfil.');
+        return;
+      }
+      showMessage('Perfil clonado correctamente.', 'success');
+      loadPerfiles();
+    }).fail(function () {
+      alert('Error de conexión con el servidor.');
+    });
+  }
 
   // ---------------------------------------------------------------------
   // Permisos por módulo / almacén
@@ -227,8 +247,8 @@ $(function () {
       .dialog('open');
 
     apiGet('app_perfiles_permisos_get', { id_perfil: idPerfil }).done(function (resp) {
-      if (!resp || resp.result !== 'ok') {
-        $('#permisosAccordion').text((resp && resp.result_text) || 'No se pudieron cargar los permisos.');
+      if (!resp || resp.result !== 'ok') {        
+        $('#permisosAccordion').text((resp && resp.result_text.toUpperCase()) || 'No se pudieron cargar los permisos.');
         return;
       }
       renderPermisos(normalizeList(resp.data));
@@ -265,7 +285,7 @@ $(function () {
     });
 
     orden.forEach(function (modulo) {
-      var $header = $('<h3>').text(modulo);
+      var $header = $('<h3>').text(modulo.toUpperCase());
       var $panel = $('<div>').addClass('permisos-panel');
 
       var allChecked = grupos[modulo].every(function (row) { return String(row.activo) === '1'; });

@@ -17,6 +17,10 @@ trait ExosApp_Perfiles
                 'descripcion' => 'Elimina un perfil de la aplicación.',
                 'parameters' => ['id_perfil']
             ],
+            'app_perfiles_clone' => [
+                'descripcion' => 'Clona un perfil existente en la aplicación.',
+                'parameters' => ['id_perfil']
+            ],
             'app_perfiles_update' => [
                 'descripcion' => 'Actualiza un perfil existente en la aplicación.',
                 'parameters' => ['id_perfil', 'nombre', 'descripcion', 'activo']
@@ -56,7 +60,7 @@ trait ExosApp_Perfiles
         ];
     }
     public function app_perfiles_list(){
-        $sql_perfiles = "select * from app_perfiles";
+        $sql_perfiles = "select * from app_perfiles order by nombre";
         $ds_perfiles = DatasetSQL_WS($sql_perfiles);
         while ($row = mysqli_fetch_array($ds_perfiles)) {
             $data['item_' . $row['id']] = [
@@ -113,6 +117,18 @@ trait ExosApp_Perfiles
         return ( ['result' => 'ok',
                 'result_text' => 'Perfil eliminado exitosamente desde ExosAPP',
                 'id_perfil' => $id_perfil,
+                ] );
+    }
+    public function app_perfiles_clone(){
+        $id_perfil = Requesting("id_perfil");
+        $sql_perfil = "insert into app_perfiles (nombre, descripcion, activo) select concat(nombre, ' (Copia)'), descripcion, activo from app_perfiles WHERE id = " . $id_perfil;
+        $id_nuevo = ExecuteSQL_ReturnID_WS($sql_perfil);
+        $sql_permisos = "insert into app_perfiles_modulos (id_perfil, id_modulo, id_almacen, activo) select " . $id_nuevo . ", id_modulo, id_almacen, activo from app_perfiles_modulos WHERE id_perfil = " . $id_perfil;
+        ExecuteSQL_WS($sql_permisos);
+
+        return ( ['result' => 'ok',
+                'result_text' => 'Perfil clonado exitosamente desde ExosAPP',
+                'id_perfil' => $id_nuevo,
                 ] );
     }
 
@@ -273,6 +289,7 @@ trait ExosApp_Perfiles
                 'id_usuario' => $row['id_usuario'],
                 'id_usuario_app' => $id_usuario_app,
                 'nombre' => $row['nombre_upper'],
+                'usuario' => $row['usuario'],
                 'id_tipo_usuario' => $row['id_tipo_usuario'],
                 'activo' => $row['activo']
             ];

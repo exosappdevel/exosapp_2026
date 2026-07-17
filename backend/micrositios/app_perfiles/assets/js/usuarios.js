@@ -46,7 +46,7 @@ $(function () {
     usuarios.forEach(function (u) {
       var activo = String(u.activo) === '1';
       var $row = $('<tr>').attr('data-nombre', (u.nombre || '').toLowerCase());
-      $row.append($('<td>').text(u.nombre || ''));
+      $row.append($('<td>').text(u.nombre+ ' (' + u.usuario.toLowerCase() + ')' || ''));
       $row.append($('<td>').append(
         $('<span>').addClass('badge ' + (activo ? 'badge-on' : 'badge-off')).text(activo ? 'Activo' : 'Inactivo')
       ));
