@@ -179,6 +179,54 @@ class WebServiceController
         "buscar_pieza_danada_registro_general" => [
             'descripcion' =>'Obtiene la lista de reportes de pieza danada',
             'parameters' => ["fecha_inicio","fecha_fin","codigo_registro","codigo_cirugia","codigo_activo","referencia","lote","pieza_estatus","codigo_traspaso","orderby","limite"]
+        ],
+        "app_perfiles_list" => [
+            'descripcion' =>'Obtiene la lista de perfiles de usuario app',
+            'parameters' => []
+        ],
+        "app_perfiles_add" => [
+            'descripcion' =>'Crea un perfil de usuario app',
+            'parameters' => ["nombre","descripcion","activo"]
+        ],
+        "app_perfiles_update" => [
+            'descripcion' =>'Actualiza un perfil de usuario app',
+            'parameters' => ["id_perfil","nombre","descripcion","activo"]
+        ],
+        "app_perfiles_delete" => [
+            'descripcion' =>'Elimina un perfil de usuario app',
+            'parameters' => ["id_perfil"]
+        ],        
+        "app_perfiles_info" => [
+            'descripcion' =>'Obtiene la información de un perfil de usuario app',
+            'parameters' => ["id_perfil"]
+        ],
+        "app_perfiles_permisos_get" => [
+            'descripcion' =>'Obtiene los permisos de un perfil de usuario app',
+            'parameters' => ["id_perfil"]
+        ],
+        "app_perfiles_permisos_update" => [
+            'descripcion' =>'Actualiza permisos a un perfil de usuario app',
+            'parameters' => ["id_perfil","permisos"]
+        ],
+        "app_perfiles_usuario_get" => [
+            'descripcion' =>'Obtiene los perfiles de un usuario app',
+            'parameters' => ["id_usuario_app"]
+        ],
+        "app_perfiles_usuario_add" => [
+            'descripcion' =>'Agrega un perfil a un usuario app',
+            'parameters' => ["id_perfil","id_usuario_app"]
+        ],
+        "app_perfiles_usuario_delete" => [
+            'descripcion' =>'Elimina un perfil de un usuario app',
+            'parameters' => ["id_perfil","id_usuario_app"]
+        ],
+        "app_perfiles_usuarios_get" => [
+            'descripcion' =>'Obtiene los id_usuario_app asignados a un perfil',
+            'parameters' => ["id_perfil"]
+        ],
+        "app_usuarios_list" => [
+            'descripcion' =>'Obtiene la lista de usuarios',
+            'parameters' => []
         ]
     ];
 
@@ -466,6 +514,25 @@ class WebServiceController
                 'result_text' => 'El archivo llegó al temporal pero no se pudo mover a la carpeta final: ' . $uploadDir
             ];
         }
+    }
+    private function Existe_usuario_en_App($id_usuario)
+    {
+        $query = "SELECT COUNT(id_usuario_app) AS existe, Max(id_usuario_app) AS max_id FROM user_profile WHERE id_usuario = " . $id_usuario;
+        $existe = GetValueSQL_WS($query, "existe");
+        $id_usuario_app = GetValueSQL_WS($query, "max_id");
+        return ($existe > 0 ? $id_usuario_app : 0);
+    }
+    private function Sync_Usuario_App($id_usuario)
+    {
+        $id_usuario_app = $this->Existe_usuario_en_App($id_usuario);
+        if ($id_usuario_app > 0) {
+            return $id_usuario_app; // Ya existe, no es necesario sincronizar
+        }
+
+        
+        $sql_new = "insert into user_profile(id_usuario_app,id_usuario) values (0," . $id_usuario . ")";
+        $id_usuario_app = ExecuteSQL_ReturnID_WS($sql_new);
+        return $id_usuario_app;            
     }
     //****************************************************************************************** */
     // -------------------------- IMPLEMENTACION DE LOS WEB SERVICES MOCKUP --------------------

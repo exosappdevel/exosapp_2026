@@ -45,5 +45,21 @@ function ExecuteSQL_WS($sSQL){
  	}
 }
 
+function ExecuteSQL_returnID_WS($sSQL){
+	global $WS_DB_Host, $WS_DB_User, $WS_DB_Password, $WS_DB_Database, $WS_DB_Init_Params, $WS_DB_Host;
+	Init_DBParams_WS();
+    $dbConx = mysqli_connect($WS_DB_Host,$WS_DB_User,$WS_DB_Password,$WS_DB_Database);
+
+	try {
+ 		$rsTemp=DatasetSQL_con($sSQL,$dbConx);
+ 		$aidi=mysqli_insert_id($dbConx);
+ 		mysqli_close($dbConx);
+		return $aidi;
+ 	} catch (Exception $e) {
+ 		 echo $e->getMessage();
+ 		return false;
+ 	}
+}
+
 //********************************************************************************************
 ?>
