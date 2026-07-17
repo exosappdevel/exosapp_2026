@@ -6,7 +6,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { useRouter } from 'expo-router';
 import { iMenuItem } from "@/context/AppmenuItems";
-import {hexToRGBA} from './_Functions'
 
 interface MenuGridProps {
     menuItems: iMenuItem[];               // Lista de ítems    
@@ -53,22 +52,6 @@ export const _MenuGrid = ({ menuItems }: MenuGridProps) => {
 }
 
 const styles = StyleSheet.create({
-    menuGridContainer: {
-        flex: 1,
-        width: '100%',
-    },
-    menuGridContent: {
-        paddingTop: 10,
-        paddingBottom: 120, // Espacio extra para el footer
-    },
-    menuListContainer: {
-        flex: 1,
-        width: '100%',
-    },
-    menuListContent: {
-        paddingTop: 10,
-        paddingBottom: 120,
-    },
     menuItem: {
         width: '48%',
         borderRadius: 16,

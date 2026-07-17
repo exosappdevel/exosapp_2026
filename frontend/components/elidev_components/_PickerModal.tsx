@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, FlatList
 } from "react-native";

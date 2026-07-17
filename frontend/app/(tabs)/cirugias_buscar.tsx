@@ -8,29 +8,19 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-  Modal,
-  FlatList,
   LayoutAnimation,
-  UIManager,
   Image,
   KeyboardAvoidingView, useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { useRouter } from 'expo-router';
 import { useApp } from '../../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../../components/elidev_components';
 import CustomModal from '../../components/CustomModal';
-import { _Header,_DatePicker, _Report, _PickerModal, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../../components/elidev_components';
+import { _Header,_DatePicker, _PickerModal, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate } from '../../components/elidev_components';
 import { addMonths } from 'date-fns';
 
-
-interface PickerOption {
-  id: string;
-  nombre: string;
-}
 interface iOrderList {
   order: string;
   text: string;
@@ -68,7 +58,6 @@ interface iSubdistribuidor {
 
 
 export default function Cirugia_BuscarScreen() {
-  const router = useRouter();
   const { user, theme, t } = useApp();
   const pageConfig = {
     name: t('screens.cirugias_buscar'),
@@ -80,28 +69,24 @@ export default function Cirugia_BuscarScreen() {
   };
 
   const [appReady, setAppReady] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [report_visible, setReportVisible] = useState(false);
 
   // Form fields
   const [fecha_ini, setFecha_ini] = useState('');
   const [fecha_fin, setFecha_fin] = useState('');
   const [estatus, setEstatus] = useState<iEstatusList | null>(null);
-  const [hospital, setHospital] = useState<iHospital | null>(null);
-  const [medico, setMedico] = useState<iMedico | null>(null);
+  const [, setHospital] = useState<iHospital | null>(null);
+  const [, setMedico] = useState<iMedico | null>(null);
   const [vendedor, setVendedor] = useState<iVendedor | null>(null);
   const [tecnico, setTecnico] = useState<iTecnico | null>(null);
   const [subdistribuidor, setSubdistribuidor] = useState<iSubdistribuidor | null>(null);
   const [codigo_cirugia, setCodigo_cirugia] = useState('');
   const [limite, setLimite] = useState("15");
   const [filtrar_fecha, setFiltrar_fecha] = useState(false); // Por defecto NO se filtra por fecha
-  // Agregar junto a tus otros useState
-  const [showOrderModal, setShowOrderModal] = useState(false); // Para mostrar las opciones de ordenamiento
 
-
-  // listas  
-  const [Estatus_list, setEstatusList] = useState<iEstatusList[]>([
+  // listas
+  const [Estatus_list] = useState<iEstatusList[]>([
     { estatus: -1, text: t('cirugias_programar.estatus_text_All') },
     { estatus: 0, text: t('cirugias_programar.estatus_text_0') },
     { estatus: 1, text: t('cirugias_programar.estatus_text_1') },
@@ -110,7 +95,7 @@ export default function Cirugia_BuscarScreen() {
     { estatus: 4, text: t('cirugias_programar.estatus_text_4') },
     { estatus: 5, text: t('cirugias_programar.estatus_text_5') }
   ]);
-  const [Order_list, setOrderList] = useState<iOrderList[]>([
+  const [Order_list] = useState<iOrderList[]>([
     { order: "codigo_newest", text: t('cirugias_programar.order_codigo_newest') },
     { order: "codigo_oldest", text: t('cirugias_programar.order_codigo_oldest') },
     { order: "fecha_newest", text: t('cirugias_programar.order_fecha_newest') },
@@ -133,13 +118,11 @@ export default function Cirugia_BuscarScreen() {
   const [showTecnicoPicker, setShowTecnicoPicker] = useState(false);
   const [showSubdistribuidorPicker, setShowSubdistribuidorPicker] = useState(false);
 
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState<string | null>(null);
   const scrollRef = React.useRef<ScrollView>(null);
 
-  const [section_resultados_visible, setSection_resultados_visible] = useState(false);
+  const [, setSection_resultados_visible] = useState(false);
   const [resultados, setResultados] = useState([]);
-  const [resultados_count, setResultados_count] = useState(0);
+  const [, setResultados_count] = useState(0);
   const [resultado_item, setResultadoItem] = useState(null);
   const [resultado_item_visible, setResultadoItemVisible] = useState(false);
 
@@ -206,34 +189,6 @@ export default function Cirugia_BuscarScreen() {
   }, []); // <-- DEJAMOS EL ARRAY VACÍO PARA QUE SOLO CORRA AL INICIO
 
 
-  const onDateChange_ini = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    onDateChange(event, selectedDate, setFecha_ini)
-  }
-  const onDateChange_fin = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    onDateChange(event, selectedDate, setFecha_fin)
-  }
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date, set_target?: any) => {
-    // En iOS, el picker puede quedarse abierto, en Android se cierra solo
-    setShowDatePicker(null);
-
-    if (event.type === 'set' && selectedDate) {
-      // 1. Actualizamos el objeto Date para el componente interno
-      //setDate(selectedDate);
-
-      // 2. Formateamos la fecha para mostrarla en el campo de texto
-      const day = selectedDate.getDate().toString().padStart(2, '0');
-      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-      const year = selectedDate.getFullYear();
-      const formattedDate = `${day}/${month}/${year}`;
-
-      // 3. ¡CRUCIAL!: Actualizamos el estado que lee el <Text> del selector
-      set_target(formattedDate);
-    } else {
-      // Si el usuario cancela, cerramos el picker
-    }
-    setShowDatePicker(null);
-  };
-
   const [modal, setModal] = useState({
     visible: false,
     titulo: '',
@@ -250,7 +205,6 @@ export default function Cirugia_BuscarScreen() {
 
     return resultados.map((item: any, index: number) => {
       //alert(JSON.stringify(item));
-      const tituloGrupo = `<View><Text>${item.codigo}</Text><Text>${item.estatus_text}</Text><Text>${item.vendedor}</Text></View>`;
 
       return (
         /*<View>
@@ -789,18 +743,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '85%'
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   content: {
     flex: 1,
     padding: 3
@@ -811,19 +753,6 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     marginBottom: 40,
   },
-  formHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
   fieldContainer: {
     marginBottom: 16,
   },
@@ -831,10 +760,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-  },
-  required: {
-    color: '#f56565',
-    fontSize: 16,
   },
   input: {
     borderWidth: 1,
@@ -845,14 +770,6 @@ const styles = StyleSheet.create({
     zIndex: 1,           // Asegura que esté al frente
     cursor: 'text',      // Solo para Web, ayuda a identificar que es editable
     userSelect: 'text',  // Permite que el navegador reconozca la selección de texto
-  },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 14,
-    minHeight: 100,
   },
   selector: {
     flexDirection: 'row',
@@ -881,69 +798,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 10,
   },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    borderTopWidth: 1,
-  },
-  footerText: {
-    marginLeft: 10,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  pickerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  pickerContainer: {
-    maxHeight: '60%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-  },
-  pickerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  pickerItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-  },
-  pickerItemText: {
-    fontSize: 14,
-  },
-  accordionContainer: { borderWidth: 1, borderRadius: 8, marginBottom: 12, overflow: 'hidden' },
-  accordionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    padding: 15, backgroundColor: '#0f0f0f0', alignItems: 'center'
-  },
-  accordionTitle: { fontSize: 16, fontWeight: 'bold' },
-  accordionContent: { padding: 15 },
-  inputGroup: { marginBottom: 15 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  checkLabel: { marginLeft: 10, fontSize: 15 },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12, // Espacio suficiente para el touch
-    paddingHorizontal: 15,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
-  },
-  checkboxLabel: {
-    marginLeft: 12,
-    fontSize: 15,
-    flex: 1,
-  },
   loadingDataContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -960,64 +814,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 10,
   },
-  actionButton: {
-    alignItems: 'center',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    width: '45%'
-  },
-  fileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc'
-  },
-  detalleContainer: {
-    paddingVertical: 5,
-    paddingHorizontal: 10
-  },
-  rowDetalle: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-    borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(100,100,100,0.05)',
-  },
-
-  labelDetalle: {
-    fontSize: 12,
-    fontWeight: '600',
-    flex: 2,
-  },
-  valueDetalle: {
-    fontSize: 12,
-    flex: 2,
-    textAlign: 'right',
-  },
-  rowDetalleMulti: {
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-    borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(100,100,100,0.05)',
-  },
-  labelDetalleMulti: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  valueDetalleMulti: {
-    fontSize: 11,
-    textAlign: 'left',
-    paddingVertical: 4,
-    paddingLeft: 5
-  },
-  divisor: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginVertical: 8,
-  },
   // Al final de tu StyleSheet en cirugias_buscar.tsx
   grupoFechasContainer: {
     borderWidth: 1,
@@ -1025,11 +821,4 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
-  shareButton: {
-    top: -50,                   // Reducido un poco para que no choque con los bordes del acordeón
-    left: 20,
-  },
-  value_bold: {
-    fontWeight: 'bold'
-  }
 });

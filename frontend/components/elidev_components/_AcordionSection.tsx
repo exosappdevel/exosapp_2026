@@ -5,8 +5,6 @@ import {
     TouchableOpacity,
     StyleSheet,
     LayoutAnimation,
-    Platform,
-    UIManager,
     ScrollView
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -41,7 +39,6 @@ export const _AccordionSection = ({
     const { theme } = useApp();
     
     if (!visible) return null;
-    const containerBg = backgroundColor || hexToRGBA(theme.card, 0.3);
 
     const handlePress = () => {                
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);

@@ -13,7 +13,6 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
-import CustomModal from '../components/CustomModal';
 import { _Footer, _Header, _Background, _PickerModal, hexToRGBA } from '@/components/elidev_components';
 import Constants from 'expo-constants';
 
@@ -51,7 +50,7 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [showAlmacenPicker, setShowAlmacenPicker] = useState(false);
   const [sel_language, setSel_language] = useState(language);
-  const [modal, setModal] = useState({
+  const [, setModal] = useState({
     visible: false,
     titulo: '',
     mensaje: '',
@@ -104,7 +103,7 @@ export default function ProfileScreen() {
 
         router.replace('/home');
       }
-    } catch (e) {
+    } catch {
       setModal({
         visible: true,
         titulo: t('common.error'),
@@ -427,21 +426,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
     paddingHorizontal: 15,
     paddingVertical: 10
-  },
-  codeButton: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 30,
-    borderWidth: 1,
-  },
-  codeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 10,
   },
   pickerOverlay: {
     ...StyleSheet.absoluteFillObject,

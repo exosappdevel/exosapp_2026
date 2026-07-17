@@ -5,11 +5,10 @@ import {
   ScrollView, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import translations from '../../languages.json'
 import { useApp } from '../../context/AppContext';
 import { PanResponder } from 'react-native';
 
-import { _Header, _Footer, _MenuGrid, _MenuSection, _Background, _MenuLauncher } from '.';
+import { _Header, _Footer, _MenuSection, _Background, _MenuLauncher } from '.';
 import { Soon_Modal } from '../CustomModal';
 import { Tabs_Allowed } from '@/context/AppmenuItems';
 
@@ -18,7 +17,7 @@ interface HomeTemplateProps {
 }
 
 export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
-  const { user, t } = useApp();
+  const { user } = useApp();
 
   const [activeSection, setActiveSection] = useState(tab_name);
 
@@ -119,18 +118,5 @@ const styles = StyleSheet.create({
     //borderTopColor: 'rgba(255,255,255,0.1)',
     // Opcional: añadir un ligero desenfoque de fondo al dock
     //backgroundColor: 'rgba(0,0,0,0.1)',
-  },
-  launcherHeader: {
-    paddingHorizontal: 20,
-    marginTop: 10,
-  },
-  launcherHeaderText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    opacity: 0.8,
-    textShadowColor: '0, 1, 3, rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   }
 });

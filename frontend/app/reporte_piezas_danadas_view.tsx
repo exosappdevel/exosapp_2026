@@ -11,20 +11,17 @@ import {
   Modal,
   FlatList,
   LayoutAnimation,
-  UIManager,
   Image,
   KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Report,_Show_Generic_Report, _DetalleLinea, _DetalleMultiLinea, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate, _ZoomableView } from '../components/elidev_components';
-import { addMonths } from 'date-fns';
+import { _Header, _Show_Generic_Report, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, formatDate } from '../components/elidev_components';
 
 
 interface PickerOption {
@@ -43,7 +40,6 @@ interface iOrderList {
 
 
 export default function reporte_piezas_danadas_view_Screen() {
-  const router = useRouter();
   const { user, theme, t } = useApp();
   const pageConfig = {
     name: t('screens.reporte_piezas_danadas_view'),
@@ -54,9 +50,8 @@ export default function reporte_piezas_danadas_view_Screen() {
   };
 
   const [appReady, setAppReady] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [report_visible, setReportVisible] = useState(false);
 
   // Form fields
   const [fecha_ini, setFecha_ini] = useState('');
@@ -67,17 +62,14 @@ export default function reporte_piezas_danadas_view_Screen() {
   const [referencia, setReferncia] = useState('');
   const [lote, setLote] = useState('');
   const [estatus, setEstatus] = useState<iEstatusList | null>(null);
-  const [traspaso, setTraspaso] = useState('');
+  const [traspaso] = useState('');
 
   const [limite, setLimite] = useState("15");
   const [filtrar_fecha, setFiltrar_fecha] = useState(false); // Por defecto NO se filtra por fecha
-  // Agregar junto a tus otros useState
-  const [showOrderModal, setShowOrderModal] = useState(false); // Para mostrar las opciones de ordenamiento
 
-
-  // listas  
+  // listas
   const [Estatus_list, setEstatusList] = useState<iEstatusList[]>([]);
-  const [Order_list, setOrderList] = useState<iOrderList[]>([
+  const [Order_list] = useState<iOrderList[]>([
     { order: "codigo_cirugia desc", text: t('reporte_piezas_danadas_view.codigo_cirugia_desc') },
     { order: "codigo_cirugia ", text: t('reporte_piezas_danadas_view.codigo_cirugia_asc') },
     { order: "codigo desc", text: t('reporte_piezas_danadas_view.codigo_desc') },
@@ -110,7 +102,6 @@ export default function reporte_piezas_danadas_view_Screen() {
         if (!isMounted) return;
 
         const today = new Date();
-        const nextMonth = addMonths(new Date(), 1);
 
         setFecha_ini(formatDate(today));
         setFecha_fin(formatDate(today));
@@ -860,18 +851,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   content: {
     flex: 1,
     padding: 3,
@@ -882,19 +861,6 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     marginBottom: 40,
   },
-  formHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
   fieldContainer: {
     marginBottom: 16,
   },
@@ -902,10 +868,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-  },
-  required: {
-    color: '#f56565',
-    fontSize: 16,
   },
   input: {
     borderWidth: 1,
@@ -916,14 +878,6 @@ const styles = StyleSheet.create({
     zIndex: 1,           // Asegura que esté al frente
     cursor: 'text',      // Solo para Web, ayuda a identificar que es editable
     userSelect: 'text',  // Permite que el navegador reconozca la selección de texto
-  },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 14,
-    minHeight: 100,
   },
   selector: {
     flexDirection: 'row',
@@ -951,18 +905,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 10,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    borderTopWidth: 1,
-  },
-  footerText: {
-    marginLeft: 10,
-    fontSize: 14,
-    fontWeight: '500',
   },
   pickerOverlay: {
     flex: 1,
@@ -992,29 +934,6 @@ const styles = StyleSheet.create({
   pickerItemText: {
     fontSize: 14,
   },
-  accordionContainer: { borderWidth: 1, borderRadius: 8, marginBottom: 12, overflow: 'hidden' },
-  accordionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    padding: 15, backgroundColor: '#0f0f0f0', alignItems: 'center'
-  },
-  accordionTitle: { fontSize: 16, fontWeight: 'bold' },
-  accordionContent: { padding: 15 },
-  inputGroup: { marginBottom: 15 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  checkLabel: { marginLeft: 10, fontSize: 15 },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12, // Espacio suficiente para el touch
-    paddingHorizontal: 15,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
-  },
-  checkboxLabel: {
-    marginLeft: 12,
-    fontSize: 15,
-    flex: 1,
-  },
   loadingDataContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1031,64 +950,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 10,
   },
-  actionButton: {
-    alignItems: 'center',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    width: '45%'
-  },
-  fileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc'
-  },
-  detalleContainer: {
-    paddingVertical: 5,
-    paddingHorizontal: 10
-  },
-  rowDetalle: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-    borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(100,100,100,0.05)',
-  },
-
-  labelDetalle: {
-    fontSize: 12,
-    fontWeight: '600',
-    flex: 2,
-  },
-  valueDetalle: {
-    fontSize: 12,
-    flex: 2,
-    textAlign: 'right',
-  },
-  rowDetalleMulti: {
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-    borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(100,100,100,0.05)',
-  },
-  labelDetalleMulti: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  valueDetalleMulti: {
-    fontSize: 11,
-    textAlign: 'left',
-    paddingVertical: 4,
-    paddingLeft: 5
-  },
-  divisor: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginVertical: 8,
-  },
   // Al final de tu StyleSheet en cirugias_buscar.tsx
   grupoFechasContainer: {
     borderWidth: 1,
@@ -1096,11 +957,4 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
-  shareButton: {
-    top: -50,                   // Reducido un poco para que no choque con los bordes del acordeón
-    left: 5,
-  },
-  value_bold: {
-    fontWeight: 'bold'
-  }
 });

@@ -1,13 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ViewStyle, useWindowDimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ViewStyle } from "react-native";
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { hexToRGBA } from './_Functions'
 import { _ZoomableView } from "./_ZoomableView";
-
-interface ReportProps {
-    children: React.ReactNode;
-}
 
 export const _Report = ({ children }: { children: any }) => {
     const { theme } = useApp(); // Traemos el hook si se requiere aquí
@@ -153,7 +149,7 @@ export interface _Show_Generic_ReportProps {
     style_content?: ViewStyle
 }
 export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fields, children, style_content }: _Show_Generic_ReportProps) => {
-    const { theme, t } = useApp();
+    const { theme } = useApp();
     return (
         <Modal visible={visible} animationType="fade" transparent={true}>
             {/* GestureHandlerRootView dentro del Modal para que los gestos funcionen */}
@@ -263,11 +259,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.1)',
         marginVertical: 8,
     },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
     modalContent: {
         width: "100%",
         borderRadius: 30,
@@ -280,17 +271,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         marginTop: 15,
         textAlign: "center",
-    },
-    mensaje: {
-        fontSize: 16,
-        textAlign: "center",
-        marginVertical: 15,
-        lineHeight: 22,
-    },
-    btnText: {
-        color: "white",
-        fontWeight: "bold",
-        fontSize: 16,
     },
     modalHeader: {
         flexDirection: 'row',

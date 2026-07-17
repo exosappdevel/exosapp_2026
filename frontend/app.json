@@ -2,7 +2,7 @@
   "expo": {
     "name": "ExosApp",
     "slug": "exosapp",
-    "version": "26.07.13",
+    "version": "26.07.17",
     "orientation": "portrait",
     "icon": "./assets/images/favicon.png",
     "scheme": "exosapp",

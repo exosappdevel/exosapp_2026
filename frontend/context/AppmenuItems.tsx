@@ -1,16 +1,4 @@
-import React, { useState} from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView, Platform
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import translations from '../languages.json'
 import { useApp } from '../context/AppContext';
-import { PanResponder } from 'react-native';
-
-import { _Header, _Footer, _MenuGrid, _MenuSection, _Background, _MenuLauncher } from '../components/elidev_components';
-import { Soon_Modal } from '../components/CustomModal';
 
 export interface iMenuItem {
   id: string;
@@ -68,7 +56,7 @@ export const AddMenuItem = (menu: any, key: string/*, set_soon: Dispatch<SetStat
 };
 
 export const Tabs_Allowed =() => {  
-  const { user, theme, t, isLoggedIn, appConfig } = useApp();
+  const { user, t } = useApp();
 
   const isAllowed = (menuName: string, itemName: string): boolean => {
     // Buscamos el menú en el arreglo de items del usuario
@@ -125,8 +113,7 @@ export const Tabs_Allowed =() => {
       else{
         const menu_name = 'menu_' + tab.id;
         tab.title =  t('home.menu_' + tab.id);
-        const n = Add_Menu_Items(tab.data, menu_name);      
-        //console.log("menu " + menu_name + ": items count= " + String(n))      
+        Add_Menu_Items(tab.data, menu_name);
       }    
     });
 

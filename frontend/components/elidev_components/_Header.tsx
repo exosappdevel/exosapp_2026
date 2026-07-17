@@ -7,7 +7,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { useRouter, usePathname, useFocusEffect } from 'expo-router';
 import { _UserMenu } from './_UserMenu';
-import { hexToRGBA } from './_Functions'
 
 interface iPage {
     name: string;

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Alert, Platform, ViewStyle } from 'react-native';
+import { StyleSheet, TouchableOpacity, Alert, Platform, ViewStyle } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';

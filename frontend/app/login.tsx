@@ -26,7 +26,7 @@ import Constants from 'expo-constants';
 export default function LoginScreen() {
   const ImageCustom = Image as any;
   const router = useRouter();
-  const { appConfig, setUser, theme, t, setIsLoggedIn, menuFav_str, menuFav_set } = useApp();
+  const { appConfig, setUser, theme, t, setIsLoggedIn, menuFav_set } = useApp();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -375,12 +375,6 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     padding: 25,
     borderWidth: 1,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 25,
   },
   inputContainer: {
     flexDirection: 'row',

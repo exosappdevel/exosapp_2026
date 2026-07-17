@@ -1,5 +1,5 @@
 import React from "react";
-import { Dispatch, SetStateAction,useState} from "react";
+import { Dispatch, SetStateAction} from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useApp } from "../context/AppContext";

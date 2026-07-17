@@ -4,7 +4,6 @@ import {
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Href } from 'expo-router';
 import { iMenuItem } from "@/context/AppmenuItems";
@@ -193,49 +192,6 @@ export const _MenuSection = ({ title, icon, menuItems, isOpen, onToggle, onSoon 
 };
 
 const styles = StyleSheet.create({
-    sectionContainer: {
-        marginHorizontal: 16,
-        marginBottom: 12,
-        borderRadius: 20,
-        borderWidth: 1,
-        overflow: 'hidden',
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        justifyContent: 'space-between',
-    },
-    sectionTitleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    sectionIconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginLeft: 12,
-    },
-    sectionItemRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderTopWidth: StyleSheet.hairlineWidth,
-    },
-    sectionItemIcon: {
-        marginRight: 15,
-    },
-    sectionItemText: {
-        fontSize: 15,
-    },
     iconGroup_Container: {
         width: '94%',
         alignSelf: 'center',

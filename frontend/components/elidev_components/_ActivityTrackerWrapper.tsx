@@ -12,7 +12,7 @@ export const _ActivityTrackerWrapper = ({ children }: ActivityWrapperProps) => {
   const refreshActivity = async () => {
     try {
       await AsyncStorage.setItem('@exosapp_last_activity', Date.now().toString());
-    } catch (e) {
+    } catch {
       // Falla silenciosa
     }
   };

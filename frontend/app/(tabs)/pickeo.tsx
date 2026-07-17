@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { useFocusEffect } from 'expo-router';
 import { useApp } from "../../context/AppContext";
 import ApiService from "../../services/ApiServices";
@@ -39,7 +39,6 @@ interface Producto {
 export default function PickeoScreen() {
 
   const router = useRouter();
-  const params = useLocalSearchParams();
   const { user, theme, t, appConfig } = useApp();
   const inputRef = useRef<TextInput>(null);
   const pageConfig = {
@@ -195,7 +194,7 @@ export default function PickeoScreen() {
             { text: "OK", onPress: () => esExito && inicializarDatos(false) },
           ]);
         }
-      } catch (e) {
+      } catch {
         setIsSubmitting(false);
         const errorMsg = t('common.connectionError');
         Platform.OS === "web" ? alert(errorMsg) : Alert.alert(t('common.error'), errorMsg);
@@ -443,12 +442,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  textSub: {
-    fontSize: 12, color: "#888", marginTop: 2,
-    textShadowColor: 'rgba(255, 255, 255, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
   textStatus: {
     fontSize: 13, fontWeight: "bold", marginTop: 4, textShadowColor: 'rgba(255, 255, 255, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
@@ -457,11 +450,6 @@ const styles = StyleSheet.create({
   actionsContainer: { flexDirection: "row", alignItems: "center" },
   btnAction: { padding: 8, borderRadius: 20 },
   btnQuick: { padding: 8, marginRight: 5 },
-  footer: {
-    flexDirection: "row",
-    padding: 6,
-    borderTopWidth: 0,
-  },
   footerBtn: {
     flex: 1,
     paddingVertical: 13,

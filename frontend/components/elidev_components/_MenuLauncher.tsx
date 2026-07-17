@@ -24,8 +24,6 @@ export const _MenuLauncher = ({ sections, activeId, onSelect }: MenuLauncherProp
                 const baseColor = hexToRGBA(theme.iconColor, 0.1); // 20% de opacidad del color de la carta
                 const activeColor = hexToRGBA(theme.iconColor, 0.5); // 40% de opacidad del color de acento
                 const borderColor = hexToRGBA(theme.border, 0.2); // Borde basado en el color del texto
-                const baseIconColor = hexToRGBA(theme.iconTextColor, 0.5); // 40% de opacidad del color de acento
-                const textColor = hexToRGBA(theme.iconTextColor, 0.8); // Borde basado en el color del texto
                 const iconTextColor_shadow = hexToRGBA(theme.iconTextColor_shadow, 0.3); // Borde basado en el color del texto
 
                 return (
@@ -87,20 +85,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 0,
         paddingBottom: 10
-    },
-    launcherBox: {
-        width: 80,
-        height:95,
-        borderRadius: 15,
-        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        textShadowColor: 'rgba(0, 0, 0, 0.8)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 5,
-       
     },
     launcherIconBox: {
         width: 62,

@@ -5,7 +5,6 @@ import {
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
-import {hexToRGBA} from './_Functions'
 interface checkBoxOptions {
     key_id: string;
     text: string;
@@ -15,7 +14,7 @@ interface checkBoxOptions {
 };
 
 export const _checkBox = ({ key_id, text, use_switch, value, setValue }: checkBoxOptions) => {
-    const { theme, user, t, logout } = useApp(); // Obtenemos el contexto    
+    const { theme } = useApp(); // Obtenemos el contexto
     if (use_switch) {
         return (
             <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 5 }}>
@@ -53,8 +52,6 @@ export const _checkBox = ({ key_id, text, use_switch, value, setValue }: checkBo
 
 };
 const styles = StyleSheet.create({
-    checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-    checkLabel: { marginLeft: 10, fontSize: 15 },
     checkboxContainer: {
         flexDirection: 'row',
         alignItems: 'center',

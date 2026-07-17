@@ -1,4 +1,4 @@
-import { useAudioPlayer, createAudioPlayer } from 'expo-audio';
+import { createAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 
 export const hexToRGBA = (hex: string, opacity: number) => {

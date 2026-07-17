@@ -8,37 +8,24 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-  Modal,
-  FlatList,
   LayoutAnimation,
-  UIManager,
   Image,
   Switch,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard, useWindowDimensions,
+  useWindowDimensions,
   Alert
 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { useRouter } from 'expo-router';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useApp } from '../../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import * as ImagePicker from 'expo-image-picker';
 import { _TouchableWithoutFeedback } from '../../components/elidev_components';
-import CustomModal, { Soon_Modal } from '../../components/CustomModal';
-import { _Header, _Footer,_DatePicker, _PickerModal, _MenuGrid, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report, _SuccessCheck } from '../../components/elidev_components';
+import CustomModal from '../../components/CustomModal';
+import { _Header, _Footer,_DatePicker, _PickerModal, _checkBox, _Background, hexToRGBA, playSuccessSound, playErrorSound, _AccordionSection, formatDate, _Show_Cirugia_Report, _SuccessCheck } from '../../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
-import { Int32 } from 'react-native/Libraries/Types/CodegenTypes';
-
-// Sample data based on the HTML form
-
-interface PickerOption {
-  id: string;
-  nombre: string;
-}
 
 interface iEstado {
   id_estado: string;
@@ -100,7 +87,6 @@ interface iSubdistribuidor {
 
 
 export default function ProgramaCirugiaScreen() {
-  const router = useRouter();
   const { user, theme, t, appConfig } = useApp();
   const pageConfig = {
     name: t('cirugias_programar.new_title'),
@@ -112,7 +98,6 @@ export default function ProgramaCirugiaScreen() {
   };
 
   const [appReady, setAppReady] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [report_visible, setReportVisible] = useState(false);
   const [report_data, setReportData] = useState(null);
@@ -332,10 +317,6 @@ export default function ProgramaCirugiaScreen() {
     if (!notas) return 'Ingrese notas o adicionales';
     return null;
   };
-  const finalizarSeleccion = () => {
-    const materialesSeleccionados = Object.keys(selectedSubcats).filter(id => selectedSubcats[id]);
-    console.log("IDs a enviar al servidor:", materialesSeleccionados);
-  };
   const confirm_Clean_form = () => {
     if (Platform.OS === "web") {
           if (confirm(t('common.confirm_clean_form'))) Clean_form();
@@ -469,7 +450,7 @@ export default function ProgramaCirugiaScreen() {
           colorIcon: '#f56565'
         });
       }
-    } catch (e) {
+    } catch {
       setModal({
         visible: true,
         titulo: t('common.error'),
@@ -501,44 +482,6 @@ export default function ProgramaCirugiaScreen() {
 
     setExpandedSection(expandedSection === section ? null : section);
   };
-  const [expandedSubsections, setExpandedSubsections] = useState<Record<string, boolean>>({});
-
-
-  const toggleSubsection = (SubsectionId: string, yOffset: number = 0) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    const isOpening = !expandedSubsections[SubsectionId];
-
-    setExpandedSubsections((prev) => {
-      // Si la sección que clickeamos ya está abierta, la cerramos (devolvemos objeto vacío)
-      if (prev[SubsectionId]) {
-        return {};
-      }
-      // Si está cerrada, abrimos SOLO esa (creamos un objeto nuevo solo con esa llave)
-      return { [SubsectionId]: true };
-    });
-
-    if (isOpening) {
-      // El delay es vital para que la animación de LayoutAnimation 
-      // termine de expandir el contenido antes de calcular el scroll.
-      setTimeout(() => {
-        // Ejecutar el scroll        
-        scrollRef.current?.scrollTo({
-          y: yOffset,
-          animated: true,
-        });
-      }, 100); // 400ms es el tiempo ideal para esperar la animación de Expo/RN
-    }
-
-  };
-
-  // Estados para Checkboxes (basados en programa_cirugia.html)
-  const [checks, setChecks] = useState({
-    ayuno: false,
-    consentimiento: false,
-    laboratorios: false,
-    electro: false,
-    valoracion: false
-  });
 
 
   // 1. MIENTRAS CARGA (Splash Screen)
@@ -1382,18 +1325,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: Platform.OS === 'ios' ? -15 : -10
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   content: {
     flex: 1,
     padding: 3,
@@ -1403,19 +1334,6 @@ const styles = StyleSheet.create({
     padding: 0,
     borderWidth: 1,
     marginBottom: 60,
-  },
-  formHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 10,
   },
   fieldContainer: {
     marginBottom: 16,
@@ -1474,35 +1392,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 10,
     paddingTop:0
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 1,
-    borderTopWidth: 1,
-  },
-  footerText: {
-    marginLeft: 10,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-
-  inputGroup: { marginBottom: 15 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  checkLabel: { marginLeft: 10, fontSize: 15 },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12, // Espacio suficiente para el touch
-    paddingHorizontal: 15,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
-  },
-  checkboxLabel: {
-    marginLeft: 12,
-    fontSize: 15,
-    flex: 1,
   },
   loadingDataContainer: {
     flex: 1,

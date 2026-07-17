@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { View, StyleSheet, Platform,ImageBackground } from "react-native";
 import { useApp } from '../../context/AppContext';
-import { hexToRGBA } from './_Functions';
 
 const localBackgrounds: { [key: string]: any } = {
     'default': require('../../assets/images/background/almacen_background_default.png'),
