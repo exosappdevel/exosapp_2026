@@ -288,6 +288,12 @@ $(function () {
       var $header = $('<h3>').text(modulo.toUpperCase());
       var $panel = $('<div>').addClass('permisos-panel');
 
+      var updateHeaderCount = function () {
+        var marcados = $panel.find('input[data-permiso-id]:checked').length;
+        var label = modulo.toUpperCase() + (marcados > 0 ? ' (' + marcados + ')' : '');
+        $header.text(label);
+      };
+
       var allChecked = grupos[modulo].every(function (row) { return String(row.activo) === '1'; });
       var $selectAllLabel = $('<label>').addClass('permisos-select-all');
       var $selectAllCb = $('<input type="checkbox">').prop('checked', allChecked);
@@ -306,6 +312,7 @@ $(function () {
             var todos = $panel.find('input[data-permiso-id]');
             var marcados = todos.filter(':checked');
             $selectAllCb.prop('checked', todos.length === marcados.length);
+            updateHeaderCount();
           });
         $label.append($checkbox).append(' ' + (row.almacen || ('Almacén #' + row.id_almacen)));
         $li.append($label);
@@ -314,13 +321,15 @@ $(function () {
 
       $selectAllCb.on('change', function () {
         $panel.find('input[data-permiso-id]').prop('checked', $(this).is(':checked'));
+        updateHeaderCount();
       });
 
       $panel.append($selectAllLabel).append($list);
       $accordion.append($header).append($panel);
+      updateHeaderCount();
     });
 
-    $accordion.accordion({ heightStyle: 'content', collapsible: true, active: 0 });
+    $accordion.accordion({ heightStyle: 'content', collapsible: true, active: false });
   }
 
   function guardarPermisos() {

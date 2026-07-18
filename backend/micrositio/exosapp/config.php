@@ -4,7 +4,7 @@ session_start();
 // Ruta del sitio hacia la raíz de este micrositio, usada para construir
 // enlaces/assets/redirects que funcionen sin importar la profundidad de la
 // página actual (ej. perfiles/index.php vs usuarios/index.php).
-define('BASE_URL', '/micrositios/app_perfiles/');
+define('BASE_URL', '/micrositio/exosapp/');
 
 // Adaptador REST/JSON (controller_ws_rest.php) en vez de controller_ws.php:
 // este micrositio necesita JSON limpio (arrays reales, no el XML con prefijos

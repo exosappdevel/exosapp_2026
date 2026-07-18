@@ -20,7 +20,7 @@ if (!empty($_SESSION['app_perfiles_user'])) {
 <div class="login-screen">
   <div class="login-logo-container">
     <img src="assets/images/logo_login.png" alt="ExosApp" class="login-logo">
-    <div class="login-appname">ExosApp &middot; Perfiles</div>
+    <div class="login-appname">ExosApp &middot; Admin</div>
   </div>
 
   <form id="loginForm" class="login-form" autocomplete="off">
