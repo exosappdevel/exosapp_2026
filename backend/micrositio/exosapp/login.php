@@ -49,7 +49,7 @@ if (!empty($_SESSION['app_perfiles_user'])) {
     </button>
   </form>
 
-  <div class="login-footer-text">Administrador de Perfiles de Usuario</div>
+  <div class="login-footer-text">Administrador de ExosApp</div>
 
   <img src="assets/images/logo_Elidev.png" alt="Elidev" class="login-logo-elidev">
 </div>
