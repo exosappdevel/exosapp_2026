@@ -5,6 +5,10 @@ trait ExosApp_Almacenes
     private function listMethods_Almacenes()
     {
         return [        
+            'get_almacenes_list_new' => [
+                'descripcion' => 'obtiene la lista de almacenes',
+                'parameters' => ['id_usuario_app', 'limit (opcional)']
+            ],
             'get_almacenes_list' => [
                 'descripcion' => 'obtiene la lista de almacenes',
                 'parameters' => ['id_usuario', 'limit (opcional)']
@@ -50,6 +54,50 @@ trait ExosApp_Almacenes
         }
     }
 
+    public function get_almacenes_list_new()
+    {
+        $id_usuario_app = Requesting("id_usuario_app");
+        $data = [];
+        if (!$id_usuario_app) {
+            return ['result' => 'error', 'result_text' => 'USUARIO es necesario'];
+        } else {
+            $query = "select apm.id_almacen 
+                        from app_perfiles_usuarios apu left join app_perfiles_modulos apm  on apu.id_perfil = apm.id_perfil  
+                        where apu.id_usuario_app = " . $id_usuario_app . " and apm.activo =1
+                        group by apm.id_almacen ";
+
+            $records = DatasetSQL_WS($query);   
+
+            while ($row_perfil = mysqli_fetch_array($records)) {
+                $query = "SELECT a.id_almacen, a.nombre, a.codigo 
+						FROM almacen a  where a.id_almacen = " . $row_perfil['id_almacen'] . " order by a.codigo";
+                $qresult = DatasetSQL($query);
+                $row = mysqli_fetch_array($qresult);
+                $data['item_' . $row_perfil['id_almacen']] = [
+                    'id_almacen' => $row_perfil['id_almacen'],
+                    'nombre' => $row['nombre'],
+                    'codigo' => $row['codigo']
+                ];
+            }
+            if (empty($data)) {
+                $id_usuario = GetValueSQL_WS("select id_usuario from user_profile where id_usuario_app = " . $id_usuario_app, "id_usuario");
+                $id_almacen = GetValueSQL("select id_almacen from usuario where id_usuario = " . $id_usuario, "id_almacen");
+                
+                $qresult = DatasetSQL("SELECT a.id_almacen, a.nombre, a.codigo FROM almacen a  where a.id_almacen = " . $id_almacen);
+                $row = mysqli_fetch_array($qresult);
+                $data['item_' . $row_perfil['id_almacen']] = [
+                    'id_almacen' => $row_perfil['id_almacen'],
+                    'nombre' => $row['nombre'],
+                    'codigo' => $row['codigo']
+                ];
+            }            
+        }
+        return [
+            'result' => 'ok',
+            'data' => $data,
+            'result_text' => 'Metodo ejecutado exitosamente'
+        ];
+    }
     public function get_almacenes_list()
     {
         $id_usuario = Requesting("id_usuario");

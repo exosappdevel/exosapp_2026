@@ -139,7 +139,31 @@ $(function () {
       width: 480,
       height: 520,
       resizable: false,
+      open: function () {
+        const $btn = $(this).dialog('widget').find('.ui-dialog-buttonpane button:first');
+        const total = $('#usuariosPerfilList > li[data-nombre] input[type=checkbox]:checked').length;
+        $btn.data('showingAll', true)
+          .button('option', 'label', 'Mostrar seleccionados (' + total + ')');
+      },
       buttons: {
+        'Mostrar todos': function (e) {
+          const $btn = $(e.target);
+          const $items = $('#usuariosPerfilList > li[data-nombre]');
+          const showingAll = $btn.data('showingAll');
+
+          if (showingAll) {
+            $items.each(function () {
+              $(this).toggle($(this).find('input[type=checkbox]').is(':checked'));
+            });
+            const total = $('#usuariosPerfilList > li[data-nombre] input[type=checkbox]:checked').length;
+            $btn.button('option', 'label', 'Mostrar todos (' + total + ')');
+          } else {
+            $items.show();
+            $btn.button('option', 'label', 'Mostrar seleccionados (' + $items.length + ')');
+          }
+
+          $btn.data('showingAll', !showingAll);
+        },
         'Cerrar': function () { $(this).dialog('close'); }
       }
     });
@@ -247,7 +271,7 @@ $(function () {
       .dialog('open');
 
     apiGet('app_perfiles_permisos_get', { id_perfil: idPerfil }).done(function (resp) {
-      if (!resp || resp.result !== 'ok') {        
+      if (!resp || resp.result !== 'ok') {
         $('#permisosAccordion').text((resp && resp.result_text.toUpperCase()) || 'No se pudieron cargar los permisos.');
         return;
       }
@@ -410,6 +434,7 @@ $(function () {
 
     if (!usuarios.length) {
       $list.append('<li class="checklist-loading">No hay usuarios registrados.</li>');
+      actualizarContadorUsuariosPerfil();
       return;
     }
 
@@ -433,12 +458,22 @@ $(function () {
             $cb.prop('checked', !$cb.is(':checked'));
           }).always(function () {
             $cb.prop('disabled', false);
+            actualizarContadorUsuariosPerfil();
           });
         });
-      $label.append($checkbox).append(' ' + (u.nombre || ('Usuario #' + u.id_usuario)));
+      $label.append($checkbox).append(' ' + ((u.nombre) || ('Usuario #' + u.id_usuario)));
+      $label.attr('title', u.usuario + ' (' + u.id_usuario + ':' + u.id_usuario_app + ')');
       $li.append($label);
       $list.append($li);
     });
+
+    actualizarContadorUsuariosPerfil();
+  }
+
+  function actualizarContadorUsuariosPerfil() {
+    var $btn = $('#dlgUsuariosPerfil').dialog('widget').find('.ui-dialog-buttonpane button:first');
+    var total = $('#usuariosPerfilList > li[data-nombre] input[type=checkbox]:checked').length;
+    $btn.data('showingAll', true).button('option', 'label', 'Mostrar seleccionados (' + total + ')');
   }
 
   function filtrarUsuariosPerfil(texto) {
