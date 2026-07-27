@@ -39,7 +39,10 @@
             <button type="button" class="btn-test" onclick="runTest()">Ejecutar Test</button>            
         </form>
     </div>
-
+    <div id="urlSection" class="section">
+        <h3>URL de la Solicitud:</h3>
+        <h3 id="urlResult"></h3>
+    </div>
     <div id="resultSection" class="section" style="display:none;">
         <h3>Resultado del Servidor:</h3>
         <pre id="xmlResult"></pre>
@@ -128,9 +131,15 @@
             div.className = 'param-row';
             div.innerHTML = '<label>Debug:</label><input type="checkbox" id="chkDebug" name="debug" checked="yes" style="width: 30px !important;">';
             container.appendChild(div);
+            // add json
+            const div2 = document.createElement('div');
+            div2.className = 'param-row';
+            div2.innerHTML = '<label>JSON:</label><input type="checkbox" id="chkJson" name="json" style="width: 30px !important;">';
+            container.appendChild(div2);
 
             if (!hasParams) {
                 container.innerHTML = '<p>Este método no requiere parámetros adicionales.</p>';
+                container.appendChild(div2);
             }
 
             document.getElementById('auditSection').style.display = 'block';
@@ -156,6 +165,7 @@
             const text = await response.text();
             const resultDisplay = document.getElementById('xmlResult');
             const trimmedText = text.trim();
+            urlResult.textContent = WS_URL + "?" + params.toString();
 
             if (trimmedText.startsWith("<" + "?xml") || trimmedText.startsWith("<response")) {
                 resultDisplay.textContent = formatXml(text);

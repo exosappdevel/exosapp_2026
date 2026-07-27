@@ -37,6 +37,10 @@ dist
 *credentials.json*
 *service-account*.json
 google-services.json
+sql_tools_config.php
+# Llave de cuenta de servicio de Google Cloud (Play Store publish) -- la copia
+# real vive fuera del repo en code/publish_info/, esto es solo por si acaso.
+refs/esdimed-exosapp-*.json
 
 # Logs and debug files
 npm-debug.log*

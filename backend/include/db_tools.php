@@ -159,9 +159,42 @@ function Dataset_To_JSON($sSQL){
 }
 
 function JSON_Envelope($Valores){
-	header('Content-type: application/json');
-	$sXML= simplexml_load_string( XML_Envelope_Text($Valores));
-        echo json_encode($sXML);
+	// Antes se armaba el XML y se convertía con simplexml_load_string() + json_encode().
+	// json_encode() sobre un SimpleXMLElement solo serializa hijos, no el texto de los
+	// nodos hoja (ni siquiera el contenido de CDATA), así que cada valor terminaba como
+	// "{}" en vez del dato real. Se serializa directo desde el array original.
+	header('Content-type: application/json; charset=UTF-8');
+	echo json_encode(JSON_Flatten_Array($Valores), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+}
+
+function JSON_Flatten_Array($value){
+	if (!is_array($value)) {
+		return $value;
+	}
+
+	// Misma convención que usa el frontend al parsear el XML: los hijos cuyo
+	// nombre empieza con item_/subitem_/prod_ representan una lista.
+	$isList = false;
+	foreach (array_keys($value) as $key) {
+		if (is_string($key) && (strpos($key, 'item_') === 0 || strpos($key, 'subitem_') === 0 || strpos($key, 'prod_') === 0)) {
+			$isList = true;
+			break;
+		}
+	}
+
+	if ($isList) {
+		$out = [];
+		foreach ($value as $v) {
+			$out[] = JSON_Flatten_Array($v);
+		}
+		return $out;
+	}
+
+	$out = [];
+	foreach ($value as $k => $v) {
+		$out[$k] = JSON_Flatten_Array($v);
+	}
+	return $out;
 }
 
 function Datarow_To_Table($sSQL,$only_det){

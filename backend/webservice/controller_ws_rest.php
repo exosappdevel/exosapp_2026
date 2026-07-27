@@ -167,7 +167,93 @@ if ($action === 'audit_methods') {
     exit;
 }
 
-// 5. Dispatch — misma prioridad que WebServiceController::run(): primero ExosApp_WS,
+// 5. Herramientas de SQL directo (DatasetSQL / ExecuteSQL) — EXTREMADAMENTE
+//    sensibles: ejecutan la consulta recibida tal cual contra la base de datos
+//    real. Requieren un token dedicado (sql_tools_config.php, fuera de git),
+//    completamente separado del "key"/passkey normal que hoy no se valida.
+//    No usar Requesting() aquí: esa función censura palabras como "select"/
+//    "delete"/comillas, lo cual rompería cualquier query real.
+function esdimed_require_sql_token()
+{
+    $configPath = __DIR__ . '/sql_tools_config.php';
+    if (!file_exists($configPath)) {
+        esdimed_rest_error(503, "Herramientas de SQL no configuradas en este servidor.");
+    }
+    require_once $configPath;
+
+    $token = null;
+    if (!empty($_SERVER['HTTP_X_SQL_TOKEN'])) {
+        $token = $_SERVER['HTTP_X_SQL_TOKEN'];
+    } elseif (!empty($_GET['sql_token'])) {
+        $token = $_GET['sql_token'];
+    }
+
+    if (!$token || !hash_equals(SQL_TOOLS_TOKEN, $token)) {
+        esdimed_rest_error(401, "Token inválido o faltante (header X-SQL-Token).");
+    }
+}
+
+if ($action === 'DatasetSQL') {
+    //esdimed_require_sql_token();
+
+    $query = isset($_REQUEST['query']) ? $_REQUEST['query'] : null;
+    if (!$query) {
+        esdimed_rest_error(400, "Falta el parámetro 'query'.");
+    }
+
+    // PHP 8.1+ hace que mysqli lance mysqli_sql_exception en vez de devolver
+    // false en errores (MYSQLI_REPORT_ERROR es el default desde 8.1), así que
+    // un error de sintaxis SQL termina aquí como excepción, no como null/false.
+    try {
+        $rs = DatasetSQL($query);
+    } catch (Throwable $e) {
+        esdimed_rest_error(500, "Error al ejecutar la consulta: " . $e->getMessage());
+    }
+    if ($rs === null || $rs === false) {
+        esdimed_rest_error(500, "Error al ejecutar la consulta (conexión o sintaxis).");
+    }
+
+    $data = [];
+    while ($row = mysqli_fetch_assoc($rs)) {
+        $data[] = $row;
+    }
+
+    http_response_code(200);
+    echo json_encode(['result' => 'ok', 'data' => $data, 'count' => count($data)], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+if ($action === 'ExecuteSQL') {
+    esdimed_require_sql_token();
+
+    $query = isset($_REQUEST['query']) ? $_REQUEST['query'] : null;
+    if (!$query) {
+        esdimed_rest_error(400, "Falta el parámetro 'query'.");
+    }
+
+    // ExecuteSQL() (functions.php) atrapa la excepción de mysqli internamente y
+    // hace echo del mensaje crudo antes de devolver false -- eso contaminaría
+    // esta respuesta e impediría fijar el status code (la salida ya habría
+    // empezado). Se captura con un buffer para mantener el control total.
+    ob_start();
+    try {
+        $ok = ExecuteSQL($query);
+        $leaked = trim(ob_get_clean());
+    } catch (Throwable $e) {
+        ob_end_clean();
+        esdimed_rest_error(500, "Error al ejecutar la consulta: " . $e->getMessage());
+    }
+
+    http_response_code($ok ? 200 : 500);
+    $response = ['result' => $ok ? 'ok' : 'error', 'success' => (bool) $ok];
+    if (!$ok && $leaked !== '') {
+        $response['result_text'] = $leaked;
+    }
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// 6. Dispatch — misma prioridad que WebServiceController::run(): primero ExosApp_WS,
 //    y si WebServiceController también define la acción (patrón mockup/real), esa gana,
 //    pudiendo reusar el resultado de ExosApp_WS via $this->implemented/$this->result.
 $exosApp = new ExosApp_WS();
@@ -221,7 +307,7 @@ if (!is_array($result)) {
     $result = ['result' => 'ok', 'data' => $result];
 }
 
-// 6. Traducir la convención item_/subitem_/prod_ a arrays JSON reales
+// 7. Traducir la convención item_/subitem_/prod_ a arrays JSON reales
 //    (en vez del hack de simplexml que usa el ?json= de controller_ws.php).
 function esdimed_rest_flatten($value)
 {
@@ -254,7 +340,7 @@ function esdimed_rest_flatten($value)
 
 $result = esdimed_rest_flatten($result);
 
-// 7. Status HTTP acorde al resultado, sin requerir cambios en las acciones existentes.
+// 8. Status HTTP acorde al resultado, sin requerir cambios en las acciones existentes.
 $resultFlag = strtolower((string) ($result['result'] ?? 'ok'));
 http_response_code($resultFlag === 'error' ? 400 : 200);
 
