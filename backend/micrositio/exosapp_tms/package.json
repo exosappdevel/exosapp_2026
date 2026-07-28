@@ -1,0 +1,15 @@
+{
+  "name": "exosapp-tms",
+  "version": "1.0.0",
+  "description": "ExosApp - Panel de Administracin (TMS WEB Core)",
+  "main": "index.html",
+  "scripts": {
+    "build": "tmsweb build",
+    "dev": "tmsweb serve",
+    "start": "tmsweb serve"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "author": "ExosApp",
+  "license": "UNLICENSED"
+}
