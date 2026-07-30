@@ -14,11 +14,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useApp } from '../../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../../components/elidev_components';
 import CustomModal from '../../components/CustomModal';
-import { _Header,_DatePicker, _PickerModal, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _Show_Cirugia_Report, formatDate } from '../../components/elidev_components';
+import { _Header,_DatePicker, _PickerModal, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, formatDate } from '../../components/elidev_components';
 import { addMonths } from 'date-fns';
 
 interface iOrderList {
@@ -54,10 +55,11 @@ interface iSubdistribuidor {
   no_registrado: string;
 }
 
-
+const MAX_LIMITE = 100; // Constante para el límite máximo de cirugías a mostrar
 
 
 export default function Cirugia_BuscarScreen() {
+  const router = useRouter();
   const { user, theme, t } = useApp();
   const pageConfig = {
     name: t('screens.cirugias_buscar'),
@@ -65,7 +67,8 @@ export default function Cirugia_BuscarScreen() {
     previous: "/home",
     show_user: true,
     show_menu: true,
-    show_in_recent: true
+    show_in_recent: true,
+    path: '/cirugias_buscar'
   };
 
   const [appReady, setAppReady] = useState(false);
@@ -82,7 +85,7 @@ export default function Cirugia_BuscarScreen() {
   const [tecnico, setTecnico] = useState<iTecnico | null>(null);
   const [subdistribuidor, setSubdistribuidor] = useState<iSubdistribuidor | null>(null);
   const [codigo_cirugia, setCodigo_cirugia] = useState('');
-  const [limite, setLimite] = useState("15");
+  const [limite, setLimite] = useState(String(MAX_LIMITE));
   const [filtrar_fecha, setFiltrar_fecha] = useState(false); // Por defecto NO se filtra por fecha
 
   // listas
@@ -123,8 +126,6 @@ export default function Cirugia_BuscarScreen() {
   const [, setSection_resultados_visible] = useState(false);
   const [resultados, setResultados] = useState([]);
   const [, setResultados_count] = useState(0);
-  const [resultado_item, setResultadoItem] = useState(null);
-  const [resultado_item_visible, setResultadoItemVisible] = useState(false);
 
   const { height } = useWindowDimensions();
   const margin_height = 45;
@@ -250,7 +251,7 @@ export default function Cirugia_BuscarScreen() {
             </View>
           }
           isOpen={expandedSection === `res_${index}`}
-          onPress={() => { setResultadoItem(item); setResultadoItemVisible(true); } /*setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)*/}
+          onPress={() => router.push({ pathname: '/cirugia_detalle_view/[id_cirugia]', params: { id_cirugia: item.id_cirugia } })}
           yoff={85 + (index * 80)}
         >
           <View></View>
@@ -610,7 +611,7 @@ export default function Cirugia_BuscarScreen() {
 
                         if (!isNaN(valorNumerico)) {
                           // Forzamos el rango matemático de 0 a 15
-                          const valorLimitado = Math.max(0, Math.min(valorNumerico, 15));
+                          const valorLimitado = Math.max(0, Math.min(valorNumerico, MAX_LIMITE));
                           // Guardamos la respuesta convertida a string
                           setLimite(String(valorLimitado));
                         }
@@ -709,12 +710,6 @@ export default function Cirugia_BuscarScreen() {
           icon={modal.icon}
           colorIcon={modal.colorIcon}
           onClose={() => setModal({ ...modal, visible: false })}
-        />
-        <_Show_Cirugia_Report
-          titulo={'Detalle de la cirugia'}
-          visible={resultado_item_visible}
-          item={resultado_item}
-          onClose={() => setResultadoItemVisible(false)}
         />
         <_Footer Show_Almacen={false} Show_Usermenu={true} >
           {/* Submit Button */}

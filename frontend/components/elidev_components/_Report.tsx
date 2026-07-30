@@ -1,16 +1,17 @@
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ViewStyle } from "react-native";
+import { useRef, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ViewStyle, Image, LayoutChangeEvent } from "react-native";
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { hexToRGBA } from './_Functions'
 import { _ZoomableView } from "./_ZoomableView";
 
-export const _Report = ({ children }: { children: any }) => {
+export const _Report = ({ children, showShare = true }: { children: any, showShare?: boolean }) => {
     const { theme } = useApp(); // Traemos el hook si se requiere aquí
 
     // AGREGADO: return explícito para que JSX lo reconozca como un componente válido
     return (
-        <_ZoomableView showShare={true} shareButtonStyle={styles.shareButton}>
+        <_ZoomableView showShare={showShare} shareButtonStyle={styles.shareButton}>
             <View style={[styles.detalleContainer, { backgroundColor: theme.card }]}>
                 {children}
             </View>
@@ -55,6 +56,264 @@ export const _DetalleMultiLinea = ({ label, value, label_style, value_style }: {
     );
 };
 
+// Campos del detalle de una cirugía. Extraído aparte de _Show_Cirugia_Report
+// para poder reusarlo tanto en el modal (cirugias_programar.tsx) como en la
+// vista de página completa (cirugia_detalle_view, abierta desde cirugias_buscar.tsx).
+export const _CirugiaReportFields = ({ item, showShare = true }: { item?: any, showShare?: boolean }) => {
+    if (!item) return null;
+    return (
+        <_Report showShare={showShare}>
+            <_DetalleLinea label="Codigo" value={item.codigo} />
+            <_DetalleLinea label="Estatus" value={item.estatus_text} />
+            <_DetalleLinea label="Vendedor" value={item.vendedor} />
+            <_DetalleLinea label="Técnico 1" value={item.tecnico} />
+            <_DetalleLinea label="Técnico 2" value={item.tecnico2} />
+            <_DetalleLinea label="Tiempo de Surtido" value={item.tiempo_surtido} />
+            <_DetalleLinea label="Tiempo de Entrega a Técnico" value={item.tiempo_entrega_tecnico} />
+            <_DetalleLinea label="Fecha de Programación" value={item.fecha_programacion} />
+            <_DetalleLinea label="Fecha de Reprogramación" value={item.fecha_reprogramacion} />
+            <_DetalleLinea label="Fecha de Cirugía" value={item.fecha_cirugia} />
+            <_DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
+            <_DetalleLinea label="Médico" value={item.medico} />
+            <_DetalleLinea label="Hospital" value={item.hospital} />
+            <_DetalleLinea label="Municipio" value={`${item.municipio || ''}, ${item.estado || ''}`} />
+
+            <View style={styles.divisor} />
+
+            <_DetalleMultiLinea label="Material" value={item.minialmacen} />
+            <_DetalleMultiLinea label="Equipo Poder" value={item.ep} />
+            <_DetalleMultiLinea label="Adicionales" value={item.adicionales} />
+            <_DetalleMultiLinea label="Consumibles" value={item.consumibles} />
+            <_DetalleLinea label="Solicita Estéril" value={item.esteril} />
+
+            <View style={styles.divisor} />
+
+            <_DetalleMultiLinea label="Notas" value={item.notas} />
+            <_DetalleLinea label="Remisión" value={item.remision} />
+            <_DetalleLinea
+                label="Última Modificación"
+                value={`${item.last_update || ''} / ${item.last_updater || ''}`}
+            />
+        </_Report>
+    );
+};
+
+export interface iMaterialSurtidoItem {
+    nombre?: string;
+    cantidad?: string;
+    codigo_2?: string;
+    referencia?: string;
+    lote?: string;
+    fecha_cad?: string;
+}
+
+// Grupo de primer nivel de "material_surtido" (un set/caja/categoría con sus
+// piezas en "data"). Ver cirugia_detalle_material_surtido_data en el backend.
+export interface iMaterialSurtidoGroup {
+    id?: string;
+    nombre?: string;
+    data?: iMaterialSurtidoItem[];
+}
+
+// Lista de material surtido de una cirugía (nodo "material_surtido" de get_cirugia_report),
+// agrupada por set/caja en un acordeón: las listas completas pueden ser muy
+// grandes (decenas de piezas por set), así que cada grupo empieza colapsado.
+export const _MaterialSurtidoList = ({ groups }: { groups?: iMaterialSurtidoGroup[] }) => {
+    const { theme } = useApp();
+    const [expanded, setExpanded] = useState<Set<number>>(new Set());
+
+    if (!groups || groups.length === 0) {
+        return (
+            <_Report showShare={false}>
+                <Text style={[styles.emptyText, { color: theme.textSub }]}>
+                    No hay material surtido registrado.
+                </Text>
+            </_Report>
+        );
+    }
+
+    const toggleGroup = (index: number) => {
+        setExpanded(prev => {
+            const next = new Set(prev);
+            if (next.has(index)) next.delete(index); else next.add(index);
+            return next;
+        });
+    };
+
+    return (
+        <_Report showShare={false}>
+            {groups.map((group, gIndex) => {
+                const items = group.data || [];
+                const isOpen = expanded.has(gIndex);
+                return (
+                    <View key={gIndex}>
+                        <TouchableOpacity
+                            style={[styles.materialGroupHeader, { borderColor: theme.border }]}
+                            onPress={() => toggleGroup(gIndex)}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={[styles.materialGroupTitle, { color: theme.text }]}>
+                                {group.nombre || '---'}
+                            </Text>
+                            <View style={styles.materialGroupHeaderRight}>
+                                <Text style={[styles.materialGroupCount, { color: theme.textSub }]}>{items.length}</Text>
+                                <MaterialCommunityIcons
+                                    name={isOpen ? 'chevron-up' : 'chevron-down'}
+                                    size={20}
+                                    color={theme.accent}
+                                />
+                            </View>
+                        </TouchableOpacity>
+                        {isOpen && items.map((mat, index) => (
+                            <View key={index} style={styles.materialItemRow}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                    <Text style={[styles.materialReferencia, { color: theme.accent }]}>{mat.referencia || '---'}</Text>
+                                    <View style={{ flexDirection: 'row', marginTop: 5 }}>
+                                        <Text style={[styles.materialCantidad, { color: theme.text }]}>Cant. </Text>
+                                        <Text style={[styles.materialCantidad, { color: theme.accent }]}> {mat.cantidad || '---'}</Text>
+                                    </View>
+                                </View>
+                                <Text style={[styles.materialNombre, { color: theme.text }]}>{mat.nombre || '---'}</Text>
+                                {index < items.length - 1 && <View style={[styles.divisor, { backgroundColor: theme.textSub }]} />}
+                            </View>
+                        ))}
+                        {gIndex < groups.length - 1 && <View style={[styles.divisorGroup, { backgroundColor: theme.border }]} />}
+                    </View>
+                );
+            })}
+        </_Report>
+    );
+};
+
+export interface _FotosCarouselProps {
+    photos?: string[];
+    // Selección controlada por el padre (cirugia_detalle_view), que es quien
+    // sabe qué fotos compartir cuando se presiona el botón de compartir.
+    selected?: Set<number>;
+    onToggleSelect?: (index: number) => void;
+}
+
+// Carrusel de fotos de una cirugía. Recibe URLs ya completas (ver getServerFileUrl
+// en _Functions.tsx, ya que las fotos se guardan relativas a la raíz del sitio,
+// no a /webservice). Pensado para vivir en un contenedor con flex:1 (no dentro
+// de un ScrollView vertical), así puede usar toda la altura disponible en vez
+// de quedar forzado a un cuadro cuadrado angosto.
+export const _FotosCarousel = ({ photos, selected, onToggleSelect }: _FotosCarouselProps) => {
+    const { theme } = useApp();
+    const [activeIndex, setActiveIndex] = useState(0);
+    // Se mide el tamaño real del contenedor (ancho Y alto) en vez de un tope fijo
+    // de 500px de ancho y una altura cuadrada que dejaban la vista de fotos más
+    // angosta y más corta que las otras vistas.
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    const scrollRef = useRef<ScrollView>(null);
+    const counterHeight = 30;
+    const imageHeight = Math.max(0, size.height - counterHeight);
+
+    if (!photos || photos.length === 0) {
+        return (
+            <_Report>
+                <Text style={[styles.emptyText, { color: theme.textSub }]}>
+                    No hay fotos registradas.
+                </Text>
+            </_Report>
+        );
+    }
+
+    const onLayout = (e: LayoutChangeEvent) => {
+        const { width, height } = e.nativeEvent.layout;
+        if (width && height && (Math.abs(width - size.width) > 1 || Math.abs(height - size.height) > 1)) {
+            setSize({ width, height });
+        }
+    };
+
+    const onScroll = (e: any) => {
+        if (!size.width) return;
+        const index = Math.round(e.nativeEvent.contentOffset.x / size.width);
+        setActiveIndex(index);
+    };
+
+    const goTo = (index: number) => {
+        if (index < 0 || index >= photos.length || !size.width) return;
+        scrollRef.current?.scrollTo({ x: index * size.width, animated: true });
+        setActiveIndex(index);
+    };
+
+    return (
+        // El ScrollView de react-native-gesture-handler necesita un GestureHandlerRootView
+        // ancestro en nativo (en web no lo exige, por eso solo fallaba en iOS/Android).
+        // _CirugiaReportFields/_MaterialSurtidoList lo obtienen gratis vía _Report -> _ZoomableView;
+        // este carrusel no pasa por ahí, así que se agrega aquí directamente.
+        <GestureHandlerRootView style={{ flex: 1, width: '100%' }}>
+            <View
+                style={[styles.fotosContainer, { backgroundColor: theme.card }]}
+                onLayout={onLayout}
+            >
+                {size.width > 0 && (
+                    <View style={{ width: '100%', height: imageHeight }}>
+                        <ScrollView
+                            ref={scrollRef}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            onScroll={onScroll}
+                            scrollEventThrottle={16}
+                            style={{ width: size.width, height: imageHeight }}
+                        >
+                            {photos.map((uri, index) => (
+                                <View key={index} style={{ width: size.width, height: imageHeight, position: 'relative' }}>
+                                    <_ZoomableView showShare={false}>
+                                        <Image
+                                            source={{ uri }}
+                                            style={{ width: '100%', height: imageHeight }}
+                                            resizeMode="contain"
+                                        />
+                                    </_ZoomableView>
+
+                                    {onToggleSelect && (
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.fotoCheckbox,
+                                                { backgroundColor: selected?.has(index) ? theme.accent : hexToRGBA('#000000', 0.45) }
+                                            ]}
+                                            onPress={() => onToggleSelect(index)}
+                                        >
+                                            <MaterialCommunityIcons
+                                                name={selected?.has(index) ? 'check-circle' : 'checkbox-blank-circle-outline'}
+                                                size={22}
+                                                color="#fff"
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            ))}
+                        </ScrollView>
+
+                        {activeIndex > 0 && (
+                            <TouchableOpacity
+                                style={[styles.fotoNavBtn, { left: 8, top: imageHeight / 2 - 20 }]}
+                                onPress={() => goTo(activeIndex - 1)}
+                            >
+                                <MaterialCommunityIcons name="chevron-left" size={28} color="#fff" />
+                            </TouchableOpacity>
+                        )}
+                        {activeIndex < photos.length - 1 && (
+                            <TouchableOpacity
+                                style={[styles.fotoNavBtn, { right: 8, top: imageHeight / 2 - 20 }]}
+                                onPress={() => goTo(activeIndex + 1)}
+                            >
+                                <MaterialCommunityIcons name="chevron-right" size={28} color="#fff" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
+                <Text style={[styles.fotoCounter, { color: theme.textSub }]}>
+                    {activeIndex + 1} / {photos.length}
+                </Text>
+            </View>
+        </GestureHandlerRootView>
+    );
+};
+
 export interface _Show_Cirugia_ReportProps {
     visible: boolean;
     titulo: string;
@@ -94,41 +353,7 @@ export const _Show_Cirugia_Report = ({ visible, titulo, onClose, item }: _Show_C
                             <Text style={[styles.titulo, { color: theme.text }]}>{titulo}</Text>
                             <View style={{ width: 36 }} />
                         </View>
-                        {item ? (
-                            <_Report>
-                                <_DetalleLinea label="Codigo" value={item.codigo} />
-                                <_DetalleLinea label="Estatus" value={item.estatus_text} />
-                                <_DetalleLinea label="Vendedor" value={item.vendedor} />
-                                <_DetalleLinea label="Técnico 1" value={item.tecnico} />
-                                <_DetalleLinea label="Técnico 2" value={item.tecnico2} />
-                                <_DetalleLinea label="Tiempo de Surtido" value={item.tiempo_surtido} />
-                                <_DetalleLinea label="Tiempo de Entrega a Técnico" value={item.tiempo_entrega_tecnico} />
-                                <_DetalleLinea label="Fecha de Programación" value={item.fecha_programacion} />
-                                <_DetalleLinea label="Fecha de Reprogramación" value={item.fecha_reprogramacion} />
-                                <_DetalleLinea label="Fecha de Cirugía" value={item.fecha_cirugia} />
-                                <_DetalleLinea label="Subdistribuidor" value={item.subdistribuidor} />
-                                <_DetalleLinea label="Médico" value={item.medico} />
-                                <_DetalleLinea label="Hospital" value={item.hospital} />
-                                <_DetalleLinea label="Municipio" value={`${item.municipio || ''}, ${item.estado || ''}`} />
-
-                                <View style={styles.divisor} />
-
-                                <_DetalleMultiLinea label="Material" value={item.minialmacen} />
-                                <_DetalleMultiLinea label="Equipo Poder" value={item.ep} />
-                                <_DetalleMultiLinea label="Adicionales" value={item.adicionales} />
-                                <_DetalleMultiLinea label="Consumibles" value={item.consumibles} />
-                                <_DetalleLinea label="Solicita Estéril" value={item.esteril} />
-
-                                <View style={styles.divisor} />
-
-                                <_DetalleMultiLinea label="Notas" value={item.notas} />
-                                <_DetalleLinea label="Remisión" value={item.remision} />
-                                <_DetalleLinea
-                                    label="Última Modificación"
-                                    value={`${item.last_update || ''} / ${item.last_updater || ''}`}
-                                />
-                            </_Report>
-                        ) : ""}                        
+                        <_CirugiaReportFields item={item} />
                     </View>
 
                 </ScrollView>
@@ -198,7 +423,7 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
                             </_Report>
 
                         ) : ""}
-                        
+
                     </View>
                 </ScrollView>
             </GestureHandlerRootView>
@@ -212,6 +437,84 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         width: '100%',
         marginBottom: 30
+    },
+    fotosContainer: {
+        flex: 1,
+        width: '100%',
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+    },
+    materialNombre: {
+        fontSize: 14,
+        fontWeight: 'normal',
+    },
+    materialReferencia: {
+        fontSize: 14,
+        marginTop: 3,
+        fontWeight: 'bold',
+    },
+    materialCantidad: {
+        fontSize: 12,
+        fontWeight: 'normal',
+    },
+    materialGroupHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+    },
+    materialGroupHeaderRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    materialGroupTitle: {
+        flex: 1,
+        fontSize: 13,
+        fontWeight: 'bold',
+        paddingRight: 8,
+    },
+    materialGroupCount: {
+        fontSize: 12,
+    },
+    materialItemRow: {
+        paddingLeft: 10,
+        paddingTop: 8,
+    },
+    divisorGroup: {
+        height: 1,
+        marginVertical: 4,
+    },
+    emptyText: {
+        textAlign: 'center',
+        paddingVertical: 20,
+        fontSize: 13,
+    },
+    fotoCounter: {
+        fontSize: 12,
+        paddingVertical: 8,
+    },
+    fotoCheckbox: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 20,
+    },
+    fotoNavBtn: {
+        position: 'absolute',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 20,
     },
     rowDetalle: {
         flexDirection: 'row',
@@ -251,7 +554,7 @@ const styles = StyleSheet.create({
     },
     shareButton: {
         position: 'absolute',
-        top: -50,
+        top: -40,
         right: 20,
     },
     divisor: {

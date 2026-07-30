@@ -47,7 +47,8 @@ export default function PickeoScreen() {
     previous: "terminales",
     show_user: true,
     show_menu: true,
-    show_in_recent: true
+    show_in_recent: true,
+    path: '/pickeo'
   };
 
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -63,7 +64,7 @@ export default function PickeoScreen() {
   });
 
   const { height } = useWindowDimensions();
-  const margin_height = 80;
+  const margin_height = 100;
   const _ClientHeight = height - 130 - margin_height;
 
   const terminalSeleccionada = !!user.local_terminal?.selected;
@@ -150,6 +151,20 @@ export default function PickeoScreen() {
   const aplicarPick = async (item: Producto | null, cantStr: string, esResta: boolean) => {
     if (!item) return;
     const valor = parseInt(cantStr) || 0;
+
+    // La cantidad recolectada no puede superar la cantidad solicitada.
+    if (!esResta) {
+      const disponible = item.cantidad_solicitada - item.cantidad_recolectada;
+      if (valor > disponible) {
+        playErrorSound();
+        const msg = t('pickeo.exceedsRequested')
+          .replace('{faltante}', String(Math.max(0, disponible)))
+          .replace('{solicitada}', String(item.cantidad_solicitada));
+        Platform.OS === "web" ? alert(msg) : Alert.alert(t('common.error'), msg);
+        return;
+      }
+    }
+
     const nuevaLista = productos.map((p) => {
       if (p.id === item.id) {
         const nuevaReco = esResta

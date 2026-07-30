@@ -136,7 +136,7 @@ class WebServiceController
         }
         // Armamos la consulta
         $sSQL = "insert into ws_log(id, id_usuario, nombre, input, output) " .
-            "values (0, " . $id_usuario . ",'" . $nombre . "','" . $input_esc . "', '" . $output_esc . "')";
+            "values (0, " . $id_usuario . ",'" . $nombre . "','" . $input_esc . "', left('" . $output_esc . "', " . (63*1024) . "))";
 
         $action = Requesting("action");
         if (

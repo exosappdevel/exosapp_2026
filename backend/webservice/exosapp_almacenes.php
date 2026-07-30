@@ -36,7 +36,29 @@ trait ExosApp_Almacenes
         if (!$id_usuario OR !$id_almacen) {
             return ['result' => 'error', 'result_text' => 'USUARIO y ALMACEN son necesarios'];
         } else {
-            $query = "SELECT id_terminal, terminal FROM terminal WHERE id_bodega = " . $id_almacen;
+            
+			//	$query = "SELECT id_terminal, terminal FROM terminal WHERE id_bodega = " . $id_almacen;
+			
+			//		$query = "SELECT t.id_terminal, t.terminal 
+			//			FROM terminal t
+			//			WHERE t.id_bodega = ".$id_almacen."  
+			//			AND NOT EXISTS ( 
+			//				SELECT 1
+			//				FROM terminal_bloqueada tb
+			//				WHERE tb.id_terminal = t.id_terminal
+			//			)";  
+			
+			/* ***** vamos a eliminar automaticamente TODOS los registro de terminal_bloqueada con mas de 60 minutos ***** */
+			$querydel = "DELETE FROM terminal_bloqueada WHERE kardex_bloqueo < DATE_SUB(NOW(), INTERVAL 60 MINUTE);";
+			ExecuteSQL($querydel);
+						
+			$query = "SELECT t.id_terminal, t.terminal 
+				FROM terminal t
+				LEFT JOIN terminal_bloqueada tb  
+					ON tb.id_terminal = t.id_terminal
+				WHERE t.id_bodega = ".$id_almacen."  
+				AND tb.id_terminal IS NULL";
+  
             $qresult = DatasetSQL($query);
             while ($row = mysqli_fetch_array($qresult)) {
                 // Usamos el prefijo 'item_' para que el XML sea válido y el frontend lo reconozca como lista
@@ -49,7 +71,7 @@ trait ExosApp_Almacenes
             return [
                 'result' => 'ok',
                 'data' => $data,
-                'result_text' => 'Metodo ejecutado exitosamente'
+                'result_text' => 'Metodo ejecutado exitosamente DESDE EXOSAPP.PHP'
             ];
         }
     }
@@ -127,49 +149,117 @@ trait ExosApp_Almacenes
         ];
     }
 
-    public function get_pickeo_list()
+    public function get_pickeo_list()   
     {
-        $id_terminal = Requesting("id_terminal");
+		 
+		/* **** muestra el listado de productos pickeables por terminal seleccionada **** */
+				 
+        $id_usuario = Requesting("id_usuario");
+		
+		$id_terminal = Requesting("id_terminal");
         if (!$id_terminal) {
             return ['result' => 'error', 'result_text' => 'ID TERMINA necesaria'];
         } else {
-            $limit = !Requesting("limit") ? 10 : Requesting("limit");
-            /* *** De aqui tengo que enviar la info de la tabla fragmento *** */
-            $query = "SELECT p.id_producto, p.nombre, p.referencia, p.codigo_1, m.marca, f.fabricante, fr.id_fragmento,
-							fr.restante as cantidad_solicitada, 0 as cantidad_recolectada, now() as last_update
-					FROM fragmento fr 
-					INNER JOIN remision_inv ri ON (ri.id_remision_inv = fr.id_remision_inv )
-					INNER JOIN inventario iv ON (iv.id_inventario = ri.id_inventario)
-					INNER JOIN producto p ON (p.id_producto = iv.id_producto)
-					LEFT JOIN marca m ON p.id_marca=m.id_marca
-					LEFT JOIN fabricante f ON m.id_fabricante=f.id_fabricante 
-					WHERE fr.pickeo = 0 AND fr.id_terminal = " . $id_terminal . "
-					LIMIT " . $limit;
-            //	echo $query;			 
-            $qresult = DatasetSQL($query);
-            $data = [];
-            while ($row = mysqli_fetch_array($qresult)) {
-                // Se usa el prefijo 'prod_' para asegurar etiquetas XML válidas
-                $data['prod_' . $row['id_producto']] = [
-                    'id' => $row['id_producto'],
-                    'id_fragmento' => $row['id_fragmento'],  /* *** fragmento.id_fragmento *** */
-                    'descripcion' => $row['nombre'],
-                    'referencia' => $row['referencia'],
-                    'marca' => $row['marca'],
-                    'fabricante' => $row['fabricante'],
-                    'cantidad_solicitada' => $row['cantidad_solicitada'],
-                    'cantidad_recolectada' => $row['cantidad_recolectada'],
-                    'last_update' => $row['last_update']
-                ];
-            }
+			
+			/* *** EN teoría primero validamos que la termina NO esté bloqueada **** */
+			
+			 
+			/* ***** vamos a eliminar automaticamente TODOS los registro de terminal_bloqueada con mas de 60 minutos ***** */
+			$querydel = "DELETE FROM terminal_bloqueada WHERE kardex_bloqueo < DATE_SUB(NOW(), INTERVAL 60 MINUTE);";
+			ExecuteSQL($querydel);
+				
+			/* **** verifico si la Terminal está bloqueada **** */
+			$queryb = "SELECT COUNT(terminal_bloqueada.id_registro) AS existe, terminal_bloqueada.id_registro, terminal_bloqueada.kardex_bloqueo, usuario.usuario 
+				FROM terminal_bloqueada
+				INNER JOIN usuario ON (usuario.id_usuario = terminal_bloqueada.id_usuario_bloqueo)
+				WHERE id_terminal = ".$id_terminal." AND terminal_bloqueada.id_usuario_bloqueo != ".$id_usuario;
+			$existe_terminal_bloqueada = GetValueSQL($queryb,"existe");
+			
+			if($existe_terminal_bloqueada == 0){
+				
+				/* ***** vamos a eliminar automaticamente TODOS los registro de fragmento_terminal_tmp_fragmentos con mas de 15 minutos ***** */
+				$querydel = "DELETE FROM fragmento_terminal_tmp_fragmentos WHERE kardex < DATE_SUB(NOW(), INTERVAL 15 MINUTE);";
+				ExecuteSQL($querydel);
+			
+				/* ***** elimon lo termporales relacionadas a esta terminal, sin importar kardex *** */
+				$querydel2 = "DELETE FROM fragmento_terminal_tmp_fragmentos WHERE id_terminal = ".$id_terminal;
+				ExecuteSQL($querydel2);
+			
+			 
+			
+				$limit = !Requesting("limit") ? 10 : Requesting("limit");
+				
+				/* *** De aqui tengo que enviar la info de la tabla fragmento *** */
+				
+				//			$query = "SELECT p.id_producto, p.nombre, p.referencia, p.codigo_1, m.marca, f.fabricante, fr.id_fragmento,
+				//							fr.restante as cantidad_solicitada, 0 as cantidad_recolectada, now() as last_update
+				//					FROM fragmento fr 
+				//					INNER JOIN remision_inv ri ON (ri.id_remision_inv = fr.id_remision_inv )
+				//					INNER JOIN inventario iv ON (iv.id_inventario = ri.id_inventario)
+				//					INNER JOIN producto p ON (p.id_producto = iv.id_producto)
+				//					LEFT JOIN marca m ON p.id_marca=m.id_marca
+				//					LEFT JOIN fabricante f ON m.id_fabricante=f.id_fabricante 
+				//					WHERE fr.pickeo = 0 AND fr.id_terminal = " . $id_terminal . "
+				//					LIMIT " . $limit;
+				
+				//	echo $query;
+				
+				
+				$query = "SELECT fragmento.id_fragmento, producto.referencia, producto.nombre, fragmento.restante, fragmento.cantidad, SUM(fragmento.cantidad) AS sumcantidad, 
+					almacen.nombre AS bodegaconsumo, SUM(fragmento.restante) AS sumrestante, producto.id_producto, fragmento.id_bodega_destino, marca.marca, fabricante.fabricante    
+					FROM fragmento
+					INNER JOIN producto ON (producto.id_producto = fragmento.id_producto)
+					INNER JOIN carpeta ON (carpeta.id_carpeta = fragmento.id_carpeta) 
+					INNER JOIN almacen ON (almacen.id_almacen = fragmento.id_bodega_destino) 
+					LEFT JOIN marca ON producto.id_marca=marca.id_marca
+					LEFT JOIN fabricante ON marca.id_fabricante=fabricante.id_fabricante 
+					WHERE fragmento.id_terminal = ".$id_terminal." AND fragmento.pickeo = 0 AND fragmento.restante > 0
+					GROUP BY fragmento.id_producto, fragmento.id_bodega_destino"; 
+				$qresult = DatasetSQL($query);
+				$data = [];
+				while ($row = mysqli_fetch_array($qresult)) {
+					// Se usa el prefijo 'prod_' para asegurar etiquetas XML válidas
+					$data['prod_' . $row['id_producto']] = [
+						'id' => $row['id_producto'],
+						'id_fragmento' => $row['id_fragmento'],  /* *** fragmento.id_fragmento *** */
+						'descripcion' => $row['nombre'],
+						'referencia' => $row['referencia'],
+						'marca' => $row['marca'],
+						'fabricante' => $row['fabricante'],  
+						'cantidad_solicitada' => $row['sumcantidad'],
+						'cantidad_recolectada' => $row['sumrestante'],
+						'id_bodega_destino' => $row['id_bodega_destino'],  
+						'last_update' => $row['last_update']
+					];
+				}
+				
+				 
+				$query = "INSERT INTO terminal_bloqueada (id_terminal, kardex_bloqueo, id_usuario_bloqueo)
+					VALUES (".$id_terminal.", NOW(), ".$id_usuario.")";
+				ExecuteSQL($query);
+		
+		
+				return [
+					'result' => 'ok',
+					'data' => $data,
+					'result_text' => 'Metodo ejecutado exitosamente en EXOSAPP.PHP V2'
+				];
+		
+			}else{ 
+				
+				$usuario 		= GetValueSQL($queryb,"usuario");
+				
+				return ['result' => 'error', 'result_text' => 'TERMINAL BLOQUEADA POR '.$usuario ];
+				
+				
+			}
+			
+			
         }
-        return [
-            'result' => 'ok',
-            'data' => $data,
-            'result_text' => 'Metodo ejecutado exitosamente en EXOSAPP.PHP'
-        ];
+        
     }
 
+   	 
     public function pickeo_checkout()
     {
         /* *** Esta funcion guarda los fragmentos pickeados en la tabla fragmento_terminal *** */
@@ -183,7 +273,7 @@ trait ExosApp_Almacenes
             necesito la sig estructura :
         $datos_pickeo[
             { 
-                id_fragmento, 
+                id_fragmento,  
                 id_terminal,
                 bodega_surte // en teoria ahora siempre seria matriz GDL
             }

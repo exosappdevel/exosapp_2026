@@ -40,7 +40,8 @@ export default function ProfileScreen() {
     previous: "",
     show_user: false,
     show_menu: false,
-    show_in_recent: false
+    show_in_recent: false,
+    path: '/profile'
   };
 
   const [selectedTheme, setSelectedTheme] = useState(user.tema);

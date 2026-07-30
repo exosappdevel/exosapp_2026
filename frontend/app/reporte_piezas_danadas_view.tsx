@@ -46,7 +46,9 @@ export default function reporte_piezas_danadas_view_Screen() {
     icon: "glass-fragile",
     previous: "/home",
     show_user: true,
-    show_menu: true
+    show_menu: true,
+    show_in_recent: true,
+    path: '/reporte_piezas_danadas_view'
   };
 
   const [appReady, setAppReady] = useState(false);

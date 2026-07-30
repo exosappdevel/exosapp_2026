@@ -5,7 +5,7 @@ import {
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
-import { useRouter, usePathname, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { _UserMenu } from './_UserMenu';
 
 interface iPage {
@@ -15,11 +15,11 @@ interface iPage {
     show_user: boolean;
     show_menu: boolean;
     show_in_recent: boolean;
+    path: string;
 }
 
 export const _Header = ({ page_info, children }: { page_info: iPage, children?: React.ReactNode }) => {
     const router = useRouter();
-    const pathname = usePathname();
     const { theme, user, addOpenTab } = useApp();
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -36,19 +36,23 @@ export const _Header = ({ page_info, children }: { page_info: iPage, children?: 
         }
     };
 
+    // Se usa page_info.path (fijo por pantalla) en vez de usePathname(): ese hook
+    // puede reportar todavía el path de la pantalla anterior justo cuando el
+    // useFocusEffect se dispara tras un router.back(), causando que el tab
+    // registrado tenga el name correcto pero el path de otra pantalla.
     useFocusEffect(
         useCallback(() => {
-            if (pathname && pathname !== '/login' && pathname !== '/' && page_info.show_in_recent) {
-                addOpenTab({ path: pathname, name: page_info.name, icon: page_info.icon });
+            if (page_info.path && page_info.show_in_recent) {
+                addOpenTab({ path: page_info.path, name: page_info.name, icon: page_info.icon });
             }
-        }, [pathname, page_info.show_in_recent, page_info.name, page_info.icon])
+        }, [page_info.path, page_info.show_in_recent, page_info.name, page_info.icon])
     );
 
     return (
         <View style={[styles.header]}>
             <View style={styles.headerLeft}>
                 {page_info.previous ? (
-                    <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "" ? router.back() : router.replace({ pathname: page_info?.previous })}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "back" ? router.back() : router.replace({ pathname: page_info?.previous })}>
                         <MaterialCommunityIcons name="arrow-left" size={20} color={theme.iconTextColor} />
                     </TouchableOpacity>
                 ) : <View style={[styles.backButton]}></View>}

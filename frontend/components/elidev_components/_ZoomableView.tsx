@@ -12,7 +12,6 @@ interface ZoomableProps {
   showShare?: boolean;
   shareButtonStyle?: ViewStyle;
 }
-
 export const _ZoomableView = ({ children, showShare = false, shareButtonStyle }: ZoomableProps) => {
   const { theme } = useApp();
   const viewShotRef = useRef<ViewShot>(null);
@@ -146,7 +145,7 @@ export const _ZoomableView = ({ children, showShare = false, shareButtonStyle }:
           onPress={handleShare}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="share-variant" size={22} color={theme.text} />
+          <MaterialCommunityIcons name="share-variant" size={22} color={theme.accent} />
         </TouchableOpacity>
       )}
     </GestureHandlerRootView>

@@ -30,7 +30,8 @@ export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
     previous: "",
     show_user: true,
     show_menu: true,
-    show_in_recent: false
+    show_in_recent: false,
+    path: '/home'
   };
   const [show_soon, setShow_soon] = useState(false);
 

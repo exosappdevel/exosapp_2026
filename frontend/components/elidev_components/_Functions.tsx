@@ -8,6 +8,18 @@ export const hexToRGBA = (hex: string, opacity: number) => {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 };
 
+/**
+ * Construye la URL completa de un archivo servido desde la raíz del sitio
+ * (ej. "fotos_camara/foto_x.png"), a partir de la URL del webservice
+ * (appConfig.url termina en "/webservice"). Las fotos de cirugía y otros
+ * archivos legacy (guardar_foto*.php) se guardan relativos a la raíz del
+ * sitio, no a la carpeta webservice.
+ */
+export const getServerFileUrl = (webserviceUrl: string, relativePath: string): string => {
+    const siteRoot = webserviceUrl.replace(/\/?webservice\/?$/, '');
+    return `${siteRoot}/${relativePath}`.replace(/([^:])\/\/+/g, '$1/');
+};
+
 export const formatDate = (fecha: Date) => {
     const day = fecha.getDate().toString().padStart(2, '0');
     const month = (fecha.getMonth() + 1).toString().padStart(2, '0');

@@ -94,7 +94,8 @@ export default function ProgramaCirugiaScreen() {
     previous: "/home",
     show_user: true,
     show_menu: true,
-    show_in_recent: true
+    show_in_recent: true,
+    path: '/cirugias_programar'
   };
 
   const [appReady, setAppReady] = useState(false);
@@ -173,7 +174,7 @@ export default function ProgramaCirugiaScreen() {
       participantes: !!vendedor && !!tecnico1 && !!tecnico2 && !!subdistribuidor
         && !!hospital && hospital.id_hospital !== '0'
         && !!medico && medico.id_medico !== '0',
-      paciente: !!paciente?.nombre && !!paciente?.paterno,
+      //paciente: !!paciente?.nombre && !!paciente?.paterno,
       notas: !!notas,
     };
 

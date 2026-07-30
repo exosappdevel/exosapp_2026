@@ -172,7 +172,7 @@ const themes: Record<ThemeType, Theme> = {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const servers = {
-    "local" : "http://jon-dell/exorta/webservice",
+    "local" : "http://exorta.dvl.to/webservice",
     "exos" : "https://exorta.exos.software/webservice",
     "exodos": "https://exodos.exos.software/webservice"
   };
@@ -336,19 +336,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [openTabs, setOpenTabs] = useState<OpenTab[]>([]);
 
+  // Expo Router trata "/(tabs)/cirugias_buscar" y "/cirugias_buscar" como paths
+  // distintos aunque sean la misma pantalla (los grupos de ruta entre paréntesis
+  // no deberían afectar la URL, pero usePathname() a veces sí los conserva según
+  // cómo se navegó). Se quitan aquí para que addOpenTab/closeOpenTab siempre
+  // comparen y guarden la forma "limpia", sin depender de que cada pantalla evite
+  // el prefijo por su cuenta.
+  const normalizeTabPath = (path: string): string => {
+    const cleaned = path
+      .split('/')
+      .filter(segment => !(segment.startsWith('(') && segment.endsWith(')')))
+      .join('/');
+    return cleaned || '/';
+  };
+
   const addOpenTab = (tab: OpenTab) => {
+  const normalizedTab = { ...tab, path: normalizeTabPath(tab.path) };
   setOpenTabs(prev => {
-    const exists = prev.find(t => t.path === tab.path);
+    const exists = prev.find(t => t.path === normalizedTab.path);
     if (exists) {
       // lo movemos al final (más reciente) sin duplicar
-      return [...prev.filter(t => t.path !== tab.path), tab];
+      return [...prev.filter(t => t.path !== normalizedTab.path), normalizedTab];
     }
-    return [...prev, tab];
+    return [...prev, normalizedTab];
   });
 };
 
 const closeOpenTab = (path: string) => {
-  setOpenTabs(prev => prev.filter(t => t.path !== path));
+  const normalizedPath = normalizeTabPath(path);
+  setOpenTabs(prev => prev.filter(t => t.path !== normalizedPath));
 };
 
   return (

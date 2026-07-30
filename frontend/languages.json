@@ -39,7 +39,8 @@
       "cirugias_buscar":"Buscar cirugía",
       "cirugias_calendario" : "Calendario de cirugías",
       "cirugias_vista_diario" : "Vista diaria" ,
-      "reporte_piezas_danadas_view": "Ver reporte piezas dañadas"
+      "reporte_piezas_danadas_view": "Ver reporte piezas dañadas",
+      "cirugia_detalle_view": "Detalle de cirugía"
 
     },
     "login": {      
@@ -81,7 +82,8 @@
       "showAll": "Ver todos",
       "checkout": "Hacer Corte",
       "checkoutConfirm": "¿Realizar Check Out de la terminal?",
-      "adjustQuantity": "Ajustar Cantidad"    
+      "adjustQuantity": "Ajustar Cantidad",
+      "exceedsRequested": "No puedes recolectar más de lo solicitado. Faltan {faltante} de {solicitada}."
     },
     "userMenu": {
       "logout": "Cerrar Sesión",
@@ -262,7 +264,8 @@
       "showAll": "Show all",
       "checkout": "Checkout",
       "checkoutConfirm": "Checkout from terminal?",
-      "adjustQuantity": "Adjust Quantity"
+      "adjustQuantity": "Adjust Quantity",
+      "exceedsRequested": "You cannot collect more than requested. {faltante} of {solicitada} remaining."
     },
     "userMenu": {
       "logout": "Logout",

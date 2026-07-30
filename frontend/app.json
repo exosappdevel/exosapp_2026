@@ -3,7 +3,7 @@
     "name": "ExosApp",
     "slug": "exosapp",
     "version": "26.07.17",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/favicon.png",
     "scheme": "exosapp",
     "userInterfaceStyle": "automatic",
@@ -93,7 +93,14 @@
       "expo-video",
       "expo-font",
       "@react-native-community/datetimepicker",
-      "expo-asset"
+      "expo-asset",
+      "expo-screen-orientation",
+      [
+        "react-native-share",
+        {
+          "android": []
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

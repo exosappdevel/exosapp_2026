@@ -297,6 +297,20 @@ class ApiService {
       orderby
     });
   }
+  static async get_cirugia_report(
+    id_cirugia: string,    
+  ) {
+    return await this.request("get_cirugia_report", {
+      id_cirugia
+    });
+  }
+  static async imprimir_pdf_entregar(id_cirugia: string, url_base:string, show_fotos:string
+  ) {    
+    return await this.request("imprimir_pdf_entregar", {
+      id_cirugia, url_base, show_fotos
+    });
+  }
+  
   static async piezas_danadas_reporte_estatus(show_todos:string){
     return await this.request("piezas_danadas_reporte_estatus", {show_todos});
   }
@@ -305,6 +319,7 @@ class ApiService {
     return await this.request("buscar_pieza_danada_registro_general", {fecha_inicio,fecha_fin,codigo_registro,codigo_cirugia,codigo_activo,referencia,lote,pieza_estatus,codigo_traspaso, orderby, limite});
 
   }
+  
   
 }
 

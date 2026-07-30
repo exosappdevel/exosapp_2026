@@ -30,7 +30,8 @@ export default function TerminalesScreen() {
     previous: "home",
     show_user: true,
     show_menu: true,
-    show_in_recent: false
+    show_in_recent: false,
+    path: '/terminales'
   };
 
   const [terminales, setTerminales] = useState<Terminal[]>([]);
