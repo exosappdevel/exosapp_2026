@@ -2,6 +2,22 @@
 
 trait ExosApp_Usuarios
 {
+    public function get_id_usuario_app($id_usuario)
+    {
+        $query = "SELECT count(id_usuario_app) as existe, u.* 
+                FROM user_profile u
+                WHERE id_usuario = " . $id_usuario;
+
+        $existe = GetValueSQL_WS($query, "existe");
+        if ($existe == 0) {
+            $sql_new = "insert into user_profile(id_usuario_app,id_usuario) values (0," . $id_usuario . ")";
+            if (!ExecuteSQL_WS($sql_new)) {
+                $this->result["sql_error"] = $sql_new;
+            }
+        }
+
+        return GetValueSQL_WS($query, "id_usuario_app");
+    }
     public function listMethods_Usuarios()
     {
         return [
@@ -12,6 +28,10 @@ trait ExosApp_Usuarios
             'save_profile' => [
                 'descripcion' => 'Guarda la configuración del perfil del usuario en la aplicación.',
                 'parameters' => ['id_usuario_app', 'tema', 'app_language', 'menu_favorites']
+            ],
+            'get_app_code_ios' => [
+                'descripcion' => 'Obtiene un código de aplicación iOS para el usuario.',
+                'parameters' => ['id_usuario', 'new']
             ]
         ];
     }
@@ -153,4 +173,54 @@ trait ExosApp_Usuarios
 
         return ($this->result);
     }
+    public function get_app_code_ios(){
+       $id_usuario = Requesting("id_usuario");       
+       $new = Requesting("new")=="" ? 0 : Requesting("new");
+
+        if (!$id_usuario) {
+            return $this->DatosIncorrectos();
+        }
+
+        $id_usuario_app = $this->get_id_usuario_app($id_usuario);
+
+        $query = "select case when count(*) =0 then 0 else max(id) end as existe_id from app_codes_ios where id_usuario_app = " . $id_usuario_app;
+        $id_code = GetValueSQL_WS($query, "existe_id");
+
+        if (($id_code == 0) or ($new == 1)) {
+            $query ="select min(id) as existe_id from app_codes_ios where id_usuario_app is null and activo = 1";
+            $id_code = GetValueSQL_WS($query, "existe_id");
+        }
+        
+        $sql_code ="select code,url from app_codes_ios where id=" . $id_code;
+        $code = GetValueSQL_WS($sql_code, "code");
+        $url = GetValueSQL_WS($sql_code, "url");
+        
+        $sql_update = "update app_codes_ios set id_usuario_app=" . $id_usuario_app . " where id=" . $id_code;
+        ExecuteSQL_WS($sql_update);
+        
+        $qr_code_base64_ios = "";
+        if ($url) {
+            ob_start();
+            QRcode::png($url, false, QR_ECLEVEL_L, 5, 2);
+            $qr_code_base64_ios = base64_encode(ob_get_clean());
+        }
+
+        $url_android ="https://play.google.com/store/apps/details?id=com.esdimed.exosapp";
+        $qr_code_base64_android = "";
+        if ($url_android) {
+            ob_start();
+            QRcode::png($url_android, false, QR_ECLEVEL_L, 5, 2);
+            $qr_code_base64_android = base64_encode(ob_get_clean());
+        }
+        return [
+            'result' => 'ok',
+            'result_text' => 'Código de aplicación iOS obtenido con éxito desde ExosApp.',
+            'id_usuario_app' => $id_usuario_app,
+            'id_code' => $id_code,
+            'code' => $code,
+            'qr_code_base64_ios' => $qr_code_base64_ios,
+            'qr_code_base64_android' => $qr_code_base64_android
+        ];
+    }
+
 }

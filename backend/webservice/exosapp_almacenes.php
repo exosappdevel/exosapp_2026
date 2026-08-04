@@ -229,6 +229,7 @@ trait ExosApp_Almacenes
 						'cantidad_solicitada' => $row['sumcantidad'],
 						'cantidad_recolectada' => $row['sumrestante'],
 						'id_bodega_destino' => $row['id_bodega_destino'],  
+						'bodegaconsumo' => $row['bodegaconsumo'],  
 						'last_update' => $row['last_update']
 					];
 				}

@@ -209,6 +209,21 @@ export const _FotosCarousel = ({ photos, selected, onToggleSelect }: _FotosCarou
     const counterHeight = 30;
     const imageHeight = Math.max(0, size.height - counterHeight);
 
+    // Estado de descarga por foto: mientras no esté 'loaded' se muestra un gif
+    // de carga; si tarda demasiado o falla, un botón de refresh fuerza un
+    // nuevo intento (bust de cache vía query param + remount con "key").
+    const [photoStatus, setPhotoStatus] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
+    const [retryTick, setRetryTick] = useState<Record<number, number>>({});
+    const getPhotoStatus = (index: number) => photoStatus[index] || 'loading';
+    const getPhotoUri = (uri: string, index: number) => {
+        const tick = retryTick[index];
+        return tick ? `${uri}${uri.includes('?') ? '&' : '?'}_retry=${tick}` : uri;
+    };
+    const retryPhoto = (index: number) => {
+        setPhotoStatus(prev => ({ ...prev, [index]: 'loading' }));
+        setRetryTick(prev => ({ ...prev, [index]: (prev[index] || 0) + 1 }));
+    };
+
     if (!photos || photos.length === 0) {
         return (
             <_Report>
@@ -263,11 +278,32 @@ export const _FotosCarousel = ({ photos, selected, onToggleSelect }: _FotosCarou
                                 <View key={index} style={{ width: size.width, height: imageHeight, position: 'relative' }}>
                                     <_ZoomableView showShare={false}>
                                         <Image
-                                            source={{ uri }}
+                                            key={retryTick[index] || 0}
+                                            source={{ uri: getPhotoUri(uri, index) }}
                                             style={{ width: '100%', height: imageHeight }}
                                             resizeMode="contain"
+                                            onLoad={() => setPhotoStatus(prev => ({ ...prev, [index]: 'loaded' }))}
+                                            onError={() => setPhotoStatus(prev => ({ ...prev, [index]: 'error' }))}
                                         />
                                     </_ZoomableView>
+
+                                    {getPhotoStatus(index) !== 'loaded' && (
+                                        <View style={styles.fotoLoadingOverlay}>
+                                            {getPhotoStatus(index) === 'loading' ? (
+                                                <Image
+                                                    source={require('../../assets/images/loading_blue_circle.gif')}
+                                                    style={styles.fotoLoadingGif}
+                                                    resizeMode="contain"
+                                                />
+                                            ) : (
+                                                <MaterialCommunityIcons name="image-broken-variant" size={40} color="#fff" />
+                                            )}
+                                            <TouchableOpacity style={styles.fotoRetryButton} onPress={() => retryPhoto(index)}>
+                                                <MaterialCommunityIcons name="refresh" size={18} color="#fff" />
+                                                <Text style={styles.fotoRetryText}>Reintentar</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
 
                                     {onToggleSelect && (
                                         <TouchableOpacity
@@ -444,6 +480,32 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 8,
     },
+    fotoLoadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        zIndex: 10,
+    },
+    fotoLoadingGif: {
+        width: 90,
+        height: 90,
+    },
+    fotoRetryButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginTop: 12,
+        paddingVertical: 6,
+        paddingHorizontal: 14,
+        borderRadius: 16,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+    },
+    fotoRetryText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
     materialNombre: {
         fontSize: 14,
         fontWeight: 'normal',
@@ -494,6 +556,8 @@ const styles = StyleSheet.create({
     fotoCounter: {
         fontSize: 12,
         paddingVertical: 8,
+        marginBottom:5,
+        paddingBottom:3
     },
     fotoCheckbox: {
         position: 'absolute',

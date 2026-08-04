@@ -4,20 +4,25 @@ set -e
 ACTION=$1
 PLATFORM=${2:-all}
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 case "$ACTION" in
   dev)
+    "$SCRIPT_DIR/appsyncversions.sh"
     echo "===================================================="
     echo " Iniciando EAS Build: CLIENTE DE DESARROLLO (dev)"
     echo "===================================================="
     eas build --profile development --platform "$PLATFORM"
     ;;
   prev)
+    "$SCRIPT_DIR/appsyncversions.sh"
     echo "===================================================="
     echo " Iniciando EAS Build: COMPILACION DE PRUEBA (preview)"
     echo "===================================================="
     eas build --profile preview --platform "$PLATFORM"
     ;;
   prod)
+    "$SCRIPT_DIR/appsyncversions.sh"
     echo "===================================================="
     echo " Iniciando EAS Build: VERSION FINAL (production)"
     echo "===================================================="

@@ -92,8 +92,8 @@ android {
         applicationId 'com.esdimed.exosapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.1.20260622"
+        versionCode 260717
+        versionName "26.07.17"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }

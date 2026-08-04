@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Text, Alert, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Text, Alert, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useApp } from '../../context/AppContext';
@@ -31,6 +31,10 @@ export default function Cirugia_Detalle_ViewScreen() {
 
   // Captura de pantalla del formCard, usada solo para compartir la vista "detalle" como imagen.
   const reportShotRef = useRef<ViewShot>(null);
+
+  // El webservice imprimir_pdf_entregar puede tardar varios segundos en generar
+  // el PDF, así que se muestra un overlay de carga mientras se espera.
+  const [generandoPdf, setGenerandoPdf] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -112,14 +116,19 @@ export default function Cirugia_Detalle_ViewScreen() {
   // Comparte la vista "material" como el PDF de entrega generado por el
   // webservice (evita capturar la lista completa, que puede ser muy larga).
   const shareMaterialPdf = async () => {
-    const siteRoot = getServerFileUrl(appConfig.url, '');
-    const response = await ApiService.imprimir_pdf_entregar(String(id_cirugia), siteRoot, '0');
-    if (response?.result !== 'ok' || !response?.filepath) {
-      Alert.alert('Error', response?.result_text || 'No se pudo generar el PDF.');
-      return;
+    setGenerandoPdf(true);
+    try {
+      const siteRoot = getServerFileUrl(appConfig.url, '');
+      const response = await ApiService.imprimir_pdf_entregar(String(id_cirugia), siteRoot, '0');
+      if (response?.result !== 'ok' || !response?.filepath) {
+        Alert.alert('Error', response?.result_text || 'No se pudo generar el PDF.');
+        return;
+      }
+      const downloaded = await File.downloadFileAsync(response.filepath, Paths.cache);
+      await Sharing.shareAsync(downloaded.uri, { dialogTitle: 'Compartir PDF', mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
+    } finally {
+      setGenerandoPdf(false);
     }
-    const downloaded = await File.downloadFileAsync(response.filepath, Paths.cache);
-    await Sharing.shareAsync(downloaded.uri, { dialogTitle: 'Compartir PDF', mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
   };
 
   // Descarga las fotos seleccionadas y las comparte todas juntas en un solo
@@ -214,7 +223,11 @@ export default function Cirugia_Detalle_ViewScreen() {
             <_FotosCarousel photos={fotoUrls} selected={selectedFotos} onToggleSelect={toggleFotoSelect} />
           </View>
         ) : (
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
             <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 1) }]}>
               {vista === 'material' ? (
                 <_MaterialSurtidoList groups={item?.material_surtido} />
@@ -252,6 +265,17 @@ export default function Cirugia_Detalle_ViewScreen() {
             </TouchableOpacity>
           </View>
         )}
+
+        {generandoPdf && (
+          <View style={styles.pdfLoadingOverlay}>
+            <Image
+              source={require('../../assets/images/loading_blue_circle.gif')}
+              style={styles.pdfLoadingGif}
+              resizeMode="contain"
+            />
+            <Text style={styles.pdfLoadingText}>Generando PDF...</Text>
+          </View>
+        )}
       </_Background>
     </SafeAreaView>
   );
@@ -263,13 +287,20 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 3,
+  },
+  // flexGrow:1 hace que el contenido del ScrollView ocupe como mínimo toda la
+  // altura visible, así el formCard (y su color de fondo) cubre la pantalla
+  // completa aunque el contenido (p.ej. el acordeón de material colapsado)
+  // sea corto, en vez de dejar ver el fondo debajo.
+  scrollContent: {
+    flexGrow: 1,
   },
   fotosWrapper: {
     flex: 1,
     padding: 3,
   },
   formCard: {
+    flex: 1,
     borderRadius: 0,
     padding: 0,
     borderWidth: 0,
@@ -345,5 +376,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
+  },
+  pdfLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  pdfLoadingGif: {
+    width: 120,
+    height: 120,
+  },
+  pdfLoadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

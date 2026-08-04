@@ -27,6 +27,7 @@ interface Producto {
   id_fragmento: string;
   descripcion: string;
   referencia: string;
+  bodegaconsumo :string;
   marca: string;
   fabricante: string;
   cantidad_solicitada: number;
@@ -293,7 +294,7 @@ export default function PickeoScreen() {
                       onPress={() => aplicarPick(item, "1", false)}
                       style={styles.btnQuick}
                     >
-                      <MaterialCommunityIcons name="flash" size={24} color={item.color} />
+                      <MaterialCommunityIcons name="flash" size={26} color={item.color} />
                     </TouchableOpacity>
                   </View>
                   <View style={styles.itemInfo}>
@@ -301,6 +302,7 @@ export default function PickeoScreen() {
                       {item.descripcion}
                     </Text>
                     <Text style={[styles.textMain,{color:theme.accent}]}>{item.referencia}</Text>
+                    <Text style={[styles.textMain,{color:theme.text, fontWeight:'normal'}]}>{item.bodegaconsumo}</Text>
                     <Text style={[styles.textStatus, { color: item.color }]}>
                       {item.cantidad_recolectada} / {item.cantidad_solicitada}
                     </Text>
@@ -310,13 +312,13 @@ export default function PickeoScreen() {
                       style={[styles.btnAction, { backgroundColor: item.color }]}
                       onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: false })}
                     >
-                      <MaterialCommunityIcons name="plus" size={20} color="white" />
+                      <MaterialCommunityIcons name="plus" size={18} color="white" />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.btnAction, { backgroundColor: item.color, marginLeft: 8 }]}
                       onPress={() => setModalCant({ visible: true, item, cantidad: "1", esResta: true })}
                     >
-                      <MaterialCommunityIcons name="minus" size={20} color="white" />
+                      <MaterialCommunityIcons name="minus" size={18} color="white" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -446,11 +448,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
-    padding: 15,
+    padding: 8,
     borderRadius: 25,
     borderWidth: 1,    
   },
-  dot: { width: 12, height: 12, borderRadius: 6, marginRight: 12 },
+  dot: { width: 16, height: 16, borderRadius: 16, marginRight: 0 },
   itemInfo: { flex: 1 },
   textMain: {
     fontWeight: "bold", fontSize: 14, textShadowColor: 'rgba(255, 255, 255, 0.2)',

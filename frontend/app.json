@@ -52,7 +52,7 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
-      "runtimeVersion": "1.0.0"
+      "runtimeVersion": "1.7.30"
     },
     "web": {
       "bundler": "metro",
