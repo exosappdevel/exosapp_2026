@@ -183,7 +183,7 @@ trait ExosApp_Usuarios
 
         $id_usuario_app = $this->get_id_usuario_app($id_usuario);
 
-        $query = "select case when count(*) =0 then 0 else max(id) end as existe_id from app_codes_ios where id_usuario_app = " . $id_usuario_app;
+        $query = "select case when count(*) =0 then 0 else max(id) end as existe_id from app_codes_ios where activo=1 and id_usuario_app = " . $id_usuario_app;
         $id_code = GetValueSQL_WS($query, "existe_id");
 
         if (($id_code == 0) or ($new == 1)) {
@@ -195,7 +195,10 @@ trait ExosApp_Usuarios
         $code = GetValueSQL_WS($sql_code, "code");
         $url = GetValueSQL_WS($sql_code, "url");
         
-        $sql_update = "update app_codes_ios set id_usuario_app=" . $id_usuario_app . " where id=" . $id_code;
+        $sql_update = "update app_codes_ios set activo=0 where id_usuario_app=" . $id_usuario_app . " and id<>" . $id_code;
+        ExecuteSQL_WS($sql_update);
+
+        $sql_update = "update app_codes_ios set activo=1, id_usuario_app=" . $id_usuario_app . " where id=" . $id_code;
         ExecuteSQL_WS($sql_update);
         
         $qr_code_base64_ios = "";
