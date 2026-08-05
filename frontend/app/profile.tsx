@@ -15,6 +15,7 @@ import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import { _Footer, _Header, _Background, _PickerModal, hexToRGBA } from '@/components/elidev_components';
 import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 
 
 const themeOptions = [
@@ -58,6 +59,10 @@ export default function ProfileScreen() {
     icon: 'alert-circle-outline',
     colorIcon: '#f56565'
   });
+
+  const updateInfo = (!Updates.isEnabled || Updates.isEmbeddedLaunch || !Updates.createdAt)
+    ? t('profile.updateEmbedded')
+    : `${t('profile.updateOta')}: ${Updates.createdAt.toLocaleString()}`;
 
   useEffect(() => {
     ApiService.init(appConfig);
@@ -148,6 +153,9 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.userInfo}>
               <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}  - {Constants.expoConfig?.version || "1.0.0"}</Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{updateInfo}</Text>
             </View>
 
           </View>

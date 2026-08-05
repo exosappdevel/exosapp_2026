@@ -66,6 +66,8 @@
       "warehouse": "Almacén",
       "language": "Idioma",    
       "openTabs" : "Apps recientes",
+      "updateEmbedded": "Build nativo",
+      "updateOta": "Actualización",
       "themes": {
         "light": "Claro",
         "dark": "Oscuro",
@@ -251,6 +253,8 @@
       "theme": "Theme",
       "warehouse": "Warehouse",
       "language": "Language",
+      "updateEmbedded": "Native build",
+      "updateOta": "Update",
       "themes": {
         "light": "Light",
         "dark": "Dark",
