@@ -26,7 +26,7 @@ case "$ACTION" in
     echo "===================================================="
     echo " Iniciando EAS Build: VERSION FINAL (production)"
     echo "===================================================="
-    eas build --profile production --platform "$PLATFORM"
+    eas build --profile production --platform "$PLATFORM" --non-interactive
     ;;
   *)
     echo

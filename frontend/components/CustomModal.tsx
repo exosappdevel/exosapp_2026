@@ -11,15 +11,19 @@ export interface CustomModalProps {
   icon?: string;
   colorIcon?: string;
   onClose: () => void;
+  buttonText?: string;
+  onConfirm?: () => void;
 }
 
-export default function CustomModal({ 
-  visible, 
-  titulo, 
-  mensaje, 
-  icon, 
-  colorIcon, 
-  onClose 
+export default function CustomModal({
+  visible,
+  titulo,
+  mensaje,
+  icon,
+  colorIcon,
+  onClose,
+  buttonText,
+  onConfirm
 }: CustomModalProps) {
   const { theme, t } = useApp();
 
@@ -38,11 +42,11 @@ export default function CustomModal({
           <Text style={[styles.titulo, { color: theme.text }]}>{titulo}</Text>
           <Text style={[styles.mensaje, { color: theme.textSub }]}>{mensaje}</Text>
 
-          <TouchableOpacity 
-            style={[styles.btnCerrar, { backgroundColor: theme.accent }]} 
-            onPress={onClose}
+          <TouchableOpacity
+            style={[styles.btnCerrar, { backgroundColor: theme.accent }]}
+            onPress={onConfirm ?? onClose}
           >
-            <Text style={styles.btnText}>{t('common.understood')}</Text>
+            <Text style={styles.btnText}>{buttonText ?? t('common.understood')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -70,6 +74,24 @@ export const Soon_Modal = ({ visible, setVisible }: SoonModalProps) => {
         onClose: () => {setVisible(false)}
       };
   return CustomModal(modal);
+}
+
+interface UpdateRequiredModalProps {
+  visible: boolean;
+  onRestart: () => void;
+}
+export const UpdateRequired_Modal = ({ visible, onRestart }: UpdateRequiredModalProps) => {
+  const { theme, t } = useApp();
+  return CustomModal({
+    visible,
+    titulo: t('common.updateRequiredTitle'),
+    mensaje: t('common.updateRequiredMessage'),
+    icon: 'restart',
+    colorIcon: theme.accent,
+    buttonText: t('common.restartNow'),
+    onConfirm: onRestart,
+    onClose: onRestart,
+  });
 }
 
 const styles = StyleSheet.create({

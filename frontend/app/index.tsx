@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
+import { UpdateRequired_Modal } from '../components/CustomModal';
 import ApiService from '../services/ApiServices';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Asegúrate de importar esto
 import Constants from 'expo-constants';
 
 export default function Index() {
   const router = useRouter();
-  const { appConfig, isLoggedIn, setIsLoggedIn } = useApp(); // Agregamos setIsLoggedIn para poder cerrar sesión
+  const { appConfig, isLoggedIn, setIsLoggedIn, isUpdatePending, applyUpdateAndRestart } = useApp(); // Agregamos setIsLoggedIn para poder cerrar sesión
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   useEffect(() => {
     // Initialize API Service
@@ -43,6 +45,11 @@ export default function Index() {
             const elapsed = now - parseInt(lastActivity);
 
             if (elapsed > FIVE_MINUTES) {
+              if (isUpdatePending) {
+                console.log("Sesión expirada e inactividad detectada, pero hay un update pendiente: se muestra modal de reinicio.");
+                setShowUpdateModal(true);
+                return;
+              }
               console.log("Sesión expirada por inactividad de 5 minutos.");
               await AsyncStorage.removeItem('@exosapp_last_activity'); // Limpiamos el token de tiempo
               await setIsLoggedIn(false);
@@ -73,6 +80,7 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#3182ce" />
+      <UpdateRequired_Modal visible={showUpdateModal} onRestart={applyUpdateAndRestart} />
     </View>
   );
 }

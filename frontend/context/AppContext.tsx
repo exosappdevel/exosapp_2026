@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Updates from 'expo-updates';
 import translations from '../languages.json';
 import { hexToRGBA } from '@/components/elidev_components/_Functions';
 
@@ -82,6 +83,8 @@ interface AppContextType {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => Promise<void>;
   logout: () => Promise<void>;
+  isUpdatePending: boolean;
+  applyUpdateAndRestart: () => Promise<void>;
   menuFav_str: () => string;
   menuFav_set: (value: any) => void;
   openTabs: OpenTab[];
@@ -227,11 +230,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [language, setLanguageState] = useState<Language>('es');
   const [isLoggedIn, setIsLoggedInState] = useState(false);
+  const [isUpdatePending, setIsUpdatePending] = useState(false);
 
   useEffect(() => {
     loadSavedLanguage();
     loadSavedUser();
+    checkForAppUpdate();
   }, []);
+
+  const checkForAppUpdate = async () => {
+    if (__DEV__ || !Updates.isEnabled) return;
+    try {
+      const check = await Updates.checkForUpdateAsync();
+      if (check.isAvailable) {
+        await Updates.fetchUpdateAsync();
+      }
+      setIsUpdatePending(Updates.isUpdatePending);
+    } catch (e) {
+      console.log('Error checking for app update:', e);
+    }
+  };
+
+  const applyUpdateAndRestart = async () => {
+    await Updates.reloadAsync();
+  };
 
   const loadSavedLanguage = async () => {
     try {
@@ -379,6 +401,8 @@ const closeOpenTab = (path: string) => {
       isLoggedIn,
       setIsLoggedIn,
       logout,
+      isUpdatePending,
+      applyUpdateAndRestart,
       menuFav_str,
       menuFav_set,
       openTabs,

@@ -105,6 +105,9 @@
       "connectionError": "No se pudo conectar con el servidor.",
       "loadError": "No se pudieron obtener los productos del servidor.",
       "notice":"Aviso",
+      "updateRequiredTitle": "Actualización disponible",
+      "updateRequiredMessage": "Se descargó una nueva versión de la app. Es necesario reiniciar para aplicarla.",
+      "restartNow": "REINICIAR AHORA",
       "submit":"Enviar",
       "requerido":"Requerido",
       "close":"Cerrar",
@@ -287,6 +290,9 @@
       "connectionError": "Connection error.",
       "loadError": "Loaded error.",
       "notice":"Notice",
+      "updateRequiredTitle": "Update available",
+      "updateRequiredMessage": "A new version of the app has been downloaded. You need to restart to apply it.",
+      "restartNow": "RESTART NOW",
       "submit":"Submit",
       "activos":"Actives"
 }
