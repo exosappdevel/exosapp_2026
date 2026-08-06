@@ -221,6 +221,8 @@ trait ExosApp_Usuarios
             'id_usuario_app' => $id_usuario_app,
             'id_code' => $id_code,
             'code' => $code,
+            'url_ios' => $url,
+            'url_android' => $url_android,
             'qr_code_base64_ios' => $qr_code_base64_ios,
             'qr_code_base64_android' => $qr_code_base64_android
         ];
