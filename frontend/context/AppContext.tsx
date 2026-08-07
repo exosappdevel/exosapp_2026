@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
 import translations from '../languages.json';
@@ -236,6 +237,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadSavedLanguage();
     loadSavedUser();
     checkForAppUpdate();
+
+    // La app puede quedarse abierta en foreground mucho rato sin volver a
+    // mandarse a background, así que un solo chequeo al montar no basta para
+    // detectar un OTA publicado mientras ya estaba abierta: se revisa de
+    // nuevo al volver de background y cada 5 min mientras sigue en uso.
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        checkForAppUpdate();
+      }
+    };
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const updateCheckInterval = setInterval(checkForAppUpdate, 5 * 60 * 1000);
+
+    return () => {
+      subscription.remove();
+      clearInterval(updateCheckInterval);
+    };
   }, []);
 
   const checkForAppUpdate = async () => {
