@@ -179,7 +179,7 @@
 
         try {
             // URL para obtener el texto plano de input y output
-            const baseUrl = `https://exorta.exos.software/controller_ws.php?action=audit_ws_log_data&id_log=${id}`;
+            const baseUrl = `controller_ws.php?action=audit_ws_log_data&id_log=${id}`;
 
             // Peticiones paralelas para mayor velocidad
             const [resInput, resOutput] = await Promise.all([

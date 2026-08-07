@@ -2,7 +2,7 @@
 set -e
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/webservice" && pwd)/"
-DEST="/home/jonatan/devilbox/data/www/exorta/htdocs/webservice/"
+DEST="/home/jonatan/Documentos/code/www/exorta/webservice/"
 
 if [ ! -d "$SRC" ]; then
   echo "Error: no se encontró el origen $SRC"

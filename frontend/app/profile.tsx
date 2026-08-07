@@ -152,10 +152,10 @@ export default function ProfileScreen() {
               <Text style={[styles.userName, { color: theme.text, fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{user.tipo_usuario}</Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}  - {Constants.expoConfig?.version || "1.0.0"}</Text>
+              <Text style={[styles.userName, { color: theme.accent , fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}  - {Constants.expoConfig?.version || "1.0.0"}</Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.text + "90", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{updateInfo}</Text>
+              <Text style={[styles.userName, { color: theme.text + "70", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{updateInfo}</Text>
             </View>
 
           </View>

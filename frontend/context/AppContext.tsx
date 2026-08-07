@@ -175,12 +175,12 @@ const themes: Record<ThemeType, Theme> = {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const servers = {
-    "local" : "http://exorta.dvl.to/webservice",
+    "local" : "http://192.168.100.59/exorta/webservice",
     "exos" : "https://exorta.exos.software/webservice",
     "exodos": "https://exodos.exos.software/webservice"
   };
   
-  const backend_server = "exodos";
+  const backend_server = "exos";
   
   const [appConfig] = useState<AppConfig>({
     passtrough_mode: false,
@@ -243,9 +243,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const check = await Updates.checkForUpdateAsync();
       if (check.isAvailable) {
-        await Updates.fetchUpdateAsync();
+        const fetchResult = await Updates.fetchUpdateAsync();
+        setIsUpdatePending(fetchResult.isNew);
       }
-      setIsUpdatePending(Updates.isUpdatePending);
     } catch (e) {
       console.log('Error checking for app update:', e);
     }

@@ -53,9 +53,9 @@ function Init_DBParams(){
 	
 	/* GOOGLE CLOUD EXOS.SOFTWARE */
 	//	$DB_Host ="34.51.48.23";
-	$DB_Host ="mysql";
-	$DB_User = "root"; 
-	$DB_Password = "";//"Ex0._GC_2025#"; 
+	$DB_Host ="localhost";
+	$DB_User = "root";
+	$DB_Password = "";//"Ex0._GC_2025#";
 	$DB_Database ="exodos";
 	$DB_Init_Params = true; 
 	
