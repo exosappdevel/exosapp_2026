@@ -7,8 +7,14 @@ error_reporting(E_ALL ^ E_DEPRECATED);
 function DatasetSQL_WS($sSQL){
 	global $WS_DB_Host, $WS_DB_User, $WS_DB_Password, $WS_DB_Database, $WS_DB_Init_Params, $WS_DB_Host;
     Init_DBParams_WS();
-   $dbConx = mysqli_connect($WS_DB_Host,$WS_DB_User,$WS_DB_Password,$WS_DB_Database);
-   $ret = DatasetSQL_con($sSQL,$dbConx);
+	try{
+   		$dbConx = mysqli_connect($WS_DB_Host,$WS_DB_User,$WS_DB_Password,$WS_DB_Database);
+   		$ret = DatasetSQL_con($sSQL,$dbConx);   
+	} catch (Exception $e) {   		
+			Addlog("Error: " . $e->getMessage(). " SQL: " . $sSQL);
+			error_log("Error: " . $e->getMessage(). " SQL: " . $sSQL);
+			$ret = null;
+	}   
    mysqli_close($dbConx);
    return $ret;
 }
@@ -40,7 +46,8 @@ function ExecuteSQL_WS($sSQL){
  		mysqli_close($dbConx);
  		return true;	
  	} catch (Exception $e) {
- 		 echo $e->getMessage();
+ 		Addlog("Error: " . $e->getMessage(). " SQL: " . $sSQL);
+ 		error_log("Error: " . $e->getMessage(). " SQL: " . $sSQL);
  		return false;
  	}
 }

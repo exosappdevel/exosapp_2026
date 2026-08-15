@@ -128,8 +128,14 @@ function DatasetSQL_con($sSQL,&$dbConx){
 }
 function DatasetSQL($sSQL){
    $dbConx = null;
-   $ret = DatasetSQL_con($sSQL,$dbConx);
-   mysqli_close($dbConx);
+   try{
+   	$ret = DatasetSQL_con($sSQL,$dbConx);
+	mysqli_close($dbConx);
+   } catch (Exception $e) {   		
+		Addlog("Error: " . $e->getMessage(). " SQL: " . $sSQL);
+ 		error_log("Error: " . $e->getMessage(). " SQL: " . $sSQL);
+   		$ret = null;
+   }   
    return $ret;
 }
 function GetValueSQL_con(&$dbConx,$sSQL,$sFieldname){
@@ -180,7 +186,8 @@ function ExecuteSQL($sSQL){
  		mysqli_close($dbConx);
  		return true;	
  	} catch (Exception $e) {
- 		 echo $e->getMessage();
+		Addlog("Error: " . $e->getMessage(). " SQL: " . $sSQL);
+ 		error_log("Error: " . $e->getMessage(). " SQL: " . $sSQL);
  		return false;
  	}
 }
@@ -193,7 +200,8 @@ function ExecuteSQL_returnID($sSQL){
  		mysqli_close($dbConx);
 		return $aidi;
  	} catch (Exception $e) {
- 		 echo $e->getMessage();
+		Addlog("Error: " . $e->getMessage(). " SQL: " . $sSQL);
+ 		error_log("Error: " . $e->getMessage(). " SQL: " . $sSQL);
  		return false;
  	}
 }
@@ -377,8 +385,7 @@ function ConComillas($sTexto,$ID_Service){
 
 function Addlog($sLog){
   $date = new DateTime();
-  $sCommand = "echo " . $date->format('Y-m-d H:i:s.u') ." ".$sLog." >>server.log";
-  shell_exec ($sCommand);  
+  file_put_contents("server.log", $date->format('Y-m-d H:i:s.u') . " " . $sLog . "\n", FILE_APPEND | LOCK_EX);
 }
 //*********************** ENVIO DE MAIL USANDO PHP MAILER ***********************************
 function Send_Mail($to,$name, $subject, $message){

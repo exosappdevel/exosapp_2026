@@ -39,18 +39,22 @@ class WebServiceController
     private $metodos_info = [
         "listAllMethods" => [
             'descripcion' => 'Lista todos los métodos registrados en el sistema de auditoría.',
+            'omit_show' => true,
             'parameters' => []
         ],
         "auditMethod" => [
             'descripcion' => 'Audita un método específico y devuelve información sobre sus parámetros.',
+            'omit_show' => true,
             'parameters' => ['action']
         ],
         "audit_ws_log" => [
             'descripcion' => 'Audita el log de WS y devuelve registros paginados.',
+            'omit_show' => true,
             'parameters' => ['limit', 'page', 'search']
         ],
         "audit_ws_log_data" => [
             'descripcion' => 'Audita un registro específico del log de WS y devuelve su input o output.',
+            'omit_show' => true,
             'parameters' => ['id_log', 'type']
         ]
     ];
@@ -95,57 +99,85 @@ class WebServiceController
 
         // --- FLUJO DE EJECUCIÓN (Lógica Real o Mockups) ---
         if ($this->exosApp->Implemented($action)) {
-            $this->result = $this->exosApp->$action();
-            $this->implemented = true;
+            try{
+                $this->result = $this->exosApp->$action();
+                $this->implemented = true;
+                } catch (\Throwable $e) {
+                    Addlog("Error al ejecutar la acción '{$action}': " . $e->getMessage()." Input: " . $this->input_esc());
+                    $this->add_ws_log($action, "error", $this->input_esc(), $this->output_esc("Error al ejecutar la acción '{$action}': " . $e->getMessage()));
+                    $this->sendError("Error al ejecutar la acción '{$action}': " . $e->getMessage());
+                    return;
+                }                
         } else {
             $this->result = [];
             $this->implemented = false;
         }
         $metodosProhibidos = ['run', 'sendResponse', 'sendError', '__construct', 'auditMethod', 'listAllMethods'];
 
-        if (method_exists($this, $action) && !in_array($action, $metodosProhibidos)) {
-            $this->result = $this->$action();
-            $this->sendResponse($this->result);
+        if (method_exists($this, $action) && !in_array($action, $metodosProhibidos)) {            
+            
+            try {
+                    $this->result = $this->$action();
+                    $this->sendResponse($this->result);
+                } catch (\Throwable $e) {
+                    Addlog("Error al ejecutar la acción '{$action}': " . $e->getMessage()." Input: " . $this->input_esc());
+                    $this->add_ws_log($action, "error", $this->input_esc(), $this->output_esc("Error al ejecutar la acción '{$action}': " . $e->getMessage()));
+                    $this->sendError("Error al ejecutar la acción '{$action}': " . $e->getMessage());
+                }                
+
         } else {
             if ($this->implemented == true) {
-
                 $this->sendResponse($this->result);
             } else {
                 $this->sendError("La acción '{$action}' no es válida.");
             }
         }
     }
-
+    
     // --- UTILIDADES ---
-    private function sendResponse($data)
+    private function input_esc()
+    {
+        $input = $_SERVER['QUERY_STRING'];
+        return str_replace("'", "\'", $input);
+    }
+    private function output_esc($output)
+    {
+        return str_replace("'", "\'", $output);
+    }
+    private function add_ws_log($action, $log_type, $input_esc, $output_esc)
     {
         $id_usuario = isset($_REQUEST["id_usuario"]) ? strval($_REQUEST["id_usuario"]) : "0";
-
-        $input = $_SERVER['QUERY_STRING'];
-        $data["is_debuging"] = $this->is_debuging?"true":"false";
-        $data["now"] = date('Y-m-d H:i:s');
-
-        $output = XML_Envelope_Text($data);
-
-        $input_esc = str_replace("'", "\'", $input);
-        $output_esc = str_replace("'", "\'", $output);
-
         $nombre = "";
         if (($id_usuario != "") && ($id_usuario != "0")) {
             $nombre = GetValueSQL("select coalesce(max(nombre), '') as usuario_nombre from usuario where id_usuario=" . $id_usuario, "usuario_nombre");
         }
         // Armamos la consulta
-        $sSQL = "insert into ws_log(id, id_usuario, nombre, input, output) " .
-            "values (0, " . $id_usuario . ",'" . $nombre . "','" . $input_esc . "', left('" . $output_esc . "', " . (63*1024) . "))";
+        $sSQL = "insert into ws_log(id, id_usuario, nombre, action, log_type, input, output) " .
+            "values (0, " . $id_usuario . ",'" . $nombre . "','" . $action . "','" . $log_type . "','" . $input_esc . "', left('" . $output_esc . "', " . (63*1024) . "))";
+
+        ExecuteSQL_WS($sSQL);
+    }
+    
+    private function sendResponse($data)
+    {
+        $id_usuario = isset($_REQUEST["id_usuario"]) ? strval($_REQUEST["id_usuario"]) : "0";
+
+        $data["is_debuging"] = $this->is_debuging?"true":"false";
+        $data["now"] = date('Y-m-d H:i:s');
+        $output_esc = $this->output_esc(json_encode($data));
+
 
         $action = Requesting("action");
         if (
             ($action != "listAllMethods")
             && ($action != "auditMethod")
             && ($action != "audit_ws_log")
-            && ($action != "audit_ws_log_data")
-        )
-            ExecuteSQL_WS($sSQL);
+            && ($action != "audit_ws_log_data")            
+            && ($action != "inicia_sesion")            
+            && ($action != "get_app_code_ios")            
+        )  
+            $this->add_ws_log($action, "info", $this->input_esc(), $output_esc);          
+                
         //$data["SQL"] = $sSQL;
         if (!$this->use_xml_envelope) 
             JSON_Envelope($data);        
@@ -184,12 +216,15 @@ class WebServiceController
 
         $i = 0;
         foreach ($this->metodos_info as $name => $info) {
-            $data['method_' . $i] = [
-                'action' => $name,
-                'descripcion' => $info['descripcion'],
-                'parametros_count' => count($info['parameters'])
-            ];
-            $i++;
+            if (!isset($info['omit_show'])){
+                $data['method_' . $i] = [
+                    'action' => $name,
+                    'descripcion' => $info['descripcion'],
+                    'parametros_count' => count($info['parameters']),                    
+                ];
+
+                $i++;
+            }
         }
 
         return ($data);

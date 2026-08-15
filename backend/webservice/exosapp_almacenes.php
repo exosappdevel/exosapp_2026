@@ -57,7 +57,7 @@ trait ExosApp_Almacenes
 				LEFT JOIN terminal_bloqueada tb  
 					ON tb.id_terminal = t.id_terminal
 				WHERE t.id_bodega = ".$id_almacen."  
-				AND tb.id_terminal IS NULL";
+				AND (tb.id_terminal IS NULL OR tb.id_usuario_bloqueo = ".$id_usuario.")";                
   
             $qresult = DatasetSQL($query);
             while ($row = mysqli_fetch_array($qresult)) {
@@ -265,10 +265,10 @@ trait ExosApp_Almacenes
     {
         /* *** Esta funcion guarda los fragmentos pickeados en la tabla fragmento_terminal *** */
         /* *** Fragmento_terminal es la tabla desde la cual se haran reposiciones desde EXOS *** */
-        $id_terminal = Requesting("id_terminal");
-        $id_usuario = Requesting("id_usuario");
-        $datos_pickeo = Requesting("datos_pickeo"); // JSON enviado desde la App
-        $bodega_surte = 1;
+        $id_terminal 	= Requesting("id_terminal");
+        $id_usuario 	= Requesting("id_usuario");
+        $datos_pickeo 	= Requesting("datos_pickeo"); // JSON enviado desde la App
+        $bodega_surte 	= 35;
         $nums = 0;
         /* **** 
             necesito la sig estructura :
