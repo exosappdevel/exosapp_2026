@@ -52,12 +52,14 @@ trait ExosApp_Almacenes
 			$querydel = "DELETE FROM terminal_bloqueada WHERE kardex_bloqueo < DATE_SUB(NOW(), INTERVAL 60 MINUTE);";
 			ExecuteSQL($querydel);
 						
-			$query = "SELECT t.id_terminal, t.terminal 
-				FROM terminal t
-				LEFT JOIN terminal_bloqueada tb  
-					ON tb.id_terminal = t.id_terminal
-				WHERE t.id_bodega = ".$id_almacen."  
-				AND (tb.id_terminal IS NULL OR tb.id_usuario_bloqueo = ".$id_usuario.")";                
+			$query = "SELECT t.id_terminal, t.terminal, case when tb.id_usuario_bloqueo = ".$id_usuario." then 1 else 0 end as bloqueada_por_mi
+                            FROM terminal t
+                            LEFT JOIN terminal_bloqueada tb  
+                                ON tb.id_terminal = t.id_terminal
+                            WHERE t.id_bodega = ".$id_almacen."  
+                            AND (tb.id_terminal IS NULL OR tb.id_usuario_bloqueo = ".$id_usuario.")
+                        GROUP BY t.id_terminal, t.terminal
+                        ORDER BY t.terminal";                
   
             $qresult = DatasetSQL($query);
             while ($row = mysqli_fetch_array($qresult)) {
@@ -65,7 +67,8 @@ trait ExosApp_Almacenes
                 $data['item_' . $row['id_terminal']] = [
                     'id_terminal' => $row['id_terminal'],
                     'nombre' => $row['terminal'],
-                    'descripcion' => $row['terminal']
+                    'descripcion' => $row['terminal'],
+                    'bloqueada_por_mi' => $row['bloqueada_por_mi']
                 ];
             }
             return [

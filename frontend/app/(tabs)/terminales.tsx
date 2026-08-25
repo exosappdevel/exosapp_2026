@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { BlurView } from 'expo-blur';
 import { useApp } from '../../context/AppContext';
 import ApiService from '../../services/ApiServices';
 import { _Header, _Footer, _Background, hexToRGBA } from '@/components/elidev_components';
@@ -19,11 +20,12 @@ interface Terminal {
   id_terminal: string;
   nombre: string;
   descripcion: string;
+  bloqueada_por_mi?: string;
 }
 
 export default function TerminalesScreen() {
   const router = useRouter();
-  const { user,setUser, theme, t, appConfig } = useApp();
+  const { user, setUser, theme, t, appConfig } = useApp();
   const pageConfig = {
     name: t("screens.terminales"),
     icon: "desktop-tower-monitor",
@@ -37,12 +39,8 @@ export default function TerminalesScreen() {
   const [terminales, setTerminales] = useState<Terminal[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    ApiService.init(appConfig);
-    loadTerminales();
-  }, []);
-
-  const loadTerminales = async () => {
+  const loadTerminales = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await ApiService.get_terminales_list(user.id_usuario, user.id_almacen);
       if (Array.isArray(response.data)) {
@@ -53,24 +51,33 @@ export default function TerminalesScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id_usuario, user.id_almacen]);
+
+  // Refresca la lista cada vez que se muestra este tab (no solo la primera
+  // vez), ademas del boton de refresh manual de abajo.
+  useFocusEffect(
+    useCallback(() => {
+      ApiService.init(appConfig);
+      loadTerminales();
+    }, [appConfig, loadTerminales])
+  );
 
   const handleTerminalPress = (terminal: Terminal) => {
     setUser(prev => ({
-        ...prev,
-        local_terminal:{
-          selected:true,
-          id:terminal.id_terminal,
-          nombre: terminal.nombre
-        }        
-      }));
-    
+      ...prev,
+      local_terminal: {
+        selected: true,
+        id: terminal.id_terminal,
+        nombre: terminal.nombre
+      }
+    }));
+
     router.push({
       pathname: '/pickeo',
-     /* params: {
-        id_terminal: terminal.id_terminal,
-        terminal_nombre: terminal.nombre
-      }*/
+      /* params: {
+         id_terminal: terminal.id_terminal,
+         terminal_nombre: terminal.nombre
+       }*/
     });
   };
 
@@ -99,6 +106,9 @@ export default function TerminalesScreen() {
           textShadowRadius: 10,
         }]}>{item.descripcion}</Text>
       </View>
+      {item.bloqueada_por_mi === '1' && (
+        <MaterialCommunityIcons name="lock" size={20} color={theme.accent} style={styles.lockIcon} />
+      )}
       <MaterialCommunityIcons name="chevron-right" size={24} color={theme.textSub} />
     </TouchableOpacity>
   );
@@ -108,6 +118,12 @@ export default function TerminalesScreen() {
       <SafeAreaView style={[styles.container]}>
 
         <_Header page_info={pageConfig} />
+
+        <BlurView intensity={70} style={[styles.actionsBar, { borderBottomColor: theme.border }]}>
+          <TouchableOpacity onPress={() => loadTerminales()} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="refresh" size={24} color={theme.text} />
+          </TouchableOpacity>
+        </BlurView>
 
         {/* Content */}
         {loading ? (
@@ -121,12 +137,14 @@ export default function TerminalesScreen() {
             <Text style={[styles.emptyText, { color: theme.card }]}>{t('terminales.noTerminals')}</Text>
           </View>
         ) : (
-          <FlatList
-            data={terminales}
-            renderItem={renderTerminal}
-            keyExtractor={(item) => item.id_terminal}
-            contentContainerStyle={styles.listContent}
-          />
+          
+            <FlatList
+              data={terminales}
+              renderItem={renderTerminal}
+              keyExtractor={(item) => item.id_terminal}
+              contentContainerStyle={styles.listContent}
+            />
+          
         )}
         <_Footer />
 
@@ -139,6 +157,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginBottom: Platform.OS === 'ios' ? -15 : -10
+  },
+  actionsBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderBottomWidth: 0,
+  },
+  headerBtn: {
+    marginLeft: 15,
+  },
+  lockIcon: {
+    marginRight: 8,
   },
   terminalInfo: {
     flex: 1,
