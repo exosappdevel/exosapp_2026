@@ -200,6 +200,7 @@ export default function PickeoScreen() {
           if (esExito) {
             await AsyncStorage.removeItem(STORAGE_KEY);
             inicializarDatos(false);
+            router.replace('/terminales');
           }
           else {
             playErrorSound();
@@ -207,7 +208,14 @@ export default function PickeoScreen() {
         } else {
           playSuccessSound();
           Alert.alert(esExito ? t('common.success') : t('common.notice'), mensaje, [
-            { text: "OK", onPress: () => esExito && inicializarDatos(false) },
+            {
+              text: "OK", onPress: () => {
+                if (esExito) {
+                  inicializarDatos(false);
+                  router.replace('/terminales');
+                }
+              }
+            },
           ]);
         }
       } catch {

@@ -1,21 +1,30 @@
 import { useEffect, useState, useRef } from "react";
 import {
-    View, Text, StyleSheet, TouchableOpacity
+    View, Text, StyleSheet, TouchableOpacity, ActivityIndicator
 } from "react-native";
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../../context/AppContext';
 import { useRouter } from 'expo-router';
 import { PanResponder, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { hexToRGBA } from './_Functions'
 import { _UserMenu } from './_UserMenu';
+import { _PickerModal } from './_PickerModal';
+import ApiService from '../../services/ApiServices';
 
 interface FooterProps {
     Show_Almacen?: boolean;
     Main_action?: 'home' | 'back';
     children?: React.ReactNode;
     Show_Usermenu?: boolean;
+}
+
+interface iAlmacen {
+    id_almacen: string;
+    nombre: string;
+    codigo: string;
 }
 
 export const _footer_baseHeight = (Show_Almacen: boolean) => {
@@ -35,11 +44,44 @@ export const _Footer = ({
     Show_Usermenu = true
 }: FooterProps) => {
     const router = useRouter();
-    const { theme, user } = useApp();
+    const { theme, user, setUser, appConfig } = useApp();
     const insets = useSafeAreaInsets();
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const triggerRef = useRef<View>(null);
+
+    const [showAlmacenPicker, setShowAlmacenPicker] = useState(false);
+    const [almacenes, setAlmacenes] = useState<iAlmacen[]>([]);
+    const [loadingAlmacenes, setLoadingAlmacenes] = useState(false);
+
+    const openAlmacenPicker = async () => {
+        setShowAlmacenPicker(true);
+        if (almacenes.length > 0) return;
+        setLoadingAlmacenes(true);
+        try {
+            ApiService.init(appConfig);
+            const response = await ApiService.get_almacenes_list(user.id_usuario);
+            if (Array.isArray(response.data)) {
+                setAlmacenes(response.data);
+            }
+        } catch (e) {
+            console.log('Error loading almacenes:', e);
+        } finally {
+            setLoadingAlmacenes(false);
+        }
+    };
+
+    const handleSelectAlmacen = async (item: iAlmacen) => {
+        const updatedUser = {
+            ...user,
+            id_almacen: item.id_almacen,
+            almacen_nombre: item.nombre,
+            almacen_codigo: item.codigo,
+        };
+        setUser(updatedUser);
+        await AsyncStorage.setItem('@exosapp_user', JSON.stringify(updatedUser));
+        setShowAlmacenPicker(false);
+    };
 
     const baseHeight = _footer_baseHeight(Show_Almacen) + insets.bottom;
     const maxHeight  = _footer_maxHeight(Show_Almacen)  + insets.bottom;
@@ -140,7 +182,11 @@ export const _Footer = ({
                         )}
 
                         {Show_Almacen ? (
-                            <View style={[styles.footerContentRow]}>
+                            <TouchableOpacity
+                                style={[styles.footerContentRow]}
+                                onPress={openAlmacenPicker}
+                                activeOpacity={0.7}
+                            >
                                 <MaterialCommunityIcons
                                     name="warehouse"
                                     size={22}
@@ -149,7 +195,17 @@ export const _Footer = ({
                                 <Text style={[styles.footerText, { color: theme.iconTextColor }]}>
                                     {user?.almacen_nombre || "Almacén"}
                                 </Text>
-                            </View>
+                                {loadingAlmacenes ? (
+                                    <ActivityIndicator size="small" color={theme.iconTextColor} style={{ marginLeft: 6 }} />
+                                ) : (
+                                    <MaterialCommunityIcons
+                                        name="chevron-down"
+                                        size={18}
+                                        color={hexToRGBA(theme.iconTextColor, 0.6)}
+                                        style={{ marginLeft: 4 }}
+                                    />
+                                )}
+                            </TouchableOpacity>
                         ) : (
                             <View style={[styles.footerContentChildreen]}>
                                 {children}
@@ -165,6 +221,18 @@ export const _Footer = ({
                 anchorPosition={anchorPos}
                 direction="up"
             />
+
+            {Show_Almacen && (
+                <_PickerModal
+                    key="picker-almacen-footer"
+                    visible={showAlmacenPicker}
+                    onClose={() => setShowAlmacenPicker(false)}
+                    data={almacenes}
+                    key_name="id_almacen"
+                    onSelect={handleSelectAlmacen}
+                    title="Seleccionar Almacén"
+                />
+            )}
         </>
     );
 };

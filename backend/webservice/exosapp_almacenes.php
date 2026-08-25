@@ -341,6 +341,11 @@ trait ExosApp_Almacenes
             $consulta = rtrim($consulta, ",");
             ExecuteSQL($consulta);
         }
+
+        // ---- Al hacer checkout, se elimina el registro de la tabla terminal_bloqueada para liberar la terminal ----
+        $querydel = "DELETE FROM terminal_bloqueada WHERE id_terminal = " .$id_terminal;
+        ExecuteSQL($querydel);
+
         //			[{"id_fragmento": 1, "id_terminal":1, "bodega_surte":1}]
         /*
         [{
