@@ -187,10 +187,29 @@ export const _MaterialSurtidoList = ({ groups }: { groups?: iMaterialSurtidoGrou
 
 export interface _FotosCarouselProps {
     photos?: string[];
+    // Identificadores únicos por foto (mismo orden/longitud que "photos").
+    // Se usan como key de React y para identificar la foto en onDelete. Si
+    // no se pasa, se usa el índice como antes.
+    keys?: (string | number)[];
+    // Controla si la selección (checkbox por foto) está habilitada. Default
+    // true para no alterar el uso ya existente (cirugia_detalle_view); en
+    // reporte_piezas_danadas, donde no aplica seleccionar, se pasa false.
+    allowSelect?: boolean;
     // Selección controlada por el padre (cirugia_detalle_view), que es quien
     // sabe qué fotos compartir cuando se presiona el botón de compartir.
     selected?: Set<number>;
     onToggleSelect?: (index: number) => void;
+    // Si es true, muestra un botón de eliminar arriba a la derecha de cada
+    // foto; al presionarlo llama onDelete con el identificador (de "keys",
+    // o el índice si no se pasaron keys) de esa foto. Default false.
+    showDelete?: boolean;
+    onDelete?: (key: string | number) => void;
+    // Tamaño explícito opcional: cuando se especifica, se usa directamente en
+    // vez de medir el contenedor con onLayout. Necesario para usar este
+    // carrusel dentro de un <Modal>, donde onLayout/ResizeObserver no se
+    // dispara de forma confiable en RN Web (contenido montado en un portal).
+    width?: number;
+    height?: number;
 }
 
 // Carrusel de fotos de una cirugía. Recibe URLs ya completas (ver getServerFileUrl
@@ -198,13 +217,19 @@ export interface _FotosCarouselProps {
 // no a /webservice). Pensado para vivir en un contenedor con flex:1 (no dentro
 // de un ScrollView vertical), así puede usar toda la altura disponible en vez
 // de quedar forzado a un cuadro cuadrado angosto.
-export const _FotosCarousel = ({ photos, selected, onToggleSelect }: _FotosCarouselProps) => {
+export const _FotosCarousel = ({
+    photos, keys, allowSelect = true, selected, onToggleSelect, showDelete = false, onDelete,
+    width: fixedWidth, height: fixedHeight
+}: _FotosCarouselProps) => {
     const { theme } = useApp();
     const [activeIndex, setActiveIndex] = useState(0);
     // Se mide el tamaño real del contenedor (ancho Y alto) en vez de un tope fijo
     // de 500px de ancho y una altura cuadrada que dejaban la vista de fotos más
-    // angosta y más corta que las otras vistas.
-    const [size, setSize] = useState({ width: 0, height: 0 });
+    // angosta y más corta que las otras vistas. Si el padre ya especificó
+    // width/height (ver _FotosCarouselProps), se usan esos y no se mide nada.
+    const [measuredSize, setMeasuredSize] = useState({ width: 0, height: 0 });
+    const hasFixedSize = !!(fixedWidth && fixedHeight);
+    const size = hasFixedSize ? { width: fixedWidth, height: fixedHeight } : measuredSize;
     const scrollRef = useRef<ScrollView>(null);
     const counterHeight = 30;
     const imageHeight = Math.max(0, size.height - counterHeight);
@@ -235,9 +260,10 @@ export const _FotosCarousel = ({ photos, selected, onToggleSelect }: _FotosCarou
     }
 
     const onLayout = (e: LayoutChangeEvent) => {
+        if (hasFixedSize) return;
         const { width, height } = e.nativeEvent.layout;
-        if (width && height && (Math.abs(width - size.width) > 1 || Math.abs(height - size.height) > 1)) {
-            setSize({ width, height });
+        if (width && height && (Math.abs(width - measuredSize.width) > 1 || Math.abs(height - measuredSize.height) > 1)) {
+            setMeasuredSize({ width, height });
         }
     };
 
@@ -274,54 +300,66 @@ export const _FotosCarousel = ({ photos, selected, onToggleSelect }: _FotosCarou
                             scrollEventThrottle={16}
                             style={{ width: size.width, height: imageHeight }}
                         >
-                            {photos.map((uri, index) => (
-                                <View key={index} style={{ width: size.width, height: imageHeight, position: 'relative' }}>
-                                    <_ZoomableView showShare={false}>
-                                        <Image
-                                            key={retryTick[index] || 0}
-                                            source={{ uri: getPhotoUri(uri, index) }}
-                                            style={{ width: '100%', height: imageHeight }}
-                                            resizeMode="contain"
-                                            onLoad={() => setPhotoStatus(prev => ({ ...prev, [index]: 'loaded' }))}
-                                            onError={() => setPhotoStatus(prev => ({ ...prev, [index]: 'error' }))}
-                                        />
-                                    </_ZoomableView>
-
-                                    {getPhotoStatus(index) !== 'loaded' && (
-                                        <View style={styles.fotoLoadingOverlay}>
-                                            {getPhotoStatus(index) === 'loading' ? (
-                                                <Image
-                                                    source={require('../../assets/images/loading_blue_circle.gif')}
-                                                    style={styles.fotoLoadingGif}
-                                                    resizeMode="contain"
-                                                />
-                                            ) : (
-                                                <MaterialCommunityIcons name="image-broken-variant" size={40} color="#fff" />
-                                            )}
-                                            <TouchableOpacity style={styles.fotoRetryButton} onPress={() => retryPhoto(index)}>
-                                                <MaterialCommunityIcons name="refresh" size={18} color="#fff" />
-                                                <Text style={styles.fotoRetryText}>Reintentar</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
-
-                                    {onToggleSelect && (
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.fotoCheckbox,
-                                                { backgroundColor: selected?.has(index) ? theme.accent : hexToRGBA('#000000', 0.45) }
-                                            ]}
-                                            onPress={() => onToggleSelect(index)}
-                                        >
-                                            <MaterialCommunityIcons
-                                                name={selected?.has(index) ? 'check-circle' : 'checkbox-blank-circle-outline'}
-                                                size={22}
-                                                color="#fff"
+                            {photos.map((uri, index) => {
+                                const photoKey = keys?.[index] ?? index;
+                                return (
+                                    <View key={photoKey} style={{ width: size.width, height: imageHeight, position: 'relative' }}>
+                                        <_ZoomableView showShare={false}>
+                                            <Image
+                                                key={retryTick[index] || 0}
+                                                source={{ uri: getPhotoUri(uri, index) }}
+                                                style={{ width: '100%', height: imageHeight }}
+                                                resizeMode="contain"
+                                                onLoad={() => setPhotoStatus(prev => ({ ...prev, [index]: 'loaded' }))}
+                                                onError={() => setPhotoStatus(prev => ({ ...prev, [index]: 'error' }))}
                                             />
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-                            ))}
+                                        </_ZoomableView>
+
+                                        {getPhotoStatus(index) !== 'loaded' && (
+                                            <View style={styles.fotoLoadingOverlay}>
+                                                {getPhotoStatus(index) === 'loading' ? (
+                                                    <Image
+                                                        source={require('../../assets/images/loading_blue_circle.gif')}
+                                                        style={styles.fotoLoadingGif}
+                                                        resizeMode="contain"
+                                                    />
+                                                ) : (
+                                                    <MaterialCommunityIcons name="image-broken-variant" size={40} color="#fff" />
+                                                )}
+                                                <TouchableOpacity style={styles.fotoRetryButton} onPress={() => retryPhoto(index)}>
+                                                    <MaterialCommunityIcons name="refresh" size={18} color="#fff" />
+                                                    <Text style={styles.fotoRetryText}>Reintentar</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+
+                                        {allowSelect && onToggleSelect && (
+                                            <TouchableOpacity
+                                                style={[
+                                                    styles.fotoCheckbox,
+                                                    { backgroundColor: selected?.has(index) ? theme.accent : hexToRGBA('#000000', 0.45) }
+                                                ]}
+                                                onPress={() => onToggleSelect(index)}
+                                            >
+                                                <MaterialCommunityIcons
+                                                    name={selected?.has(index) ? 'check-circle' : 'checkbox-blank-circle-outline'}
+                                                    size={22}
+                                                    color="#fff"
+                                                />
+                                            </TouchableOpacity>
+                                        )}
+
+                                        {showDelete && (
+                                            <TouchableOpacity
+                                                style={styles.fotoDeleteButton}
+                                                onPress={() => onDelete?.(photoKey)}
+                                            >
+                                                <MaterialCommunityIcons name="delete" size={20} color="#fff" />
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                );
+                            })}
                         </ScrollView>
 
                         {activeIndex > 0 && (
@@ -556,8 +594,9 @@ const styles = StyleSheet.create({
     fotoCounter: {
         fontSize: 12,
         paddingVertical: 8,
-        marginBottom:5,
-        paddingBottom:3
+        marginBottom:8,
+        paddingBottom:3,
+        marginLeft:20,        
     },
     fotoCheckbox: {
         position: 'absolute',
@@ -566,6 +605,18 @@ const styles = StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 20,
+    },
+    fotoDeleteButton: {
+        position: 'absolute',
+        top: 0,
+        right: 20,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: hexToRGBA('#e53e3e', 0.85),
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 20,

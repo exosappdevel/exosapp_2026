@@ -316,8 +316,15 @@ class WebServiceController
         // Retornamos en formato yyyy-mm-dd para el SQL
         return $dateObj ? $dateObj->format('Y-m-d') : $dateStr;
     }
+    
 
-    public function upload_pago_cirugia(){
+    public function upload_file(){
+        $folder = Requesting("folder") ?: "default";
+        $filename = Requesting("filename") ?: "file";
+        $path = $folder . '/files/exosapp/';
+
+        $uploadDir = __DIR__ . '/' . $path;       
+        
         // Identificar si el archivo viene bajo la clave 'files[]' (como se ve en tu captura) o 'files'
         $paramName = isset($_FILES['files[]']) ? 'files[]' : (isset($_FILES['files']) ? 'files' : null);
 
@@ -348,22 +355,20 @@ class WebServiceController
                 'result_text' => 'Error en el servidor temporal de PHP. Código de error interno: ' . $fileError . '. (Verifica post_max_size o upload_max_filesize en tu php.ini)'
             ];
         }
-
-        // Directorio de subida (Asegúrate de que la carpeta tenga permisos de escritura 755 o 777)
-        $uploadDir = __DIR__ . '/pagos_cirugias/files/exosapp/';
+        // Directorio de subida (Asegúrate de que la carpeta tenga permisos de escritura 755 o 777)        
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
-
         $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
-        $newFileName   = uniqid('pago_', true) . '.' . $fileExtension;
+        $newFileName   = uniqid($filename, true) . '.' . $fileExtension;        
+        
         $destination   = $uploadDir . $newFileName;
+        $publicUrl = $path . $newFileName;
 
-        if (move_uploaded_file($fileTmpName, $destination)) {
-            $publicUrl = "pagos_cirugias/files/exosapp/" . $newFileName;
+        if (move_uploaded_file($fileTmpName, $destination)) {            
             return [
                 'result' => 'ok',
-                'result_text' => 'Archivo subido con éxito al controlador.',
+                'result_text' => 'Archivo subido con éxito.',
                 'url' => $publicUrl,
                 'fileName' => $fileName,
                 'tmp' => $fileTmpName,

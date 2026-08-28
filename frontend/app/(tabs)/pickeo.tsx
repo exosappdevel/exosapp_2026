@@ -27,7 +27,7 @@ interface Producto {
   id_fragmento: string;
   descripcion: string;
   referencia: string;
-  bodegaconsumo :string;
+  bodegaconsumo: string;
   marca: string;
   fabricante: string;
   cantidad_solicitada: number;
@@ -188,7 +188,13 @@ export default function PickeoScreen() {
     const confirmarEnvio = async () => {
       try {
         setIsSubmitting(true);
-        const response = await ApiService.pickeo_checkout(user.id_usuario, id_terminal, productos);
+        // Filtramos el arreglo para enviar únicamente id_fragmento y cantidad_recolectada
+        const productosFiltrados = productos.map((p) => ({
+          id_fragmento: p.id_fragmento,
+          cantidad_recolectada: Number(p.cantidad_recolectada) || 0,
+        }));
+
+        const response = await ApiService.pickeo_checkout(user.id_usuario, id_terminal, productosFiltrados);
         setIsSubmitting(false);
 
         const mensaje = response?.result_text || "Error desconocido";
@@ -250,17 +256,17 @@ export default function PickeoScreen() {
     <_Background id_almacen={user?.id_almacen}>
       <SafeAreaView style={[styles.container]}>
         <_Header page_info={pageConfig} >
-          
+
         </_Header>
 
 
-        <BlurView intensity={70} style={[styles.header, { borderBottomColor: theme.border, /*backgroundColor: hexToRGBA(theme.card, 0.5) */}]}>
+        <BlurView intensity={70} style={[styles.header, { borderBottomColor: theme.border, /*backgroundColor: hexToRGBA(theme.card, 0.5) */ }]}>
           <TouchableOpacity onPress={() => router.replace('/terminales')} style={styles.header} >
             <MaterialCommunityIcons name="desktop-classic" size={24} color={theme.text} />
-          
-          <Text style={[styles.title, { color: theme.text, marginLeft:10 }]} numberOfLines={1}>
-            {user.almacen_codigo} - {terminal_nombre}
-          </Text>
+
+            <Text style={[styles.title, { color: theme.text, marginLeft: 10 }]} numberOfLines={1}>
+              {user.almacen_codigo} - {terminal_nombre}
+            </Text>
           </TouchableOpacity>
           <View style={styles.headerActions}>
             <TouchableOpacity onPress={() => inicializarDatos(true)} style={styles.headerBtn}>
@@ -283,14 +289,14 @@ export default function PickeoScreen() {
         {loading ? (
           <ActivityIndicator size="large" color={theme.accent} style={{ flex: 1 }} />
         ) : (
-          <View style={{ height: _ClientHeight}}>
+          <View style={{ height: _ClientHeight }}>
             <FlatList
               data={listaRender}
 
               keyExtractor={(item) => item.id.toString()}
               contentContainerStyle={styles.listContent}
               renderItem={({ item }) => (
-                <View                  
+                <View
                   style={[
                     styles.itemRow,
                     { backgroundColor: hexToRGBA(theme.card, 0.9), borderColor: theme.border },
@@ -309,8 +315,8 @@ export default function PickeoScreen() {
                     <Text style={[styles.textMain, { color: theme.text }]} numberOfLines={2}>
                       {item.descripcion}
                     </Text>
-                    <Text style={[styles.textMain,{color:theme.accent}]}>{item.referencia}</Text>
-                    <Text style={[styles.textMain,{color:theme.text, fontWeight:'normal'}]}>{item.bodegaconsumo}</Text>
+                    <Text style={[styles.textMain, { color: theme.accent }]}>{item.referencia}</Text>
+                    <Text style={[styles.textMain, { color: theme.text, fontWeight: 'normal' }]}>{item.bodegaconsumo}</Text>
                     <Text style={[styles.textStatus, { color: item.color }]}>
                       {item.cantidad_recolectada} / {item.cantidad_solicitada}
                     </Text>
@@ -458,7 +464,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 8,
     borderRadius: 25,
-    borderWidth: 1,    
+    borderWidth: 1,
   },
   dot: { width: 16, height: 16, borderRadius: 16, marginRight: 0 },
   itemInfo: { flex: 1 },
@@ -478,8 +484,8 @@ const styles = StyleSheet.create({
   footerBtn: {
     flex: 1,
     paddingVertical: 13,
-    paddingHorizontal:7,
-    marginTop:3,
+    paddingHorizontal: 7,
+    marginTop: 3,
     marginHorizontal: 5,
     borderRadius: 20,
     alignItems: "center",

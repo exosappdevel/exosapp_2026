@@ -33,7 +33,8 @@ export const AppmenuItems: iMenuItem[] = [
   { id: '14', titleKey: "screens.cirugias_buscar", icon: "file-search", color: "#ecc94b", href: "/cirugias_buscar" },
   { id: '15', titleKey: "screens.cirugias_calendario", icon: "calendar", color: "#48bb78", href: null },
   { id: '16', titleKey: "screens.cirugias_vista_diario", icon: "calendar", color: "#48bb78", href: null },
-  { id: '17', titleKey: "screens.reporte_piezas_danadas_view", icon: "glass-fragile", color: "#48bb78", href: "/reporte_piezas_danadas_view" }
+  { id: '17', titleKey: "screens.reporte_piezas_danadas_view", icon: "glass-fragile", color: "#48bb78", href: "/reporte_piezas_danadas_view" },
+  { id: '18', titleKey: "screens.reporte_piezas_danadas", icon: "alert-decagram-outline", color: "#e53e3e", href: "/reporte_piezas_danadas" }
 ];
 
 
@@ -97,7 +98,8 @@ export const Tabs_Allowed =() => {
     // --- Calidad
     if (menu_name == 'menu_calidad') {
       if (isAllowed('menu_calidad', 'reporte_piezas_danadas_view')) AddMenuItem(menu, "screens.reporte_piezas_danadas_view");
-    }    
+      if (isAllowed('menu_calidad', 'reporte_piezas_danadas')) AddMenuItem(menu, "screens.reporte_piezas_danadas");
+    }
     if (Array.isArray(menu))
       return menu.length;
     else

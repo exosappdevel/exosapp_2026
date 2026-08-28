@@ -1,6 +1,7 @@
 import {  Dispatch, SetStateAction } from "react";
 import {
-    View, Text, StyleSheet, TouchableOpacity,Switch
+    View, Text, StyleSheet, TouchableOpacity,Switch,
+    ViewStyle, TextStyle
 } from "react-native";
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -11,17 +12,19 @@ interface checkBoxOptions {
     use_switch: boolean;
     value: boolean;
     setValue: Dispatch<SetStateAction<boolean>>;
+    checkboxStyle?: ViewStyle;
+    labelStyle?: TextStyle;
 };
 
-export const _checkBox = ({ key_id, text, use_switch, value, setValue }: checkBoxOptions) => {
+export const _checkBox = ({ key_id, text, use_switch, value, setValue, checkboxStyle, labelStyle }: checkBoxOptions) => {
     const { theme } = useApp(); // Obtenemos el contexto
     if (use_switch) {
         return (
-            <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 5 }}>
+            <View pointerEvents="box-none" style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 5 }, checkboxStyle]}>
                 <Text
                     selectable={false}
                     pointerEvents="none"
-                    style={{ color: theme.text, fontSize: 12, flex: 1, marginRight: 5, textAlign: "right" }}
+                    style={[{ color: theme.text, fontSize: 12, flex: 1, marginRight: 5, textAlign: "right" }, labelStyle]}
                     ellipsizeMode="tail"
                 >{text}</Text>
                 <Switch
@@ -37,7 +40,7 @@ export const _checkBox = ({ key_id, text, use_switch, value, setValue }: checkBo
         return <TouchableOpacity
             onPress={() => setValue(!value)}
             activeOpacity={0.6}
-            style={styles.checkboxContainer}
+            style={[styles.checkboxContainer, checkboxStyle]}
         >
             <MaterialCommunityIcons
                 name={value ? 'checkbox-marked' : 'checkbox-blank-outline'}

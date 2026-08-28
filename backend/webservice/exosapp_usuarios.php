@@ -45,7 +45,7 @@ trait ExosApp_Usuarios
         }
 
         // Se mantiene la lógica de tu archivo original con md5
-        $query = "SELECT COUNT(u.id_usuario) AS existe, u.id_usuario, u.id_almacen, u.usuario, u.activo, a.nombre as almacen_nombre, a.codigo as almacen_codigo 
+        $query = "SELECT COUNT(u.id_usuario) AS existe, u.id_usuario, u.id_almacen, u.usuario, u.activo, a.nombre as almacen_nombre, a.codigo as almacen_codigo , u.pin
                 FROM usuario u left join almacen a on u.id_almacen=a.id_almacen
                 WHERE u.usuario = '" . $login_usuario . "' AND u.password = '" . md5($login_password) . "'";
 
@@ -66,6 +66,7 @@ trait ExosApp_Usuarios
                 'almacen_nombre' => GetValueSQL($query, "almacen_nombre"),
                 'almacen_codigo' => GetValueSQL($query, "almacen_codigo"),
                 'alias_usuario' => GetValueSQL($query, "usuario"),
+                'pin' => GetValueSQL($query, "pin"),
                 'result_text' => 'Acceso correcto'
             ];
     

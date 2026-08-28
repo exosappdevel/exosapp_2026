@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
-import { _Footer, _Header, _Background, _PickerModal, hexToRGBA } from '@/components/elidev_components';
+import { _Footer, _Header, _Background, _PickerModal, _PinModal, hexToRGBA } from '@/components/elidev_components';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
 
@@ -51,6 +51,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAlmacenPicker, setShowAlmacenPicker] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
   const [sel_language, setSel_language] = useState(language);
   const [, setModal] = useState({
     visible: false,
@@ -321,6 +322,16 @@ export default function ProfileScreen() {
           key_name="id_almacen"
           onSelect={(item: Almacen) => { setSelectedAlmacen(item);setShowAlmacenPicker(false); }}
           title="Seleccionar Técnico"
+        />
+        <_PinModal
+          visible={showPinModal}
+          title="Confirma tu PIN"
+          message="Introduce tu PIN para guardar los cambios del perfil."
+          onCancel={() => setShowPinModal(false)}
+          onSuccess={() => {
+            setShowPinModal(false);
+            handleSave();
+          }}
         />
       </SafeAreaView>
     </_Background>

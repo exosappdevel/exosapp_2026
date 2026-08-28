@@ -97,7 +97,7 @@ class ApiService {
     }
   }
 
-  static async uploadFileDirect(file: { uri: string, name: string, type: string }): Promise<string> {
+  static async uploadFileDirect(folder: string, filename:string, file: { uri: string, name: string, type: string }): Promise<string> {
     const formData = new FormData();
 
     if (Platform.OS === 'web') {
@@ -119,7 +119,7 @@ class ApiService {
     }
 
     // Apuntamos al controlador oficial con la nueva acción y la PASSKEY por URL
-    const uploadUrl = `${this.URL_CONTROLLER}?action=upload_pago_cirugia&key=${this.PASSKEY}`;
+    const uploadUrl = `${this.URL_CONTROLLER}?action=upload_file&folder=${folder}&filename=${filename}&key=${this.PASSKEY}`;
 
     try {
       const response = await fetch(uploadUrl, {
@@ -319,7 +319,31 @@ class ApiService {
     return await this.request("buscar_pieza_danada_registro_general", {fecha_inicio,fecha_fin,codigo_registro,codigo_cirugia,codigo_activo,referencia,lote,pieza_estatus,codigo_traspaso, orderby, limite});
 
   }
+
+  static async get_fabricante_list(show_todos:string){
+    return await this.request("get_fabricante_list", {show_todos:show_todos});
+  }
+
+  static async registrar_pieza_danada(id_reporte:string, codigo_reporte:string, id_almacen:string, codigo_cirugia:string, codigo_activo:string, en_inventario:string, id_fabricante:string, referencia:string, lote:string, comentarios:string){
+    return await this.request("registrar_pieza_danada", {id_reporte, codigo_reporte, id_almacen, codigo_cirugia, codigo_activo, en_inventario, id_fabricante, referencia, lote, comentarios});
+  }
+
+  static async iniciar_reporte_pieza_danada(id_usuario:string, id_almacen:string){
+    return await this.request("iniciar_reporte_pieza_danada", {id_usuario, id_almacen});
+  }
+  static async finalizar_reporte_pieza_danada(id_reporte:string, id_usuario:string){
+    return await this.request("finalizar_reporte_pieza_danada", {id_reporte, id_usuario});  
+  }
+  static async guardar_foto_reporte_piezas_danadas(id_registro:string, nombre_archivo:string, id_usuario:string){
+    return await this.request("guardar_foto_reporte_piezas_danadas", {id_registro, nombre_archivo, id_usuario});  
+  }
+  static async eliminar_pieza_danada(id_registro:string){
+    return await this.request("eliminar_pieza_danada", {id_registro});  
+  }
   
+  static async eliminar_foto_reporte_piezas_danadas(id_foto:string){
+    return await this.request("eliminar_foto_reporte_piezas_danadas", {id_foto});  
+  }
   
 }
 

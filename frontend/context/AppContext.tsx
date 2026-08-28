@@ -33,6 +33,7 @@ interface User {
   almacen_nombre: string;
   almacen_codigo: string;
   alias_usuario: string;
+  pin: string;
   tema: ThemeType;
   menu_favorites: string[];
   menu_items: Menu_item[];
@@ -181,7 +182,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     "exodos": "https://exodos.exos.software/webservice"
   };
   
-  const backend_server = "local";
+  const backend_server = "exos";
   
   const [appConfig] = useState<AppConfig>({
     passtrough_mode: false,
@@ -208,6 +209,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     chat_client_appID: "",
     chat_client_appKey: "",
     chat_client_token: "",    
+    pin: "",
     local_terminal:{selected:false, id:'',nombre:''}    
   });
 
@@ -290,8 +292,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
-        if (parsedUser.id_usuario) {
-          setIsLoggedIn(true);
+        if (parsedUser.id_usuario && parsedUser.id_usuario !== "" ) {
+          if (parsedUser.pin) {
+            setIsLoggedIn(true); // Solo se considera logueado si tiene pin
+          } else {
+            await logout(); // Sin pin: la sesión guardada ya no es válida
+          }
         }
       }
     } catch (e) {
@@ -335,6 +341,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       chat_client_appID: "",
       chat_client_appKey: "",
       chat_client_token: "" ,
+      pin: "",
       local_terminal:{selected:false, id:'',nombre:''}
     });
     await setIsLoggedIn(false); // Añade el await aquí    

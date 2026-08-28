@@ -396,7 +396,7 @@ export default function ProgramaCirugiaScreen() {
       for (const archivo of archivos) {
         // Solo subimos si es un objeto local (tiene uri local)
         //alert(JSON.stringify(archivo));
-        const urlServidor = await ApiService.uploadFileDirect(archivo);
+        const urlServidor = await ApiService.uploadFileDirect("pago_cirugias", 'pago', archivo);
 
         if (urlServidor) {
           urlsSubidas.push(appConfig.url + urlServidor);

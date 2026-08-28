@@ -40,6 +40,7 @@
       "cirugias_calendario" : "Calendario de cirugías",
       "cirugias_vista_diario" : "Vista diaria" ,
       "reporte_piezas_danadas_view": "Ver reporte piezas dañadas",
+      "reporte_piezas_danadas": "Reportar pieza dañada",
       "cirugia_detalle_view": "Detalle de cirugía"
 
     },
@@ -203,6 +204,44 @@
       "codigo_cirugia_asc" : "Codigo cirugía más antiguo",
       "codigo_desc" : "Codigo registro más reciente",
       "codigo_asc" : "Codigo registro más antiguo"
+    },
+    "reporte_piezas_danadas":{
+      "form_title": "Agregar pieza dañada",
+      "list_title": "Resumen de productos reportados",
+      "codigo_cirugia": "Cirugia en que se dañó",
+      "codigo_activo": "Activo de Origen",
+      "en_inventario": "¿La pieza que reporte se encuentra en Inventario?",
+      "id_fabricante": "Fabricante",
+      "referencia": "Referencia",
+      "lote": "Lote",
+      "comentarios": "Notas o Comentarios",
+      "select_fabricante": "Seleccionar fabricante",
+      "add_button": "Agregar pieza",
+      "empty_list": "Aún no has agregado piezas a este reporte.",
+      "validation_error": "Completa todos los campos antes de agregar la pieza.",
+      "pin_message": "Introduce tu PIN para reportar una pieza dañada.",
+      "pin_message_cancel": "El reporte no finalizara hasta que firmes con tu PIN.",
+      "add_fotos": "Agrega fotos desde:",
+      "starting_report": "Iniciando reporte...",
+      "col_cirugia": "Cirugía",
+      "col_activo": "Activo Origen",
+      "col_codigo": "Código Registro",
+      "col_referencia": "Referencia",
+      "col_lote": "Lote",
+      "col_notas": "Notas",
+      "col_fabricante": "Fabricante",
+      "col_fecha": "Fecha",
+      "col_foto": "Foto",
+      "no_reporte_error": "No se ha iniciado un reporte de piezas dañadas.Agrega una pieza para iniciar el reporte.",
+      "finalize_button": "Finalizar reporte",
+      "finalize_confirm": "¿Deseas finalizar el reporte de piezas dañadas? Una vez finalizado, no podrás agregar más piezas.",
+      "delete_foto_confirm" :"¿Deseas eliminar esta foto?",
+      "finalizing_report": "Finalizando reporte...",
+      "finalize_success_title": "Reporte finalizado",
+      "finalize_success": "El reporte de piezas dañadas ha sido finalizado exitosamente y enviado a revisión.",
+      "footer_no_reporte": "-----"  ,
+      "delete_pieza" : "Eliminar pieza"
+
     }
   },
   "en": {
@@ -235,7 +274,8 @@
       "socios":"Partners",
       "cirugias_programar" : "Schedule",
       "cirugias_buscar":"Search",
-      "cirugias_calendario" : "Calendary"
+      "cirugias_calendario" : "Calendary",
+      "reporte_piezas_danadas": "Report damaged piece"
     },
     "login": {
       "username": "Username",

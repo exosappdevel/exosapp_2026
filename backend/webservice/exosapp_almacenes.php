@@ -209,7 +209,8 @@ trait ExosApp_Almacenes
 				
 				
 				$query = "SELECT fragmento.id_fragmento, producto.referencia, producto.nombre, fragmento.restante, fragmento.cantidad, SUM(fragmento.cantidad) AS sumcantidad, 
-					almacen.nombre AS bodegaconsumo, SUM(fragmento.restante) AS sumrestante, producto.id_producto, fragmento.id_bodega_destino, marca.marca, fabricante.fabricante    
+					almacen.nombre AS bodegaconsumo, SUM(fragmento.restante) AS sumrestante, producto.id_producto, fragmento.id_bodega_destino, marca.marca, fabricante.fabricante,
+                    NOW() as last_update   
 					FROM fragmento
 					INNER JOIN producto ON (producto.id_producto = fragmento.id_producto)
 					INNER JOIN carpeta ON (carpeta.id_carpeta = fragmento.id_carpeta) 
@@ -229,8 +230,8 @@ trait ExosApp_Almacenes
 						'referencia' => $row['referencia'],
 						'marca' => $row['marca'],
 						'fabricante' => $row['fabricante'],  
-						'cantidad_solicitada' => $row['sumcantidad'],
-						'cantidad_recolectada' => $row['sumrestante'],
+						'cantidad_solicitada' => $row['sumrestante'],
+						'cantidad_recolectada' => 0,
 						'id_bodega_destino' => $row['id_bodega_destino'],  
 						'bodegaconsumo' => $row['bodegaconsumo'],  
 						'last_update' => $row['last_update']
@@ -391,7 +392,8 @@ trait ExosApp_Almacenes
         return [
             'result' => 'ok',
             //'sql' => $sSQL,
-            'result_text' => 'Checkout procesado correctamente en EXOSAPP.PHP'
+            'result_text' => 'Checkout procesado correctamente en EXOSAPP.PHP',
+            'nums' => $nums
         ];
     }
 

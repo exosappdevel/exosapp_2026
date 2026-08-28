@@ -172,6 +172,7 @@ export default function LoginScreen() {
           almacen_nombre: response.almacen_nombre || '',
           almacen_codigo: response.almacen_codigo || '',
           alias_usuario: (response.alias_usuario || '').toUpperCase() || '',
+          pin: response.pin || '',
           tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light',
           menu_favorites: fav.split(';').filter((item: String) => item !== ""),
           menu_items: menuItems, 
