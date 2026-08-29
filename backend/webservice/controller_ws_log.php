@@ -9,7 +9,7 @@
         
         /* Header y Buscador */
         .header-container { background: white; padding: 15px 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
-        .search-box { display: flex; gap: 10px; max-width: 600px; }
+        .search-box { display: flex; gap: 10px; max-width: 800px; }
         input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; }
         input[type="text"]:focus { border-color: #3182ce; }
         .btn-search { padding: 10px 25px; background-color: #3182ce; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
@@ -63,6 +63,7 @@
 <div class="header-container">
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="Filtrar por nombre de usuario..." onkeydown="if(event.key==='Enter') startSearch()">
+        <input type="text" id="actionInput" placeholder="Filtrar por action..." onkeydown="if(event.key==='Enter') startSearch()">
         <button class="btn-search" onclick="startSearch()">BUSCAR</button>
     </div>
 </div>
@@ -76,6 +77,7 @@
                         <th style="width: 60px;">ID</th>
                         <th style="width: 120px;">Fecha/Hora</th>
                         <th>Nombre Usuario</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="logTableBody">
@@ -107,9 +109,10 @@
 
     async function loadLogs() {
         const search = document.getElementById('searchInput').value;
+        const actionFilter = document.getElementById('actionInput').value;
         const tbody = document.getElementById('logTableBody');
         // URL del listado principal
-        const url = `controller_ws.php?action=audit_ws_log&page=${page}&search=${encodeURIComponent(search)}`;
+        const url = `controller_ws.php?action=audit_ws_log&page=${page}&search=${encodeURIComponent(search)}&action_filter=${encodeURIComponent(actionFilter)}`;
 
         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">Cargando lista...</td></tr>';
 
@@ -137,6 +140,7 @@
                 const nombre = log.getElementsByTagName("nombre")[0]?.textContent || 'Sin nombre';
                 const fecha = log.getElementsByTagName("fecha")[0]?.textContent || '';
                 const hora = log.getElementsByTagName("hora")[0]?.textContent || '';
+                const action = log.getElementsByTagName("action")[0]?.textContent || '';
                 
                 // Guardamos solo los metadatos necesarios
                 currentLogs[id] = { nombre, id, fecha, hora };
@@ -148,6 +152,7 @@
                     <td><strong>${id}</strong></td>
                     <td>${fecha}<br><small style="color: #888">${hora}</small></td>
                     <td>${nombre}</td>
+                    <td>${action}</td>
                 `;
                 tbody.appendChild(row);
             }

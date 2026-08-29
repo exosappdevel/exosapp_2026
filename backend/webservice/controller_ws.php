@@ -50,7 +50,7 @@ class WebServiceController
         "audit_ws_log" => [
             'descripcion' => 'Audita el log de WS y devuelve registros paginados.',
             'omit_show' => true,
-            'parameters' => ['limit', 'page', 'search']
+            'parameters' => ['limit', 'page', 'search', 'action_filter']
         ],
         "audit_ws_log_data" => [
             'descripcion' => 'Audita un registro específico del log de WS y devuelve su input o output.',
@@ -260,28 +260,34 @@ class WebServiceController
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         $page = ($page == 0?1:$page);
         $search = isset($_GET['search']) ? $_GET['search'] : '';
+        $action_filter = isset($_GET['action_filter']) ? $_GET['action_filter'] : '';
         $offset = ($page - 1) * $limit;
 
+        // addslashes: nombre/action_filter se concatenan directo dentro del LIKE,
+        // sin esto quedaba abierto a inyección SQL vía esos parámetros de búsqueda.
+        $whereClauses = ["nombre LIKE '%" . addslashes($search) . "%'"];
+        if ($action_filter !== '') {
+            $whereClauses[] = "action LIKE '%" . addslashes($action_filter) . "%'";
+        }
+        $whereSQL = implode(" AND ", $whereClauses);
+
         // 1. Contar total de registros para la paginación (con filtro)
-        $searchQuery = "%$search%";
-        $sqlCount = "SELECT COUNT(*) as total FROM ws_log WHERE nombre LIKE '%" . $search . "%'";
+        $sqlCount = "SELECT COUNT(*) as total FROM ws_log WHERE " . $whereSQL;
         $totalRows = GetValueSQL_WS($sqlCount, "total");
         $totalPages = ceil($totalRows / $limit);
 
         // 2. Obtener los datos paginados
-        $sqlData = "SELECT * FROM ws_log WHERE nombre LIKE '%" . $search . "%' ORDER BY id DESC LIMIT $limit OFFSET $offset";
+        $sqlData = "SELECT * FROM ws_log WHERE " . $whereSQL . " ORDER BY id DESC LIMIT $limit OFFSET $offset";
         $records = DatasetSQL_WS($sqlData);
         $data = [];
 
         while ($row = mysqli_fetch_array($records)) {
-            // Usamos el prefijo 'item_' para que el XML sea válido y el frontend lo reconozca como lista
-            $input_esc = str_replace("'", "\'", $row['input']);
-            $output_esc = str_replace("'", "\'", $row['output']);
             $data['id' . $row['id']] = [
                 'fecha' => $row['fecha'],
                 'hora' => $row['hora'],
                 'id_usuario' => $row['id_usuario'],
-                'nombre' => $row['nombre']
+                'nombre' => $row['nombre'],
+                'action' => $row['action']
             ];
         }
         $data = [
@@ -295,19 +301,32 @@ class WebServiceController
     {
         $id_log = Requesting("id_log");
         $type = Requesting("type");
-        if (!$id_log || !$type) {
+        // $type se concatenaba directo en el SELECT, permitiendo elegir
+        // cualquier columna de ws_log (o inyectar SQL); se restringe a las
+        // dos únicas columnas que este endpoint debe exponer.
+        if (!$id_log || !in_array($type, ['input', 'output'], true)) {
             return $this->DatosIncorrectos();
         }
-        $sqlData = "select " . $type . " from ws_log where id=" . $id_log;
+        $sqlData = "select " . $type . " from ws_log where id=" . intval($id_log);
         $value = GetValueSQL_WS($sqlData, $type);
-        echo $value;
+
+        // "output" ya se guarda como JSON (ver sendResponse -> json_encode),
+        // solo se reformatea legible. "input" se guarda como el query string
+        // crudo de la petición ($_SERVER['QUERY_STRING']), así que se parsea
+        // a pares clave/valor antes de codificarlo como JSON.
+        if ($type === 'input') {
+            parse_str((string) $value, $parsed);
+            $formatted = json_encode($parsed, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        } else {
+            $decoded = json_decode((string) $value, true);
+            $formatted = (json_last_error() === JSON_ERROR_NONE)
+                ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                : $value;
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo $formatted;
         exit;
-        $data = [
-            'result' => 'true',
-            'sql' => $sqlData,
-            'value' => $value
-        ];
-        return ($data);        
     }
     private function SQLDate($dateStr) {
         if (!$dateStr) return "";
