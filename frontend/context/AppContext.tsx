@@ -177,12 +177,13 @@ const themes: Record<ThemeType, Theme> = {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const servers = {
-    "local" : "http://192.168.100.59/exorta/webservice",
+    "localip" : "http://192.168.100.59/exorta/webservice",
+    "local" : "http://jonatan-kubuntu/exorta/webservice",
     "exos" : "https://exorta.exos.software/webservice",
     "exodos": "https://exodos.exos.software/webservice"
   };
   
-  const backend_server = "exos";
+  const backend_server = "local";
   
   const [appConfig] = useState<AppConfig>({
     passtrough_mode: false,

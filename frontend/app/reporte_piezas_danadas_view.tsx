@@ -12,16 +12,20 @@ import {
   FlatList,
   LayoutAnimation,
   Image,
+  Alert,
   KeyboardAvoidingView,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Show_Generic_Report, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, formatDate } from '../components/elidev_components';
+import { _Header, _Show_Generic_Report, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _FotosCarousel, getWebserviceFileUrl, formatDate } from '../components/elidev_components';
 
 
 interface PickerOption {
@@ -40,7 +44,7 @@ interface iOrderList {
 
 
 export default function reporte_piezas_danadas_view_Screen() {
-  const { user, theme, t } = useApp();
+  const { user, theme, t, appConfig } = useApp();
   const pageConfig = {
     name: t('screens.reporte_piezas_danadas_view'),
     icon: "glass-fragile",
@@ -54,6 +58,9 @@ export default function reporte_piezas_danadas_view_Screen() {
   const [appReady, setAppReady] = useState(false);
   const [loading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { width, height } = useWindowDimensions();
+  const margin_height = 45;
+  const _ClientHeight = height - 130 - margin_height;
 
   // Form fields
   const [fecha_ini, setFecha_ini] = useState('');
@@ -72,10 +79,10 @@ export default function reporte_piezas_danadas_view_Screen() {
   // listas
   const [Estatus_list, setEstatusList] = useState<iEstatusList[]>([]);
   const [Order_list] = useState<iOrderList[]>([
-    { order: "codigo_cirugia desc", text: t('reporte_piezas_danadas_view.codigo_cirugia_desc') },
-    { order: "codigo_cirugia ", text: t('reporte_piezas_danadas_view.codigo_cirugia_asc') },
     { order: "codigo desc", text: t('reporte_piezas_danadas_view.codigo_desc') },
     { order: "codigo", text: t('reporte_piezas_danadas_view.codigo_asc') },
+    { order: "codigo_cirugia desc", text: t('reporte_piezas_danadas_view.codigo_cirugia_desc') },
+    { order: "codigo_cirugia ", text: t('reporte_piezas_danadas_view.codigo_cirugia_asc') },
   ]);
   const [orderBy, setOrderBy] = useState<iOrderList | null>(Order_list[0]);
 
@@ -86,7 +93,19 @@ export default function reporte_piezas_danadas_view_Screen() {
 
   const scrollRef = React.useRef<ScrollView>(null);
 
-  const [resultados, setResultados] = useState([]);
+  const [resultados, setResultados] = useState<any[]>([]);
+
+  // --- Carousel de fotos de un reporte ya guardado (mismo patrón que
+  // reporte_piezas_danadas.tsx) ---
+  const { width: winWidth, height: winHeight } = useWindowDimensions();
+  const carouselWidth = Math.round(winWidth * 0.95);
+  const carouselHeight = Math.round(winHeight * 0.8);
+  const [archivos_pieza, setArchivos_pieza] = useState<any[]>([]);
+  const [showCarousel, setShowCarousel] = useState(false);
+  // Las fotos ya están en el servidor (vienen de buscar_pieza_danada_registro_general
+  // como {id_foto, url} con url relativa), a diferencia de reporte_piezas_danadas.tsx
+  // donde "archivos" son locales; por eso aquí sí se pasan por getWebserviceFileUrl.
+  const fotoUrls_pieza: string[] = (archivos_pieza || []).map((f: any) => f.uri);
 
   // 1. Agregamos una bandera para evitar ejecuciones dobles en modo estricto
   useEffect(() => {
@@ -163,14 +182,190 @@ export default function reporte_piezas_danadas_view_Screen() {
     colorIcon: '#f56565'
   });
 
+  const showError = (mensaje: string) => {
+    setModal({
+      visible: true,
+      titulo: t('common.error'),
+      mensaje,
+      icon: 'alert-circle-outline',
+      colorIcon: '#f56565'
+    });
+  };
+
+  // --- Agregar/quitar fotos y eliminar un reporte ya guardado, mismo patrón
+  // que reporte_piezas_danadas.tsx (ahí "pieza" viene del formulario en
+  // memoria; aquí "item" viene de un resultado de búsqueda ya finalizado). ---
+  const pickDocument = async (item: any) => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "*/*",
+        copyToCacheDirectory: true
+      });
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+      const nuevoArchivo = {
+        uri: asset.uri,
+        name: asset.name,
+        type: asset.mimeType || 'application/octet-stream',
+        url: '',
+        id_foto: ''
+      };
+
+      const urlServidor = await ApiService.uploadFileDirect("piezas_danadas", 'pieza', nuevoArchivo);
+      if (!urlServidor) {
+        showError(t('common.connectionError'));
+        return;
+      }
+
+      nuevoArchivo.url = urlServidor;
+      const response_foto = await ApiService.guardar_foto_reporte_piezas_danadas(item.id_registro, urlServidor, user?.id_usuario || '');
+      if (response_foto?.result === 'ok') {
+        const fotoGuardada = { id_foto: response_foto.id_foto, url: urlServidor };
+        setResultados((prev: any[]) => prev.map((r) => {
+          if (r.id_registro !== item.id_registro) return r;
+          const fotosActuales = Array.isArray(r.fotos) ? r.fotos : [];
+          return { ...r, fotos: [...fotosActuales, fotoGuardada], fotos_count: fotosActuales.length + 1 };
+        }));
+      } else {
+        showError(response_foto?.result_text || t('common.connectionError'));
+      }
+    } catch (err) {
+      console.error("Error al seleccionar documento:", err);
+    }
+  };
+
+  const takePhoto = async (item: any) => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+      const nuevoArchivo = {
+        uri: asset.uri,
+        name: asset.uri.split('/').pop() || 'photo.jpg',
+        type: 'image/jpeg',
+        url: '',
+        id_foto: ''
+      };
+
+      const urlServidor = await ApiService.uploadFileDirect("piezas_danadas", 'pieza', nuevoArchivo);
+      if (!urlServidor) {
+        showError(t('common.connectionError'));
+        return;
+      }
+
+      const response_foto = await ApiService.guardar_foto_reporte_piezas_danadas(item.id_registro, urlServidor, user?.id_usuario || '');
+      if (response_foto?.result === 'ok') {
+        const fotoGuardada = { id_foto: response_foto.id_foto, url: urlServidor };
+        setResultados((prev: any[]) => prev.map((r) => {
+          if (r.id_registro !== item.id_registro) return r;
+          const fotosActuales = Array.isArray(r.fotos) ? r.fotos : [];
+          return { ...r, fotos: [...fotosActuales, fotoGuardada], fotos_count: fotosActuales.length + 1 };
+        }));
+      } else {
+        showError(response_foto?.result_text || t('common.connectionError'));
+      }
+    } catch (err) {
+      console.error("Error al tomar foto:", err);
+      showError(t('common.connectionError'));
+    }
+  };
+
+  const verFotosDeReporte = (item: any) => {
+    const fotos = Array.isArray(item.fotos) ? item.fotos : [];
+    setArchivos_pieza(fotos.map((f: any) => ({
+      id_foto: f.id_foto,
+      uri: getWebserviceFileUrl(appConfig.url, f.url),
+      name: (f.url || '').split('/').pop() || 'foto.jpg',
+    })));
+    setShowCarousel(true);
+  };
+
+  const deleteFoto_byIDFoto = async (id_foto: any) => {
+    const ejecutarEliminacion = () => {
+      setArchivos_pieza((prev: any[]) => {
+        const nuevaLista = prev.filter((f) => f.id_foto !== id_foto);
+        setShowCarousel(showCarousel && nuevaLista.length > 0);
+        return nuevaLista;
+      });
+      setResultados((prev: any[]) => prev.map((r) => {
+        const fotosActuales = Array.isArray(r.fotos) ? r.fotos : [];
+        if (!fotosActuales.some((f: any) => f.id_foto === id_foto)) return r;
+        const nuevasFotos = fotosActuales.filter((f: any) => f.id_foto !== id_foto);
+        return { ...r, fotos: nuevasFotos, fotos_count: nuevasFotos.length };
+      }));
+    };
+    if (Platform.OS === "web") {
+      if (confirm(t('reporte_piezas_danadas.delete_foto_confirm'))) {
+        const response = await ApiService.eliminar_foto_reporte_piezas_danadas(id_foto);
+        if (response?.result == "ok") {
+          ejecutarEliminacion();
+        } else {
+          showError(response?.result_text || t('common.connectionError'));
+        }
+      }
+    } else {
+      Alert.alert("Check Out", t('reporte_piezas_danadas.delete_foto_confirm'), [
+        { text: "No" },
+        {
+          text: "Sí", onPress: async () => {
+            const response = await ApiService.eliminar_foto_reporte_piezas_danadas(id_foto);
+            if (response?.result == "ok") {
+              ejecutarEliminacion();
+            } else {
+              showError(response?.result_text || t('common.connectionError'));
+            }
+          }
+        },
+      ]);
+    }
+  };
+
+  const handleEliminarReporte = async (id_registro: string) => {
+    const elimina = () => {
+      setResultados((prev: any[]) => prev.filter((r) => r.id_registro !== id_registro));
+      setExpandedSection(null);
+      // Si el carousel de fotos de este reporte estaba abierto, se cierra
+      // también, ya que esas fotos dejaron de existir al eliminarse el reporte.
+      setShowCarousel(false);
+      setArchivos_pieza([]);
+    };
+    if (Platform.OS === "web") {
+      if (confirm(t('reporte_piezas_danadas_view.delete_reporte_confirm'))) {
+        const response = await ApiService.eliminar_pieza_danada(id_registro);
+        if (response?.result == "ok") {
+          elimina();
+        } else {
+          showError(response?.result_text || t('common.connectionError'));
+        }
+      }
+    } else {
+      Alert.alert("Check Out", t('reporte_piezas_danadas_view.delete_reporte_confirm'), [
+        { text: "No" },
+        {
+          text: "Sí", onPress: async () => {
+            const response = await ApiService.eliminar_pieza_danada(id_registro);
+            if (response?.result == "ok") {
+              elimina();
+            } else {
+              showError(response?.result_text || t('common.connectionError'));
+            }
+          }
+        },
+      ]);
+    }
+  };
+
   const renderResultados = () => {
     if (loading) return <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 20 }} />;
     if (resultados.length === 0) return (<View></View>);
 
     //alert(JSON.stringify(resultados));
 
-    return resultados.map((item: any, index: number) => {            
-      return (        
+    return resultados.map((item: any, index: number) => {
+
+      return (
         <_AccordionSection
           key={item.id_cirugia || index}
           scrollRef={scrollRef}
@@ -180,35 +375,47 @@ export default function reporte_piezas_danadas_view_Screen() {
             <View style={{ flex: 1, paddingRight: 5 }}>
               {/* Primer Renglón */}
               <View>
+                <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{
+                    color: theme.text,
+                    fontWeight: 'bold',
+                    fontSize: 16
+                  }}>
+                    {item.codigo}
+                  </Text>
+                  <View style={{borderRadius:10, padding:5, backgroundColor:item.color}}>
+                    <Text style={{
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: 11,
+                      
+                    }}>
+                      {item.estatus}
+                    </Text>
+                  </View>
+                </View>
                 <Text style={{
                   color: theme.text,
-                  fontWeight: 'bold',
-                  fontSize: 16
-                }}>
-                  {item.codigo_cirugia}
-                </Text>
-                <Text style={{
-                  color: theme.text,                  
                   fontSize: 14
                 }}>
-                  {item.codigo_set}
+                  {item.codigo_cirugia}
                 </Text>
               </View>
 
               {/* Segundo Renglón */}
-              <View style={{ marginTop: 2, flexDirection: 'row',justifyContent: 'space-between' }}>
+              <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text style={{
                   color: theme.accent,
                   fontSize: 12,
                   fontStyle: 'italic'
                 }}>
-                  {item.codigo}
+                  {item.referencia}
                 </Text>
                 <Text style={{
                   color: theme.textSub,
                   fontSize: 14
                 }}>
-                  {item.referencia}
+                  {item.lote}
                 </Text>
               </View>
             </View>
@@ -220,24 +427,66 @@ export default function reporte_piezas_danadas_view_Screen() {
           <_Show_Generic_Report
             titulo={'Detalle del Reporte'}
             visible={true}
+            showShare={false}
             item={item}
             onClose={() => setExpandedSection(null)}
-            style_content={{marginTop:150}}
-            items_fields={ [
-              {'label':'Cirugía','value':item.codigo_cirugia, 'tipo_linea':'multi_linea'},
-              {'label':'Activo Origen','value':item.codigo_set, 'tipo_linea':'multi_linea'},
-              {'label':'Codigo Registro','value':item.codigo, 'tipo_linea':'linea'},
-              {'label':'Referencia','value':item.referencia, 'tipo_linea':'linea'},            
-              {'label':'Lote','value':item.lote, 'tipo_linea':'linea'},
-              {'label':'Notas','value':item.comentarios, 'tipo_linea':'multi_linea'}              
-              
+            style_content={{ marginTop: 150 }}
+            items_fields={[
+              { 'label': 'Codigo Registro', 'value': item.codigo, 'tipo_linea': 'linea' },
+              { 'label': 'Estatus', 'value': item.estatus, 'tipo_linea': 'linea' },
+              { 'label': 'Traspaso', 'value': item.codigo_traspaso, 'tipo_linea': 'linea' },
+              { 'label': 'Cirugía', 'value': item.codigo_cirugia, 'tipo_linea': 'multi_linea' },
+              { 'label': 'Activo Origen', 'value': item.codigo_set, 'tipo_linea': 'multi_linea' },
+              { 'label': 'Referencia', 'value': item.referencia, 'tipo_linea': 'linea' },
+              { 'label': 'Lote', 'value': item.lote, 'tipo_linea': 'linea' },
+              { 'label': 'Notas', 'value': item.comentarios, 'tipo_linea': 'multi_linea' }
+
             ]}
           >
+            <View style={{ marginTop: 15 }}>
+              <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas_view.fotos_title')}</Text>
 
+              {(!Array.isArray(item.fotos) || item.fotos.length === 0) ? (
+                <Text style={{ color: theme.textSub, fontSize: 13, marginBottom: 10 }}>
+                  {t('reporte_piezas_danadas_view.empty_fotos')}
+                </Text>
+              ) : (
+                item.fotos.map((foto: any, fIndex: number) => (
+                  <View key={"foto_" + fIndex} style={styles.fileRow}>
+                    <TouchableOpacity onPress={() => verFotosDeReporte(item)}>
+                      <MaterialCommunityIcons name="image" size={20} color={theme.accent} />
+                    </TouchableOpacity>
+                    <Text style={{ color: theme.text, flex: 1 }} numberOfLines={1}>
+                      {(foto.url || '').split('/').pop() || `Imagen_${fIndex + 1}.jpg`}
+                    </Text>
+                    <TouchableOpacity onPress={() => deleteFoto_byIDFoto(foto.id_foto)}>
+                      <MaterialCommunityIcons name="close-circle" size={20} color="red" />
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 15 }}>
+                <TouchableOpacity onPress={() => pickDocument(item)} style={styles.actionButton}>
+                  <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
+                  <Text style={{ color: theme.text }}>Galería</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => takePhoto(item)} style={styles.actionButton}>
+                  <MaterialCommunityIcons name="camera" size={24} color={theme.text} />
+                  <Text style={{ color: theme.text }}>Cámara</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.addButton, { backgroundColor: '#e53e3e' }]}
+                onPress={() => handleEliminarReporte(item.id_registro)}
+              >
+                <MaterialCommunityIcons name="delete" size={20} color="#fff" />
+                <Text style={styles.addButtonText}>{t('reporte_piezas_danadas.delete_pieza')}</Text>
+              </TouchableOpacity>
+            </View>
           </_Show_Generic_Report>
-          <View>
-            <Text></Text>
-          </View>
         </_AccordionSection>
 
       );
@@ -296,18 +545,18 @@ export default function reporte_piezas_danadas_view_Screen() {
       ));*/
       const response =
         await ApiService.buscar_pieza_danada_registro_general(
-          (filtrar_fecha)? fecha_ini : '', 
-          (filtrar_fecha)? fecha_fin : '', 
-          codigo_registro, 
-          codigo_cirugia, 
+          (filtrar_fecha) ? fecha_ini : '',
+          (filtrar_fecha) ? fecha_fin : '',
+          codigo_registro,
+          codigo_cirugia,
           activo,
           referencia,
-          lote, 
-          (estatus? estatus.id_estatus:'0'), 
-          traspaso, 
-          orderBy?orderBy.order:'',
-           limite);
-      
+          lote,
+          (estatus ? estatus.id_estatus : '0'),
+          traspaso,
+          orderBy ? orderBy.order : '',
+          limite);
+
       if (response.result === 'ok') {
         setSubmitting(false);
         //alert(JSON.stringify(response));
@@ -458,7 +707,7 @@ export default function reporte_piezas_danadas_view_Screen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} style={[styles.content, { maxHeight: _ClientHeight }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
             <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50 }]}>
 
@@ -827,6 +1076,45 @@ export default function reporte_piezas_danadas_view_Screen() {
           colorIcon={modal.colorIcon}
           onClose={() => setModal({ ...modal, visible: false })}
         />
+
+        {/* Se monta solo cuando showCarousel es true (en vez de dejarlo
+            siempre montado con visible={showCarousel}) para que su nodo se
+            agregue al DOM DESPUÉS del modal de detalle (que también se monta
+            bajo demanda, al expandir el acordeón). En RN Web dos <Modal>
+            simultáneos apilan por orden de montaje: si el carousel ya
+            existiera desde el primer render, quedaría detrás del modal de
+            detalle y éste lo taparía siempre. */}
+        {showCarousel && (
+          <Modal visible transparent animationType="fade" onRequestClose={() => setShowCarousel(false)}>
+            <View style={styles.carouselOverlay}>
+              <View style={[styles.carouselContainer, { backgroundColor: theme.card, width: carouselWidth, height: carouselHeight }]}>
+                <View style={[styles.carouselHeader, { borderBottomColor: theme.border }]}>
+                  <Text style={[styles.carouselTitle, { color: theme.text }]}>
+                    {t('reporte_piezas_danadas_view.fotos_title')}
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowCarousel(false)}>
+                    <MaterialCommunityIcons name="close" size={24} color={theme.text} />
+                  </TouchableOpacity>
+                </View>
+                {/* _FotosCarousel mide su contenedor con onLayout, pero eso no se
+                    dispara dentro del portal de un Modal en RN Web, así que se le
+                    pasa el tamaño ya calculado con useWindowDimensions. */}
+                <View style={{ width: carouselWidth, height: carouselHeight - 49 }}>
+                  <_FotosCarousel
+                    photos={fotoUrls_pieza}
+                    keys={archivos_pieza.map((f: any) => f.id_foto)}
+                    allowSelect={false}
+                    showDelete
+                    onDelete={(key) => deleteFoto_byIDFoto(key)}
+                    width={carouselWidth}
+                    height={carouselHeight - 49}
+                  />
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+
         <_Footer Show_Almacen={false} >
           {/* Submit Button */}
           <TouchableOpacity
@@ -958,5 +1246,59 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
+  },
+  fileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#ccc'
+  },
+  actionButton: {
+    alignItems: 'center',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    width: '45%'
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 15,
+    borderRadius: 20,
+    marginTop: 3,
+    paddingHorizontal: 20
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  carouselOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  carouselContainer: {
+    width: '95%',
+    height: '80%',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  carouselHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  carouselTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

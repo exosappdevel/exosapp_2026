@@ -206,7 +206,11 @@ export default function Reporte_Piezas_DanadasScreen() {
             const response_foto = await ApiService.guardar_foto_reporte_piezas_danadas(response.id_registro, urlServidor, user?.id_usuario || '');
             if (response_foto?.result === 'ok') {
               archivo.id_foto = response_foto.id_foto;
+            } else {
+              showError(response_foto?.result_text || t('common.connectionError'));
             }
+          } else {
+            showError(t('common.connectionError'));
           }
         }
 
@@ -284,58 +288,72 @@ export default function Reporte_Piezas_DanadasScreen() {
                   return p;
                 })
               );
+            } else {
+              showError(response_foto?.result_text || t('common.connectionError'));
             }
+          } else {
+            showError(t('common.connectionError'));
           }
         }
       }
     } catch (err) {
       console.error("Error al seleccionar documento:", err);
+      showError(t('common.connectionError'));
     }
   };
   const takePhoto = async (pieza: any) => {
-    let result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
-    if (!result.canceled) {
-      const asset = result.assets[0];
-      const nuevoArchivo = {
-        uri: asset.uri,
-        name: asset.uri.split('/').pop() || 'photo.jpg',
-        type: 'image/jpeg',
-        url: '',
-        id: 0,
-        id_foto: ''
-      };
+    try {
+      let result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
+      if (!result.canceled) {
+        const asset = result.assets[0];
+        const nuevoArchivo = {
+          uri: asset.uri,
+          name: asset.uri.split('/').pop() || 'photo.jpg',
+          type: 'image/jpeg',
+          url: '',
+          id: 0,
+          id_foto: ''
+        };
 
-      if (!pieza) {
-        setArchivos(prev => [...prev, nuevoArchivo]);
-      } else {
-        const urlServidor = await ApiService.uploadFileDirect("piezas_danadas", 'pieza', nuevoArchivo);
+        if (!pieza) {
+          setArchivos(prev => [...prev, nuevoArchivo]);
+        } else {
+          const urlServidor = await ApiService.uploadFileDirect("piezas_danadas", 'pieza', nuevoArchivo);
 
-        if (urlServidor) {
-          nuevoArchivo.url = urlServidor;
-          const response_foto = await ApiService.guardar_foto_reporte_piezas_danadas(
-            pieza.id_registro,
-            urlServidor,
-            user?.id_usuario || ''
-          );
-
-          if (response_foto?.result === 'ok') {
-            nuevoArchivo.id_foto = response_foto.id_foto;
-
-            // Actualización inmutable correcta
-            setPiezas((prevPiezas: any[]) =>
-              prevPiezas.map((p) => {
-                if (p.id_registro === pieza.id_registro) {
-                  return {
-                    ...p,
-                    archivos: [...(p.archivos || []), nuevoArchivo]
-                  };
-                }
-                return p;
-              })
+          if (urlServidor) {
+            nuevoArchivo.url = urlServidor;
+            const response_foto = await ApiService.guardar_foto_reporte_piezas_danadas(
+              pieza.id_registro,
+              urlServidor,
+              user?.id_usuario || ''
             );
+
+            if (response_foto?.result === 'ok') {
+              nuevoArchivo.id_foto = response_foto.id_foto;
+
+              // Actualización inmutable correcta
+              setPiezas((prevPiezas: any[]) =>
+                prevPiezas.map((p) => {
+                  if (p.id_registro === pieza.id_registro) {
+                    return {
+                      ...p,
+                      archivos: [...(p.archivos || []), nuevoArchivo]
+                    };
+                  }
+                  return p;
+                })
+              );
+            } else {
+              showError(response_foto?.result_text || t('common.connectionError'));
+            }
+          } else {
+            showError(t('common.connectionError'));
           }
         }
       }
+    } catch (err) {
+      console.error("Error al tomar foto:", err);
+      showError(t('common.connectionError'));
     }
   };
 
@@ -387,6 +405,13 @@ export default function Reporte_Piezas_DanadasScreen() {
         const nuevaLista = prev.filter((f) => f.id_registro !== id_registro);
         return nuevaLista;
       });
+      // Si el carousel de fotos estaba abierto mostrando las fotos de una
+      // pieza (no las del formulario en curso), se cierra también, ya que
+      // esas fotos dejaron de existir al eliminarse la pieza.
+      if (carouselMode === 'pieza') {
+        setShowCarousel(false);
+        setArchivos_pieza([]);
+      }
     };
 
     if (Platform.OS === "web") {
@@ -705,8 +730,8 @@ export default function Reporte_Piezas_DanadasScreen() {
                 </View>
               ) : (
                 piezas.map((pieza, index) => (
-                  <View style={[styles.sectionCard, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
-                    <View key={pieza.id_registro || index} style={[styles.piezaRow, { borderWidth: 0, borderColor: theme.text }]}>
+                  <View key={pieza.id_registro || index} style={[styles.sectionCard, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+                    <View style={[styles.piezaRow, { borderWidth: 0, borderColor: theme.text }]}>
                       <View style={styles.piezaRowHeader}>
                         <Text style={styles.piezaLabel}>Codigo:</Text>
                         <Text style={[styles.piezaCodigo, { color: theme.accent }]}>{pieza.codigo_registro}</Text>

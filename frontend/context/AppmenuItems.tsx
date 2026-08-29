@@ -89,16 +89,17 @@ export const Tabs_Allowed =() => {
     }
 
     // --- Logistica ---
+    /*
     if (menu_name == 'menu_logistica') {
       if (isAllowed('menu_logistica', 'activos')) AddMenuItem(menu, "screens.activos");
       if (isAllowed('menu_logistica', 'carpetas')) AddMenuItem(menu, "screens.carpetas");
       if (isAllowed('menu_logistica', 'socios')) AddMenuItem(menu, "screens.socios");
-    }
+    }*/
 
     // --- Calidad
     if (menu_name == 'menu_calidad') {
-      if (isAllowed('menu_calidad', 'reporte_piezas_danadas_view')) AddMenuItem(menu, "screens.reporte_piezas_danadas_view");
       if (isAllowed('menu_calidad', 'reporte_piezas_danadas')) AddMenuItem(menu, "screens.reporte_piezas_danadas");
+      if (isAllowed('menu_calidad', 'reporte_piezas_danadas_view')) AddMenuItem(menu, "screens.reporte_piezas_danadas_view");
     }
     if (Array.isArray(menu))
       return menu.length;

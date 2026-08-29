@@ -211,7 +211,7 @@ trait ExosApp_PiezasDanadas
         
         $query = "SELECT pieza_danada_reporte.id_reporte, pieza_danada_reporte_inv.id_registro, pieza_danada_reporte_inv.codigo, pieza_danada_reporte_inv.referencia, pieza_danada_reporte_inv.lote, 
             pieza_danada_reporte_inv.comentarios, pieza_danada_reporte_inv.id_cirugia, pieza_danada_reporte_inv.id_set, pieza_danada_reporte_estatus.estatus, 
-            pieza_danada_reporte_estatus.color , pieza_danada_reporte_inv.repuesto, pieza_danada_reporte_inv.codigo_cirugia, pieza_danada_reporte_inv.codigo_set
+            pieza_danada_reporte_estatus.color , pieza_danada_reporte_inv.repuesto, pieza_danada_reporte_inv.codigo_cirugia, pieza_danada_reporte_inv.codigo_set           
             FROM pieza_danada_reporte
             INNER JOIN  pieza_danada_reporte_inv ON (pieza_danada_reporte_inv.id_reporte = pieza_danada_reporte.id_reporte)
             INNER JOIN  pieza_danada_reporte_estatus ON (pieza_danada_reporte_estatus.id_estatus = pieza_danada_reporte_inv.id_estatus)"
@@ -276,11 +276,25 @@ trait ExosApp_PiezasDanadas
                 $codigo_traspaso = "SIN TRASPASO";
             } 
 
+            // obtiene las fotos del registro
+            $sSQL = "select id_foto, url from pieza_danada_reporte_fotos where id_registro=" . $row['id_registro'];
+            $fotos_lst = [];
+            $qfotos = DatasetSQL($sSQL);
+            while ($row_foto = mysqli_fetch_array($qfotos)) {
+                $fotos_lst['item_'.$row_foto['id_foto']] = [
+                    'id_foto' => $row_foto['id_foto'],
+                    'url' => $row_foto['url']
+                ];
+            }
+
+
+
             // Usamos el prefijo 'item_' para que el XML sea válido y el frontend lo reconozca como lista
             $data['item_' . $row['id_reporte'] . "_" . $row['id_registro'] ] = [
                 'id_reporte' => $row['id_reporte'],
                 'id_registro' => $row['id_registro'],
                 'codigo' => $row['codigo'],
+                'codigo_cirugia' => $row['codigo_cirugia'],
                 'referencia' => $row['referencia'],
                 'lote' => $row['lote'],
                 'comentarios' => $row['comentarios'],
@@ -289,10 +303,11 @@ trait ExosApp_PiezasDanadas
                 'estatus' => $row['estatus'],
                 'color' => $row['color'],
                 'repuesto' => $row['repuesto'],
-                'codigo_cirugia' => $row['codigo_cirugia'],
                 'codigo_set' => $row['codigo_set'],
                 'codigo_traspaso' => $codigo_traspaso,
-                'enable_traspado' => $codigo_traspaso=="SIN TRASPASO" ? 1:0,                
+                'enable_traspado' => $codigo_traspaso=="SIN TRASPASO" ? 1:0, 
+                'fotos_count' => count($fotos_lst),
+                'fotos' => $fotos_lst               
                 ];
 
         }

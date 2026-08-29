@@ -443,11 +443,12 @@ export interface _Show_Generic_ReportProps {
     colorIcon?: string;
     onClose: () => void;
     item?: any;
-    items_fields?: any
-    children?: React.ReactNode
-    style_content?: ViewStyle
+    items_fields?: any;
+    children?: React.ReactNode;
+    style_content?: ViewStyle;
+    showShare?:boolean;
 }
-export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fields, children, style_content }: _Show_Generic_ReportProps) => {
+export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fields, children, style_content, showShare=true }: _Show_Generic_ReportProps) => {
     const { theme } = useApp();
     return (
         <Modal visible={visible} animationType="fade" transparent={true}>
@@ -477,7 +478,7 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
                             <View style={{ width: 36 }} />
                         </View>
                         {item ? (
-                            <_Report>
+                            <_Report showShare={showShare}>
                                 {items_fields?.map((field: any, index: number) => {
                                     return field.tipo_linea === "linea" ? (
                                         <_DetalleLinea

@@ -20,6 +20,18 @@ export const getServerFileUrl = (webserviceUrl: string, relativePath: string): s
     return `${siteRoot}/${relativePath}`.replace(/([^:])\/\/+/g, '$1/');
 };
 
+/**
+ * Construye la URL completa de un archivo servido dentro de la carpeta
+ * webservice (ej. "piezas_danadas/files/exosapp/foto_x.png"), a diferencia
+ * de getServerFileUrl que asume archivos relativos a la raíz del sitio.
+ * upload_file (controller_ws.php) guarda los archivos junto al propio
+ * controller_ws.php, o sea dentro de webservice/, por eso aquí NO se recorta
+ * "/webservice" de appConfig.url.
+ */
+export const getWebserviceFileUrl = (webserviceUrl: string, relativePath: string): string => {
+    return `${webserviceUrl}/${relativePath}`.replace(/([^:])\/\/+/g, '$1/');
+};
+
 export const formatDate = (fecha: Date) => {
     const day = fecha.getDate().toString().padStart(2, '0');
     const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
