@@ -383,12 +383,12 @@ export default function reporte_piezas_danadas_view_Screen() {
                   }}>
                     {item.codigo}
                   </Text>
-                  <View style={{borderRadius:10, padding:5, backgroundColor:item.color}}>
+                  <View style={{ borderRadius: 10, padding: 5, backgroundColor: item.color }}>
                     <Text style={{
                       color: 'white',
                       fontWeight: 'bold',
                       fontSize: 11,
-                      
+
                     }}>
                       {item.estatus}
                     </Text>
@@ -466,16 +466,20 @@ export default function reporte_piezas_danadas_view_Screen() {
                 ))
               )}
 
-              <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 15 }}>
-                <TouchableOpacity onPress={() => pickDocument(item)} style={styles.actionButton}>
-                  <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
-                  <Text style={{ color: theme.text }}>Galería</Text>
-                </TouchableOpacity>
+              <View style={{ marginTop: 15 }}>
+                <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas_view.add_fotos')}</Text>
 
-                <TouchableOpacity onPress={() => takePhoto(item)} style={styles.actionButton}>
-                  <MaterialCommunityIcons name="camera" size={24} color={theme.text} />
-                  <Text style={{ color: theme.text }}>Cámara</Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 15 }}>
+                  <TouchableOpacity onPress={() => pickDocument(item)} style={styles.actionButton}>
+                    <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
+                    <Text style={{ color: theme.text }}>Galería</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => takePhoto(item)} style={styles.actionButton}>
+                    <MaterialCommunityIcons name="camera" size={24} color={theme.text} />
+                    <Text style={{ color: theme.text }}>Cámara</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <TouchableOpacity

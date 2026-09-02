@@ -22,6 +22,7 @@ import { useApp, Menu_item } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
 import CustomModal from '../components/CustomModal';
 import Constants from 'expo-constants';
+import { perfil_modulos_poralmacen } from '@/context/AppmenuItems';
 
 export default function LoginScreen() {
   const ImageCustom = Image as any;
@@ -176,6 +177,8 @@ export default function LoginScreen() {
           tema: (response.tema as 'light' | 'dark' | 'blue' | 'pink') || 'light',
           menu_favorites: fav.split(';').filter((item: String) => item !== ""),
           menu_items: menuItems, 
+          all_modulos : response.modulos,
+          modulos_por_almacen : perfil_modulos_poralmacen(response.id_almacen, response.modulos),
           chat_client_enabled : response.chat_client_enabled,         
           chat_client_coonnected : response.chat_client_connected == 1,
           chat_client_appID : response.chat_client_appid,
@@ -185,7 +188,7 @@ export default function LoginScreen() {
         };
         //alert(JSON.stringify(fav.split(';').filter((item: String) => item !== "")));
         setUser(userData);
-        menuFav_set(response.menu_favorites);
+        menuFav_set(response.menu_favorites);        
         setIsLoggedIn(true);
 
         // Save user to AsyncStorage

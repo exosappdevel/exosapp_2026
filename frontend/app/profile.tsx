@@ -16,6 +16,7 @@ import ApiService from '../services/ApiServices';
 import { _Footer, _Header, _Background, _PickerModal, _PinModal, hexToRGBA } from '@/components/elidev_components';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
+import { perfil_modulos_poralmacen } from '@/context/AppmenuItems';
 
 
 const themeOptions = [
@@ -60,6 +61,8 @@ export default function ProfileScreen() {
     icon: 'alert-circle-outline',
     colorIcon: '#f56565'
   });
+
+  const [modulos, setModulos] = useState<any[]>([]);
 
   const updateInfo = (!Updates.isEnabled || Updates.isEmbeddedLaunch || !Updates.createdAt)
     ? t('profile.updateEmbedded')
@@ -157,6 +160,9 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.userInfo}>
               <Text style={[styles.userName, { color: theme.text + "70", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{updateInfo}</Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, { color: theme.text + "70", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{ modulos}</Text>
             </View>
 
           </View>
@@ -320,8 +326,8 @@ export default function ProfileScreen() {
           onClose={() => setShowAlmacenPicker(false)}
           data={almacenes}
           key_name="id_almacen"
-          onSelect={(item: Almacen) => { setSelectedAlmacen(item);setShowAlmacenPicker(false); }}
-          title="Seleccionar Técnico"
+          onSelect={(item: Almacen) => { setSelectedAlmacen(item);setShowAlmacenPicker(false); setModulos(perfil_modulos_poralmacen(item.id_almacen,user.all_modulos));}}
+          title="Seleccionar Almacen"
         />
         <_PinModal
           visible={showPinModal}

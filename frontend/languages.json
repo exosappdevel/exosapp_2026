@@ -206,7 +206,8 @@
       "codigo_asc" : "Codigo registro más antiguo",
       "delete_reporte_confirm": "¿Deseas eliminar este reporte? Esta acción no se puede deshacer.",
       "fotos_title": "Fotos",
-      "empty_fotos": "Sin fotos registradas."
+      "empty_fotos": "Sin fotos registradas.",
+      "add_fotos": "Agrega más fotos desde:"
     },
     "reporte_piezas_danadas":{
       "form_title": "Agregar pieza dañada",

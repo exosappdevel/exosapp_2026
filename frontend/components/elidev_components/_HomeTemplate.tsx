@@ -10,7 +10,7 @@ import { PanResponder } from 'react-native';
 
 import { _Header, _Footer, _MenuSection, _Background, _MenuLauncher } from '.';
 import { Soon_Modal } from '../CustomModal';
-import { Tabs_Allowed } from '@/context/AppmenuItems';
+import { Tabs_Allowed, Tabs_Allowed_almacen } from '@/context/AppmenuItems';
 
 interface HomeTemplateProps {
   tab_name: string;
@@ -20,8 +20,9 @@ export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
   const { user } = useApp();
 
   const [activeSection, setActiveSection] = useState(tab_name);
+  const modulos_por_almacen : boolean = false;
 
-  const allSections = Tabs_Allowed();
+  const allSections = (modulos_por_almacen) ? Tabs_Allowed_almacen() : Tabs_Allowed();
   const currentSection = allSections.find(s => s.id === activeSection) || allSections[0];
 
   const pageConfig = {

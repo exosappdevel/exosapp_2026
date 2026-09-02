@@ -2,6 +2,7 @@ import { useApp } from '../context/AppContext';
 
 export interface iMenuItem {
   id: string;
+  tab: string;
   titleKey: string;
   icon: string;
   color: string;
@@ -9,32 +10,18 @@ export interface iMenuItem {
 }
 
 export const AllTabs = [
-    { id: 'favorites', title: '', icon: 'star', data: [] },
-    { id: 'almacen', title: '', icon: 'warehouse', data: [] },
-    { id: 'cirugias', title: '', icon: 'medical-bag', data: [] },
-    { id: 'logistica', title: '', icon: 'truck-delivery', data: [] },
-    { id: 'calidad', title: '', icon: 'shield-star-outline', data: [] },
-  ]
+  { id: 'favorites', title: '', icon: 'star', data: [] },
+  { id: 'almacen', title: '', icon: 'warehouse', data: [] },
+  { id: 'cirugias', title: '', icon: 'medical-bag', data: [] },
+  { id: 'calidad', title: '', icon: 'shield-star-outline', data: [] },
+]
 
 export const AppmenuItems: iMenuItem[] = [
-  { id: '1', titleKey: "screens.almacen", icon: "warehouse", color: "#3182ce", href: '/almacen' },
-  { id: '2', titleKey: "screens.logistica", icon: "truck-delivery", color: "#0b4e27", href: '/logistica' },
-  { id: '3', titleKey: "screens.cirugias", icon: "stethoscope", color: "#3182ce", href: '/cirugias' },
-  { id: '4', titleKey: "screens.cirugias_programar", icon: "calendar-check", color: "#3182ce", href: '/cirugias_programar' },
-  { id: '5', titleKey: "screens.recepcion", icon: "clipboard-list", color: "#48bb78", href: null },
-  { id: '6', titleKey: "screens.carpetas", icon: "folder-account", color: "#beb535", href: null },
-  { id: '7', titleKey: "screens.pickeo", icon: "hospital", color: "#3182ce", href: '/pickeo' },
-  { id: '8', titleKey: "screens.inventario", icon: "format-list-checks", color: "#ecc94b", href: null },
-  { id: '9', titleKey: "screens.entradas", icon: "home-import-outline", color: "#48bb78", href: null },
-  { id: '10', titleKey: "screens.salidas", icon: "home-export-outline", color: "#e53e3e", href: null },
-  { id: '11', titleKey: "screens.activos", icon: "finance", color: "#ecc94b", href: null },
-  { id: '12', titleKey: "screens.carpetas", icon: "folder-account", color: "#48bb78", href: null },
-  { id: '13', titleKey: "screens.socios", icon: "account-multiple", color: "#e53e3e", href: null },
-  { id: '14', titleKey: "screens.cirugias_buscar", icon: "file-search", color: "#ecc94b", href: "/cirugias_buscar" },
-  { id: '15', titleKey: "screens.cirugias_calendario", icon: "calendar", color: "#48bb78", href: null },
-  { id: '16', titleKey: "screens.cirugias_vista_diario", icon: "calendar", color: "#48bb78", href: null },
-  { id: '17', titleKey: "screens.reporte_piezas_danadas_view", icon: "glass-fragile", color: "#48bb78", href: "/reporte_piezas_danadas_view" },
-  { id: '18', titleKey: "screens.reporte_piezas_danadas", icon: "alert-decagram-outline", color: "#e53e3e", href: "/reporte_piezas_danadas" }
+  { id: '7', tab: 'almacen', titleKey: "screens.pickeo", icon: "hospital", color: "#3182ce", href: '/pickeo' },
+  { id: '4', tab: 'cirugias', titleKey: "screens.cirugias_programar", icon: "calendar-check", color: "#3182ce", href: '/cirugias_programar' },
+  { id: '14', tab: 'cirugias', titleKey: "screens.cirugias_buscar", icon: "file-search", color: "#ecc94b", href: "/cirugias_buscar" },
+  { id: '4', tab: 'calidad', titleKey: "screens.reporte_piezas_danadas", icon: "alert-decagram-outline", color: "#e53e3e", href: "/reporte_piezas_danadas" },
+  { id: '5', tab: 'calidad', titleKey: "screens.reporte_piezas_danadas_view", icon: "glass-fragile", color: "#48bb78", href: "/reporte_piezas_danadas_view" }
 ];
 
 
@@ -43,6 +30,7 @@ export const AddMenuItem = (menu: any, key: string/*, set_soon: Dispatch<SetStat
     if (item.titleKey === key) {
       const new_item: iMenuItem = {
         id: item.id,
+        tab: item.tab,
         titleKey: item.titleKey,
         icon: item.icon,
         color: item.color,
@@ -55,26 +43,67 @@ export const AddMenuItem = (menu: any, key: string/*, set_soon: Dispatch<SetStat
   }
 
 };
+const AppmenuItems_poralmacen = () => {
+  const { user, t } = useApp();
+  let ret = "";
+  for (const item of AppmenuItems) {
+    if (user.modulos_por_almacen.includes(";" + item.id + ";")) {
+      ret = ret + item.titleKey.replace("screen.", "") + ";";
+    }
+  }
+  return ret;
+}
 
-export const Tabs_Allowed =() => {  
+export const Tabs_Allowed_almacen = () => {
+  const { user, t } = useApp();
+
+  // 1. Filtrar los items del menú a los que el usuario tiene acceso
+  const itemsPermitidos = AppmenuItems.filter((item) =>
+    user.modulos_por_almacen.includes(`;${item.id};`)
+  );
+  const itemsFavoritos = AppmenuItems.filter((item) => {
+    const fav_str = ";" + user.menu_favorites + ";";
+    return fav_str.includes(`;${item.id};`)
+  }
+  );
+
+  // 2. Agrupar o estructurar los datos según AllTabs sin mutar la variable original
+  const resultado = AllTabs.map((tabGroup: any) => {
+    // Buscar los items permitidos que corresponden a este tab
+    const itemsDelTab = (tabGroup.id == "favorites")
+      ? itemsFavoritos
+      : itemsPermitidos.filter((item) => item.tab === tabGroup.id);
+    tabGroup.title = t('home.menu_' + tabGroup.id);
+    return {
+      ...tabGroup,
+      data: [...(tabGroup.data || []), ...itemsDelTab]
+    };
+  });
+
+  // 3. Retornar el resultado
+  return resultado;
+};
+
+export const Tabs_Allowed = () => {
   const { user, t } = useApp();
 
   const isAllowed = (menuName: string, itemName: string): boolean => {
     // Buscamos el menú en el arreglo de items del usuario
     const userMenu = user.menu_items?.find(m => m.menu === menuName) || false;
     if (!userMenu) return false;
-
     // Los items vienen separados por ; según tu lógica de login    
     const allowedItems = userMenu.items.split(';');
     return allowedItems.includes(itemName);
   };
 
-  const Add_Menu_Items = (menu:any, menu_name: string):any => {    
+
+
+  const Add_Menu_Items = (menu: any, menu_name: string): any => {
     if (Array.isArray(menu))
       menu.length = 0;
     // --- Almacen ---
     if (menu_name == 'menu_almacen') {
-      if (isAllowed('menu_almacen', 'pickeo')) AddMenuItem(menu,"screens.pickeo");
+      if (isAllowed('menu_almacen', 'pickeo')) AddMenuItem(menu, "screens.pickeo");
       if (isAllowed('menu_almacen', 'inventario')) AddMenuItem(menu, "screens.inventario");
       if (isAllowed('menu_almacen', 'recepcion')) AddMenuItem(menu, "screens.recepcion");
       if (isAllowed('menu_almacen', 'entradas')) AddMenuItem(menu, "screens.entradas");
@@ -106,26 +135,36 @@ export const Tabs_Allowed =() => {
     else
       return 0;
   };
-  
-  if (Array.isArray(AllTabs)){
-    AllTabs.map((tab: any, index: number) => {   
-      if (tab.id == 'favorites'){
-        tab.title =  t('home.menu_' + tab.id);
+
+
+
+  if (Array.isArray(AllTabs)) {
+    AllTabs.map((tab: any, index: number) => {
+      if (tab.id == 'favorites') {
+        tab.title = t('home.menu_' + tab.id);
         tab.data = AppmenuItems.filter(item => user.menu_favorites?.includes(item.id)).slice();
       }
-      else{
+      else {
         const menu_name = 'menu_' + tab.id;
-        tab.title =  t('home.menu_' + tab.id);
+        tab.title = t('home.menu_' + tab.id);
         Add_Menu_Items(tab.data, menu_name);
-      }    
+
+      }
     });
 
-    
-    return AllTabs.filter(section => (section.data.length > 0) || (section.id=='favorites'));  
+
+    return AllTabs.filter(section => (section.data.length > 0) || (section.id == 'favorites'));
   }
   else
     return [];
-  
+
 }
 
+export const perfil_modulos_poralmacen = (id_almacen: string, all_modulos: Record<string, any>) => {
+  return all_modulos ?
+    (("id_almacen_" + id_almacen in all_modulos)
+      ? all_modulos["id_almacen_" + id_almacen]
+      : "")
+    : "";
+}
 

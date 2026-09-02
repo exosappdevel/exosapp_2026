@@ -313,20 +313,47 @@ class WebServiceController
         // "output" ya se guarda como JSON (ver sendResponse -> json_encode),
         // solo se reformatea legible. "input" se guarda como el query string
         // crudo de la petición ($_SERVER['QUERY_STRING']), así que se parsea
-        // a pares clave/valor antes de codificarlo como JSON.
+        // a pares clave/valor antes de codificarlo como JSON. Algunos
+        // parámetros (ej. datos_pickeo) llegan como JSON serializado dentro
+        // de un campo string, así que se decodifican recursivamente para que
+        // también salgan indentados en vez de como un blob escapado.
         if ($type === 'input') {
             parse_str((string) $value, $parsed);
+            $parsed = $this->decodeNestedJsonStrings($parsed);
             $formatted = json_encode($parsed, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } else {
             $decoded = json_decode((string) $value, true);
             $formatted = (json_last_error() === JSON_ERROR_NONE)
-                ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                ? json_encode($this->decodeNestedJsonStrings($decoded), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
                 : $value;
         }
 
         header('Content-Type: application/json; charset=utf-8');
         echo $formatted;
         exit;
+    }
+
+    // Recorre un array/valor decodificado y, cuando encuentra un string que
+    // a su vez es JSON válido (objeto o arreglo), lo reemplaza por su
+    // decodificación para que quede anidado en vez de como texto escapado.
+    private function decodeNestedJsonStrings($value)
+    {
+        if (is_array($value)) {
+            foreach ($value as $key => $item) {
+                $value[$key] = $this->decodeNestedJsonStrings($item);
+            }
+            return $value;
+        }
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed !== '' && ($trimmed[0] === '{' || $trimmed[0] === '[')) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return $this->decodeNestedJsonStrings($decoded);
+                }
+            }
+        }
+        return $value;
     }
     private function SQLDate($dateStr) {
         if (!$dateStr) return "";

@@ -37,6 +37,8 @@ interface User {
   tema: ThemeType;
   menu_favorites: string[];
   menu_items: Menu_item[];
+  all_modulos : String[];
+  modulos_por_almacen:string;
   chat_client_enabled : boolean;
   chat_client_coonnected: boolean;
   chat_client_appID: string;
@@ -183,7 +185,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     "exodos": "https://exodos.exos.software/webservice"
   };
   
-  const backend_server = "local";
+  const backend_server = "exos";
   
   const [appConfig] = useState<AppConfig>({
     passtrough_mode: false,
@@ -205,6 +207,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     tema: "light",
     menu_favorites: [],
     menu_items: [],
+    all_modulos :[],
+    modulos_por_almacen :'',
     chat_client_enabled : false,
     chat_client_coonnected: false,
     chat_client_appID: "",
@@ -337,6 +341,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tema: "light",
       menu_favorites: [],
       menu_items: [],
+      all_modulos : [],
+      modulos_por_almacen :'',
       chat_client_enabled : false,
       chat_client_coonnected: false,
       chat_client_appID: "",

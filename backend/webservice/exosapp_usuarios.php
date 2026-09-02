@@ -118,7 +118,45 @@ trait ExosApp_Usuarios
                 }
                 $this->result["menus"] = $menus_text;    
             }
+
+            // --- Modulos : reemplaza el acceso a menus, ahora e utiliza el perfiles de usuario
             
+            $modulos = [];
+            $sSQL_modulos = "select ap.nombre, apm.*
+                                from app_perfiles_usuarios apu
+                                left join app_perfiles ap  on apu.id_perfil =ap.id  
+                                left join app_perfiles_modulos apm on apu.id_perfil  = apm.id_perfil and apm.activo =1 
+                            where apu.id_usuario_app =" . $id_usuario_app . " 
+                            order BY apm.id_almacen, apm.id_modulo";
+            
+            $records_modulos_usuario = DatasetSQL_WS($sSQL_modulos);
+            $modulos_count = 0;
+            
+            $modulos_ids = ";";              
+            $almacen_group = "";
+
+
+            while ($row = mysqli_fetch_array($records_modulos_usuario)) {
+                if ($almacen_group != $row["id_almacen"]){
+                    if ($almacen_group != ""){
+                        $modulos["id_almacen_" .  $almacen_group] = $modulos_ids;
+                        $modulos_count = $modulos_count + 1;
+                    }
+
+                    $modulos_ids = ";";
+                    $almacen_group = $row["id_almacen"];
+                }
+
+                $modulos_ids = $modulos_ids . $row["id_modulo"] . ";";                
+            }
+
+            if ($almacen_group != ""){
+                $modulos["id_almacen_" .  $almacen_group] = $modulos_ids = ";";
+                $modulos_count = $modulos_count + 1;
+            }
+            
+            $this->result["modulos"] = $modulos;
+            $this->result["modulos_count"] = $modulos_count;            
 
         } catch (Exception $e) {
             $id_usuario_app = 0;
