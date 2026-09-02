@@ -91,7 +91,7 @@ export default function ProgramaCirugiaScreen() {
   const pageConfig = {
     name: t('cirugias_programar.new_title'),
     icon: "calendar-plus",
-    previous: "/home",
+    previous: "home",
     show_user: true,
     show_menu: true,
     show_in_recent: true,

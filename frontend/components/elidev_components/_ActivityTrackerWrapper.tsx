@@ -26,6 +26,17 @@ export const _ActivityTrackerWrapper = ({ children }: ActivityWrapperProps) => {
     }
   };
 
+  // Antes el modal de "hay una actualización, reinicia" SOLO se activaba
+  // dentro del chequeo de inactividad de 5 min (más abajo), así que en la
+  // práctica nunca se mostraba mientras la app seguía en uso activo: el
+  // usuario tenía que dejarla inactiva 5 minutos completos para enterarse.
+  // Este efecto lo muestra apenas AppContext detecta y descarga el OTA.
+  useEffect(() => {
+    if (isLoggedIn && isUpdatePending) {
+      setShowUpdateModal(true);
+    }
+  }, [isLoggedIn, isUpdatePending]);
+
   // Este wrapper envuelve toda la app (ver app/_layout.tsx), así que a
   // diferencia de un chequeo hecho solo en app/index.tsx, este corre sin
   // importar en qué pantalla esté el usuario ni cuánto tiempo lleve ahí.
@@ -39,11 +50,11 @@ export const _ActivityTrackerWrapper = ({ children }: ActivityWrapperProps) => {
         const elapsed = Date.now() - parseInt(lastActivity, 10);
         if (elapsed <= FIVE_MINUTES) return;
 
-        if (isUpdatePending) {
-          console.log('Sesión expirada e inactividad detectada, pero hay un update pendiente: se muestra modal de reinicio.');
-          setShowUpdateModal(true);
-          return;
-        }
+        // Si hay un update pendiente el otro efecto ya puso showUpdateModal
+        // en true, y por el guard de arriba este efecto ni siquiera llega a
+        // correr; isUpdatePending queda solo como refuerzo por si acaso.
+        if (isUpdatePending) return;
+
         console.log('Sesión expirada por inactividad de 5 minutos.');
         await AsyncStorage.removeItem('@exosapp_last_activity');
         await setIsLoggedIn(false);

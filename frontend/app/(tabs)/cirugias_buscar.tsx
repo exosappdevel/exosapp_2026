@@ -64,7 +64,7 @@ export default function Cirugia_BuscarScreen() {
   const pageConfig = {
     name: t('screens.cirugias_buscar'),
     icon: "magnify",
-    previous: "/home",
+    previous: "home",
     show_user: true,
     show_menu: true,
     show_in_recent: true,

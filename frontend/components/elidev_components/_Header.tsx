@@ -20,7 +20,7 @@ interface iPage {
 
 export const _Header = ({ page_info, children }: { page_info: iPage, children?: React.ReactNode }) => {
     const router = useRouter();
-    const { theme, user, addOpenTab } = useApp();
+    const { theme, user, addOpenTab, lastGlobalNav } = useApp();
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const triggerRef = useRef<any>(null);
@@ -52,7 +52,15 @@ export const _Header = ({ page_info, children }: { page_info: iPage, children?: 
         <View style={[styles.header]}>
             <View style={styles.headerLeft}>
                 {page_info.previous ? (
-                    <TouchableOpacity style={styles.backButton} onPress={() => page_info?.previous == "back" ? router.back() : router.replace({ pathname: page_info?.previous })}>
+                    <TouchableOpacity style={styles.backButton} 
+                        onPress={() =>{
+                                page_info?.previous == "back" ? router.back()
+                                : (
+                                   (page_info?.previous == "home") ?
+                                        router.replace({ pathname: lastGlobalNav.last_home_path as any })
+                                    : router.replace({ pathname: page_info?.previous })
+                                  )
+                            }}>
                         <MaterialCommunityIcons name="arrow-left" size={20} color={theme.iconTextColor} />
                     </TouchableOpacity>
                 ) : <View style={[styles.backButton]}></View>}

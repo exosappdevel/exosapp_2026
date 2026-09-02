@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,13 +11,15 @@ import { PanResponder } from 'react-native';
 import { _Header, _Footer, _MenuSection, _Background, _MenuLauncher } from '.';
 import { Soon_Modal } from '../CustomModal';
 import { Tabs_Allowed, Tabs_Allowed_almacen } from '@/context/AppmenuItems';
+import { useRouter } from 'expo-router';
+import { Href } from 'expo-router';
 
 interface HomeTemplateProps {
   tab_name: string;
 }
 
 export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
-  const { user } = useApp();
+  const { user, setLastGlobalNav } = useApp();
 
   const [activeSection, setActiveSection] = useState(tab_name);
   const modulos_por_almacen : boolean = false;
@@ -59,6 +61,19 @@ export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
     },
   });
 
+  const router = useRouter();
+
+  // Antes esto se llamaba directo en el cuerpo del render, con un objeto
+  // nuevo en cada llamada: como setLastGlobalNav actualiza el estado del
+  // AppProvider (un componente distinto), cada actualización re-renderizaba
+  // a todos sus consumidores -incluido este mismo componente-, que volvía a
+  // llamar setLastGlobalNav con OTRO objeto nuevo, ciclando indefinidamente.
+  // Al moverlo a un efecto atado a tab_name, solo corre cuando el tab
+  // realmente cambia.
+  useEffect(() => {
+    setLastGlobalNav({ last_home_path: "/" + (tab_name=="favorites" ? "home" : tab_name) });
+  }, [tab_name]);
+
   return (
     <_Background id_almacen={user?.id_almacen}>
       <SafeAreaView style={[styles.container]}>
@@ -88,7 +103,15 @@ export const _HomeTemplate = ({ tab_name }: HomeTemplateProps) => {
             <_MenuLauncher
               sections={allSections}
               activeId={activeSection}
-              onSelect={(id) => setActiveSection(id)}
+              onSelect={(id) => {
+                  if (id === "favorites") {
+                    router.push("/home" as Href);
+                  }
+                  else {                                 
+                    router.push("/"+id as Href);                   
+                  }
+                //setActiveSection(id);
+              }}
             />
 
           </View>

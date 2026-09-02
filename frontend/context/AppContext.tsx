@@ -8,6 +8,10 @@ import { hexToRGBA } from '@/components/elidev_components/_Functions';
 type Language = 'es' | 'en';
 type ThemeType = 'light' | 'dark' | 'blue' | 'pink';
 
+export interface GlobalNav{
+  last_home_path : string;
+}
+
 export interface OpenTab {
   path: string;
   name: string;
@@ -78,6 +82,8 @@ interface Theme {
 
 interface AppContextType {
   appConfig: AppConfig;
+  lastGlobalNav: GlobalNav;
+  setLastGlobalNav: React.Dispatch<React.SetStateAction<GlobalNav>>;
   user: User;
   setUser: React.Dispatch<React.SetStateAction<User>>;
   theme: Theme;
@@ -89,6 +95,10 @@ interface AppContextType {
   logout: () => Promise<void>;
   isUpdatePending: boolean;
   applyUpdateAndRestart: () => Promise<void>;
+  otaStatus: 'idle' | 'disabled' | 'checking' | 'up_to_date' | 'update_downloaded' | 'error';
+  otaLastCheckedAt: Date | null;
+  otaLastError: string | null;
+  checkForAppUpdate: () => Promise<void>;
   menuFav_str: () => string;
   menuFav_set: (value: any) => void;
   openTabs: OpenTab[];
@@ -185,7 +195,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     "exodos": "https://exodos.exos.software/webservice"
   };
   
-  const backend_server = "exos";
+  const backend_server = "local";
   
   const [appConfig] = useState<AppConfig>({
     passtrough_mode: false,
@@ -193,6 +203,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     passkey: "{PASSKEY}",
     url: servers[backend_server],
     backend_server: backend_server
+  });
+
+  const [lastGlobalNav, setLastGlobalNav] = useState<GlobalNav>({
+    last_home_path : "/home"
   });
 
   const [user, setUser] = useState<User>({
@@ -239,6 +253,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [language, setLanguageState] = useState<Language>('es');
   const [isLoggedIn, setIsLoggedInState] = useState(false);
   const [isUpdatePending, setIsUpdatePending] = useState(false);
+  const [otaStatus, setOtaStatus] = useState<'idle' | 'disabled' | 'checking' | 'up_to_date' | 'update_downloaded' | 'error'>('idle');
+  const [otaLastCheckedAt, setOtaLastCheckedAt] = useState<Date | null>(null);
+  const [otaLastError, setOtaLastError] = useState<string | null>(null);
 
   useEffect(() => {
     loadSavedLanguage();
@@ -264,15 +281,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const checkForAppUpdate = async () => {
-    if (__DEV__ || !Updates.isEnabled) return;
+    // __DEV__ y !Updates.isEnabled significan que no hay build OTA que
+    // consultar (Expo Go, dev client, o web): antes esto retornaba en
+    // silencio, así que desde profile.tsx no había forma de saber si el
+    // chequeo automático simplemente nunca corre en ese entorno.
+    if (__DEV__ || !Updates.isEnabled) {
+      setOtaStatus('disabled');
+      return;
+    }
+    setOtaStatus('checking');
     try {
       const check = await Updates.checkForUpdateAsync();
       if (check.isAvailable) {
         const fetchResult = await Updates.fetchUpdateAsync();
         setIsUpdatePending(fetchResult.isNew);
+        setOtaStatus(fetchResult.isNew ? 'update_downloaded' : 'up_to_date');
+      } else {
+        setOtaStatus('up_to_date');
       }
-    } catch (e) {
+      setOtaLastError(null);
+    } catch (e: any) {
       console.log('Error checking for app update:', e);
+      setOtaStatus('error');
+      setOtaLastError(e?.message || String(e));
+    } finally {
+      setOtaLastCheckedAt(new Date());
     }
   };
 
@@ -424,6 +457,8 @@ const closeOpenTab = (path: string) => {
   return (
     <AppContext.Provider value={{
       appConfig,
+      lastGlobalNav,
+      setLastGlobalNav,
       user,
       setUser,
       theme: activeTheme,
@@ -435,6 +470,10 @@ const closeOpenTab = (path: string) => {
       logout,
       isUpdatePending,
       applyUpdateAndRestart,
+      otaStatus,
+      otaLastCheckedAt,
+      otaLastError,
+      checkForAppUpdate,
       menuFav_str,
       menuFav_set,
       openTabs,

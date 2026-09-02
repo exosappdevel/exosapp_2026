@@ -48,7 +48,7 @@ export default function reporte_piezas_danadas_view_Screen() {
   const pageConfig = {
     name: t('screens.reporte_piezas_danadas_view'),
     icon: "glass-fragile",
-    previous: "/home",
+    previous: "home",
     show_user: true,
     show_menu: true,
     show_in_recent: true,

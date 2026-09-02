@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -34,7 +35,10 @@ interface Almacen {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, setUser, theme, t, language, setLanguage, appConfig, menuFav_str } = useApp();
+  const {
+    user, setUser, theme, t, language, setLanguage, appConfig, menuFav_str,
+    isUpdatePending, applyUpdateAndRestart, otaStatus, otaLastCheckedAt, otaLastError, checkForAppUpdate
+  } = useApp();
 
   const pageConfig = {
     name: t('screens.perfil'),
@@ -45,6 +49,9 @@ export default function ProfileScreen() {
     show_in_recent: false,
     path: '/profile'
   };
+  const { width, height } = useWindowDimensions();
+  const margin_height = 45;
+  const _ClientHeight = height - 130 - margin_height;
 
   const [selectedTheme, setSelectedTheme] = useState(user.tema);
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
@@ -67,6 +74,23 @@ export default function ProfileScreen() {
   const updateInfo = (!Updates.isEnabled || Updates.isEmbeddedLaunch || !Updates.createdAt)
     ? t('profile.updateEmbedded')
     : `${t('profile.updateOta')}: ${Updates.createdAt.toLocaleString()}`;
+
+  const otaStatusIcon: Record<typeof otaStatus, string> = {
+    idle: 'help-circle-outline',
+    disabled: 'cloud-off-outline',
+    checking: 'cloud-sync-outline',
+    up_to_date: 'cloud-check-outline',
+    update_downloaded: 'cloud-download-outline',
+    error: 'cloud-alert',
+  };
+  const otaStatusColor: Record<typeof otaStatus, string> = {
+    idle: theme.textSub,
+    disabled: theme.textSub,
+    checking: theme.accent,
+    up_to_date: '#38a169',
+    update_downloaded: '#dd6b20',
+    error: '#e53e3e',
+  };
 
   useEffect(() => {
     ApiService.init(appConfig);
@@ -143,144 +167,200 @@ export default function ProfileScreen() {
           <View style={{ width: 28 }} />
         </View> */}
 
-        <ScrollView style={styles.content}>
-          {/* User Info */}
-          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
-            <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.user')}</Text>
-            <View style={styles.userInfo}>
-              <MaterialCommunityIcons name="account-circle" size={30} color={theme.accent} />
-              <Text style={[styles.userName, { color: theme.text }]}>{user.alias_usuario}</Text>
+        <ScrollView style={[styles.content, { maxHeight: _ClientHeight }]}>
+        {/* User Info */}
+        <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.user')}</Text>
+          <View style={styles.userInfo}>
+            <MaterialCommunityIcons name="account-circle" size={30} color={theme.accent} />
+            <Text style={[styles.userName, { color: theme.text }]}>{user.alias_usuario}</Text>
 
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.text, fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{user.tipo_usuario}</Text>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.accent , fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}  - {Constants.expoConfig?.version || "1.0.0"}</Text>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: theme.text + "70", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{updateInfo}</Text>
-            </View>
-            {/*<View style={styles.userInfo}>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={[styles.userName, { color: theme.text, fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{user.tipo_usuario}</Text>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={[styles.userName, { color: theme.accent, fontSize: 12, fontWeight: 'normal', paddingLeft: 30, paddingTop: 10 }]}>Sistema :  {appConfig.backend_server.toUpperCase()}  - {Constants.expoConfig?.version || "1.0.0"}</Text>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={[styles.userName, { color: theme.text + "70", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{updateInfo}</Text>
+          </View>
+          {/*<View style={styles.userInfo}>
               <Text style={[styles.userName, { color: theme.text + "70", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{ modulos}</Text>
             </View>*/}
 
-          </View>
+        </View>
 
-          {/* Almacen Selection */}
-          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
-            <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.warehouse')}</Text>
-            {loading ? (
-              <ActivityIndicator color={theme.accent} />
-            ) : (
+        
+
+        {/* Almacen Selection */}
+        <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.warehouse')}</Text>
+          {loading ? (
+            <ActivityIndicator color={theme.accent} />
+          ) : (
+            <TouchableOpacity
+              style={[styles.almacenSelector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+              onPress={() => setShowAlmacenPicker(true)}
+            >
+              <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
+              <Text style={[styles.almacenText, { color: theme.text }]} numberOfLines={1}>
+                {selectedAlmacen?.nombre || user.almacen_nombre || 'Seleccionar almacén'}
+              </Text>
+              <MaterialCommunityIcons name="chevron-down" size={24} color={theme.textSub} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Theme Selection */}
+        <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.theme')}</Text>
+          <View style={styles.themeGrid}>
+            {themeOptions.map((themeOpt) => (
               <TouchableOpacity
-                style={[styles.almacenSelector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                onPress={() => setShowAlmacenPicker(true)}
-              >
-                <MaterialCommunityIcons name="warehouse" size={24} color={theme.accent} />
-                <Text style={[styles.almacenText, { color: theme.text }]} numberOfLines={1}>
-                  {selectedAlmacen?.nombre || user.almacen_nombre || 'Seleccionar almacén'}
-                </Text>
-                <MaterialCommunityIcons name="chevron-down" size={24} color={theme.textSub} />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Theme Selection */}
-          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
-            <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.theme')}</Text>
-            <View style={styles.themeGrid}>
-              {themeOptions.map((themeOpt) => (
-                <TouchableOpacity
-                  key={themeOpt.id}
-                  style={[
-                    styles.themeOption,
-                    { backgroundColor: themeOpt.color, borderColor: themeOpt.borderColor },
-                    selectedTheme === themeOpt.id && styles.themeSelected
-                  ]}
-                  onPress={() => setSelectedTheme(themeOpt.id as any)}
-                >
-                  {selectedTheme === themeOpt.id && (
-                    <MaterialCommunityIcons name="check" size={24} color={themeOpt.id === 'dark' ? '#fff' : '#333'} />
-                  )}
-                  <Text style={[
-                    styles.themeLabel,
-                    { color: themeOpt.id === 'dark' ? '#fff' : '#333' }
-                  ]}>
-                    {t(`profile.themes.${themeOpt.id}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Language Selection */}
-          <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border, display: 'none' }]}>
-            <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.language')}</Text>
-            <View style={styles.languageRow}>
-              <TouchableOpacity
+                key={themeOpt.id}
                 style={[
-                  styles.languageOption,
-                  { borderColor: sel_language === 'es' ? theme.accent : theme.border },
-                  sel_language === 'es' && { backgroundColor: theme.accent + '20' }
+                  styles.themeOption,
+                  { backgroundColor: themeOpt.color, borderColor: themeOpt.borderColor },
+                  selectedTheme === themeOpt.id && styles.themeSelected
                 ]}
-                onPress={() => setSel_language('es')}
+                onPress={() => setSelectedTheme(themeOpt.id as any)}
               >
-                <Text style={[styles.languageText, { color: sel_language === 'es' ? theme.accent : theme.text }]}>
-                  {t("languages.es")}
+                {selectedTheme === themeOpt.id && (
+                  <MaterialCommunityIcons name="check" size={24} color={themeOpt.id === 'dark' ? '#fff' : '#333'} />
+                )}
+                <Text style={[
+                  styles.themeLabel,
+                  { color: themeOpt.id === 'dark' ? '#fff' : '#333' }
+                ]}>
+                  {t(`profile.themes.${themeOpt.id}`)}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.languageOption,
-                  { borderColor: sel_language === 'en' ? theme.accent : theme.border },
-                  sel_language === 'en' && { backgroundColor: theme.accent + '20' }
-                ]}
-                onPress={() => setSel_language('en')}
-              >
-                <Text style={[styles.languageText, { color: language === 'en' ? theme.accent : theme.text }]}>
-                  {t("languages.en")}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            ))}
+          </View>
+        </View>
+        {/* OTA Update Monitor */}
+        <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
+          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.otaSection')}</Text>
+
+          <View style={styles.userInfo}>
+            <MaterialCommunityIcons name={otaStatusIcon[otaStatus] as any} size={24} color={otaStatusColor[otaStatus]} />
+            <Text style={[styles.userName, { color: otaStatusColor[otaStatus], fontSize: 14 }]}>
+              {t(`profile.otaStatus_${otaStatus}`)}
+            </Text>
+          </View>
+          {otaStatus === 'error' && !!otaLastError && (
+            <Text style={{ color: '#e53e3e', fontSize: 11, paddingLeft: 30, marginTop: 2 }}>{otaLastError}</Text>
+          )}
+
+          <View style={{ paddingLeft: 30, marginTop: 8, gap: 2 }}>
+            <Text style={{ color: theme.textSub, fontSize: 12 }}>
+              {t('profile.otaChannel')}: {Updates.channel || '-'}
+            </Text>
+            <Text style={{ color: theme.textSub, fontSize: 12 }}>
+              {t('profile.otaRuntimeVersion')}: {Updates.runtimeVersion || '-'}
+            </Text>
+            <Text style={{ color: theme.textSub, fontSize: 12 }} numberOfLines={1}>
+              {t('profile.otaUpdateId')}: {Updates.updateId || '-'}
+            </Text>
+            <Text style={{ color: theme.textSub, fontSize: 12 }}>
+              {t('profile.otaLastCheck')}: {otaLastCheckedAt ? otaLastCheckedAt.toLocaleString() : t('profile.otaNeverChecked')}
+            </Text>
           </View>
 
-
-
-          {/* Save Button */}
-
-
-
-
-        </ScrollView>
-        <_Footer Show_Almacen={false} Show_Usermenu={false}>
-          <TouchableOpacity
-            style={[styles.saveButton, { backgroundColor: theme.accent }]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.saveButtonText}>{t('common.save')}</Text>
-            )}
-          </TouchableOpacity>
+          {isUpdatePending && (
+            <View style={{ marginTop: 12, padding: 10, borderRadius: 12, backgroundColor: '#dd6b2020', borderWidth: 1, borderColor: '#dd6b20' }}>
+              <Text style={{ color: '#dd6b20', fontWeight: 'bold', fontSize: 13 }}>{t('profile.otaPendingTitle')}</Text>
+              <Text style={{ color: theme.text, fontSize: 12, marginTop: 4 }}>{t('profile.otaPendingMessage')}</Text>
+              <TouchableOpacity
+                style={[styles.otaButton, { backgroundColor: '#dd6b20', marginTop: 10 }]}
+                onPress={applyUpdateAndRestart}
+              >
+                <Text style={styles.otaButtonText}>{t('common.restartNow')}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <TouchableOpacity
-            style={[styles.saveButton, { backgroundColor: theme.accent, marginLeft: 40 }]}
-            onPress={handleClose}
-            disabled={saving}
+            style={[styles.otaButton, { backgroundColor: theme.accent, marginTop: 12 }]}
+            onPress={checkForAppUpdate}
+            disabled={otaStatus === 'checking'}
           >
-            {saving ? (
-              <ActivityIndicator color="#fff" />
+            {otaStatus === 'checking' ? (
+              <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.saveButtonText}>{t('common.close')}</Text>
+              <Text style={styles.otaButtonText}>{t('profile.otaCheckNow')}</Text>
             )}
           </TouchableOpacity>
-        </_Footer>
+        </View>
 
-        {/* Almacen Picker Modal */}
-        {/*showAlmacenPicker && (
+        {/* Language Selection */}
+        <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border, display: 'none' }]}>
+          <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.language')}</Text>
+          <View style={styles.languageRow}>
+            <TouchableOpacity
+              style={[
+                styles.languageOption,
+                { borderColor: sel_language === 'es' ? theme.accent : theme.border },
+                sel_language === 'es' && { backgroundColor: theme.accent + '20' }
+              ]}
+              onPress={() => setSel_language('es')}
+            >
+              <Text style={[styles.languageText, { color: sel_language === 'es' ? theme.accent : theme.text }]}>
+                {t("languages.es")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.languageOption,
+                { borderColor: sel_language === 'en' ? theme.accent : theme.border },
+                sel_language === 'en' && { backgroundColor: theme.accent + '20' }
+              ]}
+              onPress={() => setSel_language('en')}
+            >
+              <Text style={[styles.languageText, { color: language === 'en' ? theme.accent : theme.text }]}>
+                {t("languages.en")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+
+
+        {/* Save Button */}
+
+
+
+
+      </ScrollView>
+      <_Footer Show_Almacen={false} Show_Usermenu={false}>
+        <TouchableOpacity
+          style={[styles.saveButton, { backgroundColor: theme.accent }]}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveButtonText}>{t('common.save')}</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.saveButton, { backgroundColor: theme.accent, marginLeft: 40 }]}
+          onPress={handleClose}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveButtonText}>{t('common.close')}</Text>
+          )}
+        </TouchableOpacity>
+      </_Footer>
+
+      {/* Almacen Picker Modal */}
+      {/*showAlmacenPicker && (
           <View style={styles.pickerOverlay}>
             <View style={[styles.pickerContainer, { backgroundColor: theme.card }]}>
               <View style={styles.pickerHeader}>
@@ -312,7 +392,7 @@ export default function ProfileScreen() {
           </View>
         )*/}
 
-        {/*<CustomModal
+      {/*<CustomModal
           visible={modal.visible}
           titulo={modal.titulo}
           mensaje={modal.mensaje}
@@ -320,27 +400,27 @@ export default function ProfileScreen() {
           colorIcon={modal.colorIcon}
           onClose={() => setModal({ ...modal, visible: false })}
         />*/}
-        <_PickerModal
-          key="picker-almacen"
-          visible={showAlmacenPicker}
-          onClose={() => setShowAlmacenPicker(false)}
-          data={almacenes}
-          key_name="id_almacen"
-          onSelect={(item: Almacen) => { setSelectedAlmacen(item);setShowAlmacenPicker(false); setModulos(perfil_modulos_poralmacen(item.id_almacen,user.all_modulos));}}
-          title="Seleccionar Almacen"
-        />
-        <_PinModal
-          visible={showPinModal}
-          title="Confirma tu PIN"
-          message="Introduce tu PIN para guardar los cambios del perfil."
-          onCancel={() => setShowPinModal(false)}
-          onSuccess={() => {
-            setShowPinModal(false);
-            handleSave();
-          }}
-        />
-      </SafeAreaView>
-    </_Background>
+      <_PickerModal
+        key="picker-almacen"
+        visible={showAlmacenPicker}
+        onClose={() => setShowAlmacenPicker(false)}
+        data={almacenes}
+        key_name="id_almacen"
+        onSelect={(item: Almacen) => { setSelectedAlmacen(item); setShowAlmacenPicker(false); setModulos(perfil_modulos_poralmacen(item.id_almacen, user.all_modulos)); }}
+        title="Seleccionar Almacen"
+      />
+      <_PinModal
+        visible={showPinModal}
+        title="Confirma tu PIN"
+        message="Introduce tu PIN para guardar los cambios del perfil."
+        onCancel={() => setShowPinModal(false)}
+        onSuccess={() => {
+          setShowPinModal(false);
+          handleSave();
+        }}
+      />
+    </SafeAreaView>
+    </_Background >
 
   );
 }
@@ -452,6 +532,17 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
     paddingHorizontal: 15,
     paddingVertical: 10
+  },
+  otaButton: {
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  otaButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 13,
   },
   pickerOverlay: {
     ...StyleSheet.absoluteFillObject,
