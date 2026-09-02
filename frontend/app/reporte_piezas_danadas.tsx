@@ -813,8 +813,8 @@ export default function Reporte_Piezas_DanadasScreen() {
         <_Footer Show_Almacen={false} Show_Usermenu={true}>
           <View>
             <View style={{ paddingVertical: 10 }}>
-              <Text style={{ color: theme.iconTextColor, fontSize: 14, textAlign: 'center' }}>
-                {codigoReporte ? codigoReporte : t('reporte_piezas_danadas.footer_no_reporte')}
+              <Text style={{ color: theme.iconTextColor, fontSize: 14, textAlign: 'center' }}>                 
+                {t('reporte_piezas_danadas.footer_codigo_reporte')} {codigoReporte ? codigoReporte : t('reporte_piezas_danadas.footer_no_reporte')}
               </Text>
             </View>
             <View>
@@ -968,7 +968,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 15,
+    paddingVertical: 10,
     borderRadius: 20,
     marginTop: 3,
     paddingHorizontal: 20

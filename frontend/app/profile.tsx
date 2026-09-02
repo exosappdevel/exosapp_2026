@@ -161,9 +161,9 @@ export default function ProfileScreen() {
             <View style={styles.userInfo}>
               <Text style={[styles.userName, { color: theme.text + "70", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{updateInfo}</Text>
             </View>
-            <View style={styles.userInfo}>
+            {/*<View style={styles.userInfo}>
               <Text style={[styles.userName, { color: theme.text + "70", fontSize: 12, fontWeight: 'normal', paddingLeft: 30 }]}>{ modulos}</Text>
-            </View>
+            </View>*/}
 
           </View>
 

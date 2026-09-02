@@ -243,7 +243,8 @@
       "finalizing_report": "Finalizando reporte...",
       "finalize_success_title": "Reporte finalizado",
       "finalize_success": "El reporte de piezas dañadas ha sido finalizado exitosamente y enviado a revisión.",
-      "footer_no_reporte": "-----"  ,
+      "footer_codigo_reporte": "Código reporte:"  ,
+      "footer_no_reporte": "****"  ,
       "delete_pieza" : "Eliminar pieza"
 
     }
