@@ -50,7 +50,7 @@ run_prev() {
   echo " Canal: preview"
   echo "===================================================="
   "$SCRIPT_DIR/set_dest.sh" exodos
-  eas update --branch prev --message "$MESSAGE"
+  eas update --branch preview --message "$MESSAGE"
 }
 
 case "$CHANNEL" in

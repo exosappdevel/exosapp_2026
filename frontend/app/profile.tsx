@@ -8,13 +8,13 @@ import {
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import ApiService from '../services/ApiServices';
-import { _Footer, _Header, _Background, _PickerModal, _PinModal, hexToRGBA } from '@/components/elidev_components';
+import { _Footer, _Header, _Background, _PickerModal, _PinModal, _footer_baseHeight, hexToRGBA } from '@/components/elidev_components';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
 import { perfil_modulos_poralmacen } from '@/context/AppmenuItems';
@@ -52,6 +52,13 @@ export default function ProfileScreen() {
   const { width, height } = useWindowDimensions();
   const margin_height = 45;
   const _ClientHeight = height - 130 - margin_height;
+  const insets = useSafeAreaInsets();
+  // _Footer flota con position:absolute sobre el ScrollView (no le resta
+  // espacio al layout en flex), así que sin este padding el último elemento
+  // (el botón de "Buscar actualizaciones") queda tapado por el footer y,
+  // como el contenido no llega a medir más que el propio ScrollView, ni
+  // siquiera se activa el scroll para poder despegarlo de ahí.
+  const footerClearance = _footer_baseHeight(false) + insets.bottom + 20;
 
   const [selectedTheme, setSelectedTheme] = useState(user.tema);
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
@@ -167,7 +174,10 @@ export default function ProfileScreen() {
           <View style={{ width: 28 }} />
         </View> */}
 
-        <ScrollView style={[styles.content, { maxHeight: _ClientHeight }]}>
+        <ScrollView
+          style={[styles.content, { maxHeight: _ClientHeight }]}
+          contentContainerStyle={{ paddingBottom: footerClearance }}
+        >
         {/* User Info */}
         <View style={[styles.section, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>
           <Text style={[styles.sectionLabel, { color: theme.textSub }]}>{t('profile.user')}</Text>
