@@ -40,7 +40,7 @@ interface Producto {
 export default function PickeoScreen() {
 
   const router = useRouter();
-  const { user, theme, t, appConfig } = useApp();
+  const { user, setUser, theme, t, appConfig } = useApp();
   const inputRef = useRef<TextInput>(null);
   const pageConfig = {
     name: t("screens.pickeo"),
@@ -206,6 +206,7 @@ export default function PickeoScreen() {
           if (esExito) {
             await AsyncStorage.removeItem(STORAGE_KEY);
             inicializarDatos(false);
+            setUser(prev => ({ ...prev, local_terminal: { selected: false, id: "0", nombre: '' } }));            
             router.replace('/terminales');
           }
           else {
@@ -218,6 +219,7 @@ export default function PickeoScreen() {
               text: "OK", onPress: () => {
                 if (esExito) {
                   inicializarDatos(false);
+                  setUser(prev => ({ ...prev, local_terminal: { selected: false, id: "0", nombre: '' } }));
                   router.replace('/terminales');
                 }
               }

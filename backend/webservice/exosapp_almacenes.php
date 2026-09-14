@@ -152,7 +152,164 @@ trait ExosApp_Almacenes
         ];
     }
 
+
+
+	
     public function get_pickeo_list()   
+    {
+		 
+		/* **** muestra el listado de productos pickeables por terminal seleccionada **** */
+				 
+        $id_usuario = Requesting("id_usuario");
+		
+		$id_terminal = Requesting("id_terminal");
+        if (!$id_terminal) {
+            return ['result' => 'error', 'result_text' => 'ID TERMINA necesaria'];
+        } else {
+			
+			/* *** EN teoría primero validamos que la termina NO esté bloqueada **** */
+			
+			 
+			/* ***** vamos a eliminar automaticamente TODOS los registro de terminal_bloqueada con mas de 60 minutos ***** */
+			$querydel = "DELETE FROM terminal_bloqueada WHERE kardex_bloqueo < DATE_SUB(NOW(), INTERVAL 60 MINUTE);";
+			ExecuteSQL($querydel);
+				
+			/* **** verifico si la Terminal está bloqueada **** */
+			$queryb = "SELECT COUNT(terminal_bloqueada.id_registro) AS existe, terminal_bloqueada.id_registro, terminal_bloqueada.kardex_bloqueo, usuario.usuario 
+				FROM terminal_bloqueada
+				INNER JOIN usuario ON (usuario.id_usuario = terminal_bloqueada.id_usuario_bloqueo)
+				WHERE id_terminal = ".$id_terminal." AND terminal_bloqueada.id_usuario_bloqueo != ".$id_usuario;
+			$existe_terminal_bloqueada = GetValueSQL($queryb,"existe");
+			
+			if($existe_terminal_bloqueada == 0){
+				
+				/* ***** vamos a eliminar automaticamente TODOS los registro de fragmento_terminal_tmp_fragmentos con mas de 15 minutos ***** */
+				$querydel = "DELETE FROM fragmento_terminal_tmp_fragmentos WHERE kardex < DATE_SUB(NOW(), INTERVAL 15 MINUTE);";
+				ExecuteSQL($querydel);
+			
+				/* ***** elimon lo termporales relacionadas a esta terminal, sin importar kardex *** */
+				$querydel2 = "DELETE FROM fragmento_terminal_tmp_fragmentos WHERE id_terminal = ".$id_terminal;
+				ExecuteSQL($querydel2);
+			
+			 
+			
+				$limit = !Requesting("limit") ? 10 : Requesting("limit");
+				
+				/* *** De aqui tengo que enviar la info de la tabla fragmento *** */
+				$query1 = "SELECT 
+					fragmento.id_producto,
+					producto.referencia,
+					producto.nombre,
+					SUM(fragmento.restante) AS sumrestante,
+					almacen.nombre AS bodegaconsumo,
+					fragmento.id_bodega_destino, 
+					marca.marca,
+					fabricante.fabricante,
+					GROUP_CONCAT(
+						fragmento.id_fragmento 
+						ORDER BY fragmento.id_fragmento
+					) AS ids_fragmentos,
+					NOW() AS last_update
+
+					FROM fragmento
+					
+					INNER JOIN producto 
+						ON producto.id_producto = fragmento.id_producto
+					
+					INNER JOIN carpeta 
+						ON carpeta.id_carpeta = fragmento.id_carpeta
+					
+					INNER JOIN almacen 
+						ON almacen.id_almacen = fragmento.id_bodega_destino
+					
+					LEFT JOIN marca 
+						ON producto.id_marca = marca.id_marca
+					
+					LEFT JOIN fabricante 
+						ON marca.id_fabricante = fabricante.id_fabricante
+					
+					WHERE fragmento.id_terminal = ".$id_terminal."
+					AND fragmento.pickeo = 0
+					AND fragmento.restante > 0
+					
+					GROUP BY 
+						fragmento.id_producto,
+						fragmento.id_bodega_destino";
+
+				$qresult = DatasetSQL($query1);
+
+				
+				$data = [];
+				while ($row = mysqli_fetch_array($qresult)) {
+
+					// Convertimos:
+					// "501,502,503,504,505"
+					// en:
+					// [501,502,503,504,505]
+				
+					$fragmentos = explode(',', $row['ids_fragmentos']);
+				
+					// Primer fragmento del grupo, solamente para compatibilidad
+					//	$id_fragmento = $fragmentos[0];
+				
+					$data['prod_' . $row['id_producto']. '.' . $row['id_bodega_destino']] = [
+						'id' => $row['id_producto']. '.' . $row['id_bodega_destino'],
+				
+						// Primer fragmento, si la APP todavía requiere este campo
+						//'id_fragmento' => $id_fragmento,
+						//	'id_fragmento' => $fragmentos, /* *** ahora es la cadena de fragmentos disponibles *** */
+						
+						'id_fragmento' => $row['ids_fragmentos'], /* *** ahora es la cadena de fragmentos disponibles *** */
+				
+						// TODOS los fragmentos que forman el grupo
+						//	'ids_fragmentos' => $fragmentos,
+				
+						'descripcion' => $row['nombre'],
+				
+						'referencia' => $row['referencia'],
+				
+						'marca' => $row['marca'],
+						'fabricante' => $row['fabricante'],
+				
+						'cantidad_solicitada' => $row['sumrestante'],
+						'cantidad_recolectada' => 0,
+				
+						'id_bodega_destino' => $row['id_bodega_destino'],
+						'bodegaconsumo' => $row['bodegaconsumo'],
+				
+						'last_update' => $row['last_update']
+					];
+				} 
+				
+				 
+				$query = "INSERT INTO terminal_bloqueada (id_terminal, kardex_bloqueo, id_usuario_bloqueo)
+					VALUES (".$id_terminal.", NOW(), ".$id_usuario.")";
+				ExecuteSQL($query);
+		
+		
+				return [
+					'result' => 'ok',
+					'data' => $data,
+					'result_text' => 'Metodo ejecutado exitosamente en EXOSAPP.PHP V2',
+                    //'query' => $query1
+				];
+		
+			}else{ 
+				
+				$usuario 		= GetValueSQL($queryb,"usuario");
+				
+				return ['result' => 'error', 'result_text' => 'TERMINAL BLOQUEADA POR '.$usuario ];
+				
+				
+			}
+			
+			
+        }
+        
+    }
+
+   	 
+    public function get_pickeo_list_BACKUP()   
     {
 		 
 		/* **** muestra el listado de productos pickeables por terminal seleccionada **** */
@@ -207,27 +364,35 @@ trait ExosApp_Almacenes
 				
 				//	echo $query;
 				
-				
-				$query = "SELECT fragmento.id_fragmento, producto.referencia, producto.nombre, fragmento.restante, fragmento.cantidad, SUM(fragmento.cantidad) AS sumcantidad, 
-					almacen.nombre AS bodegaconsumo, SUM(fragmento.restante) AS sumrestante, producto.id_producto, fragmento.id_bodega_destino, marca.marca, fabricante.fabricante,
+				   
+				$query = "SELECT fragmento.id_fragmento, producto.referencia, producto.nombre, fragmento.restante, fragmento.cantidad, 
+					almacen.nombre AS bodegaconsumo, fragmento.restante AS sumrestante, producto.id_producto, fragmento.id_bodega_destino, 
+					marca.marca, fabricante.fabricante,
                     NOW() as last_update   
 					FROM fragmento
 					INNER JOIN producto ON (producto.id_producto = fragmento.id_producto)
 					INNER JOIN carpeta ON (carpeta.id_carpeta = fragmento.id_carpeta) 
 					INNER JOIN almacen ON (almacen.id_almacen = fragmento.id_bodega_destino) 
 					LEFT JOIN marca ON producto.id_marca=marca.id_marca
-					LEFT JOIN fabricante ON marca.id_fabricante=fabricante.id_fabricante 
+					LEFT JOIN fabricante ON marca.id_fabricante=fabricante.id_fabricante  
 					WHERE fragmento.id_terminal = ".$id_terminal." AND fragmento.pickeo = 0 AND fragmento.restante > 0
 					GROUP BY fragmento.id_producto, fragmento.id_bodega_destino"; 
-				$qresult = DatasetSQL($query);
+					
+
+	
+				$qresult = DatasetSQL($query); 
 				$data = [];
 				while ($row = mysqli_fetch_array($qresult)) {
 					// Se usa el prefijo 'prod_' para asegurar etiquetas XML válidas
+					
+					$fragmentos = explode(',', $row['ids_fragmentos']);
+					
+					
 					$data['prod_' . $row['id_producto']] = [
 						'id' => $row['id_producto'],
 						'id_fragmento' => $row['id_fragmento'],  /* *** fragmento.id_fragmento *** */
 						'descripcion' => $row['nombre'],
-						'referencia' => $row['referencia'],
+						'referencia' => $row['referencia'] .  ' - ' . $row['id_fragmento'],  /* *** referencia + id_fragmento *** */
 						'marca' => $row['marca'],
 						'fabricante' => $row['fabricante'],  
 						'cantidad_solicitada' => $row['sumrestante'],
@@ -274,10 +439,247 @@ trait ExosApp_Almacenes
         $datos_pickeo 	= Requesting("datos_pickeo"); // JSON enviado desde la App
         $bodega_surte 	= 35;
         $nums = 0;
+        $sql_list =[];
         /* **** 
             necesito la sig estructura :
         $datos_pickeo[
-            { 
+            {  
+                id_fragmento,  
+                id_terminal,
+                bodega_surte // en teoria ahora siempre seria matriz GDL
+            }
+        ]
+		 *** */
+		/*
+		
+		
+		
+		[    {
+            "id_fragmento": "30,31,32",
+            "cantidad_recolectada": 2
+			}
+		]
+		
+		
+		
+		
+		*/
+		
+       
+        if (!$id_usuario || !$datos_pickeo || !$id_terminal) {
+            return ['result' => 'error', 'result_text' => 'DATOS REQUERIDOS'];
+        }
+        $sSQL = "insert into pickeo_list(id, id_usuario, id_terminal, data) " .
+            " values (0," . $id_usuario . "," . $id_terminal . ",'" . $datos_pickeo . "')";
+        //	 ExecuteSQL_WS($sSQL);
+        /* **** AQUI DEBO GUARDAR LOS DATOS EN fragmento_terminal *** */
+        $consulta = "INSERT INTO fragmento_terminal (id_fragmento, id_producto, id_terminal, cantidad, bodega_destino, bodega_surte, reposicion, kardex, id_usuario_kardex) VALUES ";
+        /* **** estos son los datos reales que yo necesito que me envie la APP *** */
+        /* **** id_fragmento se envia en get_pickeo_list() *** */
+        $data = json_decode($datos_pickeo, true);
+        foreach ($data as $row) {
+			$cantidad_recolectada = intval($row['cantidad_recolectada']); /* **** convertir a INT *** */			
+			 // Los fragmentos que pertenecen al producto agrupado
+			//	$ids_fragmentos = $row['ids_fragmentos'];			
+			$ids_fragmentos = $row['id_fragmento'];			
+            //	echo "ID ::: ".$id_fragmento." ::: TERMINAL ::: ".$terminal." ::: BODEGA ::: ".$bodega." //// ";
+            if (
+				$id_terminal > 0 &&
+				$bodega_surte > 0 &&
+				$cantidad_recolectada > 0 &&
+				$ids_fragmentos != "" 
+				//	is_array($ids_fragmentos)
+			) {			
+				 
+				 /*
+				* La cantidad solicitada/recolectada es del PRODUCTO,
+				* pero cada unidad corresponde a un FRAGMENTO diferente.
+				*/
+		 
+				$procesados = 0;
+				
+				$fragmentos = explode(',', $ids_fragmentos);
+				
+				foreach ($fragmentos as $id_fragmento) {		
+					// Ya recolectamos la cantidad que pidió la APP
+					if ($procesados >= $cantidad_recolectada) {
+						break; 
+					}		
+					$id_fragmento = intval($id_fragmento);		
+					if ($id_fragmento <= 0) {
+						continue;
+					}					
+					/*
+					* Verificamos que el fragmento todavía exista
+					* y que siga disponible.
+					*/
+					$query1 = "
+						SELECT 
+							fragmento.cantidad,
+							fragmento.restante,
+							fragmento.id_producto AS id_producto_real,
+							almacen.id_almacen AS bodega_destino
+						FROM fragmento
+						INNER JOIN remision_inv 
+							ON remision_inv.id_remision_inv = fragmento.id_remision_inv
+						INNER JOIN inventario 
+							ON inventario.id_inventario = remision_inv.id_inventario
+						INNER JOIN carpeta 
+							ON carpeta.id_carpeta = fragmento.id_carpeta
+						INNER JOIN almacen 
+							ON almacen.id_almacen = carpeta.id_bodega
+						WHERE fragmento.id_fragmento = ".$id_fragmento."
+						AND fragmento.restante > 0
+						AND fragmento.pickeo = 0
+					";			
+					$id_producto 	= GetValueSQL($query1, "id_producto_real");
+					$cantidad 		= GetValueSQL($query1, "cantidad");
+					$bodega_destino = GetValueSQL($query1, "bodega_destino");
+		
+					/* 
+					* Si el fragmento ya no está disponible, 
+					* lo saltamos y buscamos el siguiente.
+					*/
+					if (!$id_producto) {
+						continue;
+					}
+		
+					/*
+					* Verificamos que NO haya sido enviado anteriormente
+					* a fragmento_terminal.
+					*/
+					$querybusca = "
+						SELECT COUNT(id_registro) AS existe 
+						FROM fragmento_terminal 
+						WHERE id_fragmento = ".$id_fragmento;
+		
+					$ya_existe = GetValueSQL($querybusca, "existe");
+		
+					if ($ya_existe > 0) {
+						continue;
+					}
+					
+					/*
+					* IMPORTANTE:
+					*
+					* Como cada fragmento representa UNA sola pieza,
+					* aquí SIEMPRE insertamos cantidad = 1.
+					*/
+					$consulta .= "
+						(".$id_fragmento.",
+						".$id_producto.",
+						".$id_terminal.",
+						1,
+						".$bodega_destino.",
+						".$bodega_surte.",
+						0,
+						NOW(),
+						".$id_usuario."),";
+		
+					$nums++;
+					$procesados++;
+			
+			
+			
+			
+					/*
+					* El fragmento fue recolectado completamente.
+					* Como cantidad = 1 y restante = 1,
+					* pasa a restante = 0 y pickeo = 1.
+					*/
+					$queryupdf = "
+						UPDATE fragmento 
+						SET restante = 0,
+							pickeo = 1
+						WHERE id_fragmento = ".$id_fragmento."
+					";
+		
+					ExecuteSQL($queryupdf);
+                    $sql_list[] = $queryupdf;
+				}
+			}
+		}
+			
+			
+			
+			
+			
+			
+		
+        if ($nums > 0) {
+            $consulta = rtrim($consulta, ",");
+            ExecuteSQL($consulta);
+            $sql_list[] = $consulta;
+        }
+
+        // ---- Al hacer checkout, se elimina el registro de la tabla terminal_bloqueada para liberar la terminal ----
+        $querydel = "DELETE FROM terminal_bloqueada WHERE id_terminal = " .$id_terminal;
+        ExecuteSQL($querydel);
+        $sql_list[] = $querydel;
+
+        //			[{"id_fragmento": 1, "id_terminal":1, "bodega_surte":1}]
+        /*
+        [{
+            "id":"21327",
+            "descripcion":"CEMENTO BonOs HV Genta 40.8g",
+            "referencia":"01-0262",
+            "marca":"BonOs HV Genta",
+            "fabricante":"OSARTIS",
+            "cantidad_solicitada":1,
+            "cantidad_recolectada":0,
+            "last_update":"2026-04-22 22:51:09",
+            "prioridad":1001,
+            "color":"#f56565",
+            "faltante":1
+        },
+        {
+            "id":"24426",
+            "descripcion":"HOJA DE SIERRA 1.27  X 100",
+            "referencia":"1002212",
+            "marca":"DEPUY SYNTHES",
+            "fabricante":"J&J",
+            "cantidad_solicitada":1,
+            "cantidad_recolectada":0,
+            "last_update":"2026-04-22 22:51:09",
+            "prioridad":1001,
+            "color":"#f56565",
+            "faltante":1
+        },
+        {
+            "id":"23589",
+            "descripcion":"SLIM BODY SKIN STAPLER",
+            "referencia":"8886803712",
+            "marca":"COVIDIEN",
+            "fabricante":"MEDTRONIC",
+            "cantidad_solicitada":1,
+            "cantidad_recolectada":0,
+            "last_update":"2026-04-22 22:51:09",
+            "prioridad":1001,
+            "color":"#f56565",
+            "faltante":1
+        }]
+        */
+        return [
+            'result' => 'ok',
+            //'sql' => $sql_list,
+            'result_text' => 'Checkout procesado correctamente en EXOSAPP.PHP',
+            'nums' => $nums
+        ];
+    }
+   	 
+    public function pickeo_checkout_BACKUP()
+    {
+        /* *** Esta funcion guarda los fragmentos pickeados en la tabla fragmento_terminal *** */
+        /* *** Fragmento_terminal es la tabla desde la cual se haran reposiciones desde EXOS *** */
+        $id_terminal 	= Requesting("id_terminal");
+        $id_usuario 	= Requesting("id_usuario");
+        $datos_pickeo 	= Requesting("datos_pickeo"); // JSON enviado desde la App
+        $bodega_surte 	= 35;
+        $nums = 0;
+        /* **** 
+            necesito la sig estructura :
+        $datos_pickeo[
+            {  
                 id_fragmento,  
                 id_terminal,
                 bodega_surte // en teoria ahora siempre seria matriz GDL
@@ -298,44 +700,56 @@ trait ExosApp_Almacenes
         foreach ($data as $row) {
             $id_fragmento = $row['id_fragmento'];
             //	$id_terminal 	= $row['id_terminal'];
-            //	$bodega_surte 	= $row['bodega_surte'];
-            $cantidad_recolectada = $row['cantidad_recolectada'];
+            //	$bodega_surte 	= $row['bodega_surte']; 
+            //	$cantidad_recolectada = $row['cantidad_recolectada'];
+			
+			$cantidad_recolectada = intval($row['cantidad_recolectada']); /* **** convertir a INT *** */
+			
+			
             //	echo "ID ::: ".$id_fragmento." ::: TERMINAL ::: ".$terminal." ::: BODEGA ::: ".$bodega." //// ";
             if ($id_terminal > 0 AND $bodega_surte > 0 AND $cantidad_recolectada > 0) {
-                $query1 = "SELECT fragmento.cantidad, inventario.id_producto, almacen.id_almacen AS bodega_destino, fragmento.id_fragmento
+                $query1 = "SELECT fragmento.cantidad, inventario.id_producto, almacen.id_almacen AS bodega_destino, fragmento.id_fragmento, 
+					fragmento.id_producto AS id_producto_real 
 					FROM fragmento
 					INNER JOIN remision_inv ON (remision_inv.id_remision_inv = fragmento.id_remision_inv)
 					INNER JOIN inventario ON (inventario.id_inventario = remision_inv.id_inventario)
 					INNER JOIN carpeta ON (carpeta.id_carpeta = fragmento.id_carpeta)
 					INNER JOIN almacen ON (almacen.id_almacen = carpeta.id_bodega)
 					WHERE fragmento.id_fragmento = " . $id_fragmento;
-                $id_producto = GetValueSQL($query1, "id_producto");
-                $cantidad = GetValueSQL($query1, "cantidad");
+                $id_producto 	= GetValueSQL($query1, "id_producto_real"); /* *** voy a tomar el producto REAL que ya viene en fragmento *** */
+                $cantidad 		= GetValueSQL($query1, "cantidad");
                 $bodega_destino = GetValueSQL($query1, "bodega_destino");  /* ** bodega_destino es la bodega donde hizo el consumo *** se toma como DESTINO por que es a donde se enviará la REPO ** */
-                /* **** aqui genero la consulta **** */
-                $consulta .= "(" . $id_fragmento . ", " . $id_producto . ", " . $id_terminal . ", " . $cantidad_recolectada . ", " . $bodega_destino . ", " . $bodega_surte . ",0, NOW(), " . $id_usuario . "),";
-                $nums++;
-                /* ****** */
-                /* Aqui pongo el campo PICKEO de la tabla FRAGMENTO en 1, ya que se mando a la canasta virtual *** */
-                /* *** esta canasta virtual es donde se van a escanear para genera el QR DPI y meterlo a paqueteria *** */
-                /* *** el flujo físico es que ya NO deberian regresar nada de las canastas al almacen, y de hacerlo, el producto seguira mostrandose en la tabla "fragmentos_terminal" *** */
-                //	$queryupdf = "UPDATE fragmento SET pickeo = 1 WHERE id_fragmento = ".$id_fragmento;
-                //	ExecuteSQL($queryupdf);
-                /* *** EERORR *** */
-                /* *** TENGO QUE VALIDAR QUE LA CANTIDAD_RECOLECTADA SEA IGUAL A LA CANTIDAD PICKEO. *** */
-                /* *** SI ES IGUAL ENTONCES YA ELIMINO EL REGISTRO *** */
-                $query2 = "SELECT restante FROM fragmento WHERE id_fragmento = " . $id_fragmento;
-                $restante_actual = GetValueSQL($query2, "restante");
-                $restante_nuevo = ($cantidad_recolectada) - ($restante_actual);
-                if ($restante_nuevo < 0)
-                    $restante_nuevo = 0;
-                if ($restante_nuevo == 0) {
-                    $queryupdf = "UPDATE fragmento SET restante = 0, pickeo = 1 WHERE id_fragmento = " . $id_fragmento;
-                    ExecuteSQL($queryupdf);
-                } else {
-                    $queryupdf = "UPDATE fragmento SET restante = " . $restante_nuevo . " WHERE id_fragmento = " . $id_fragmento;
-                    ExecuteSQL($queryupdf);
-                }
+                
+				
+				$querybusca = "SELECT COUNT(id_registro) AS existe FROM fragmento_terminal WHERE id_fragmento = ".$id_fragmento;
+				$ya_existe = GetValueSQL($querybusca,"existe");
+			
+				if($ya_existe == 0){
+				/* **** aqui genero la consulta **** */
+					$consulta .= "(" . $id_fragmento . ", " . $id_producto . ", " . $id_terminal . ", " . $cantidad_recolectada . ", " . $bodega_destino . ", " . $bodega_surte . ",0, NOW(), " . $id_usuario . "),";
+					$nums++;
+					/* ****** */
+					/* Aqui pongo el campo PICKEO de la tabla FRAGMENTO en 1, ya que se mando a la canasta virtual *** */
+					/* *** esta canasta virtual es donde se van a escanear para genera el QR DPI y meterlo a paqueteria *** */
+					/* *** el flujo físico es que ya NO deberian regresar nada de las canastas al almacen, y de hacerlo, el producto seguira mostrandose en la tabla "fragmentos_terminal" *** */
+					//	$queryupdf = "UPDATE fragmento SET pickeo = 1 WHERE id_fragmento = ".$id_fragmento;
+					//	ExecuteSQL($queryupdf);
+					/* *** EERORR *** */
+					/* *** TENGO QUE VALIDAR QUE LA CANTIDAD_RECOLECTADA SEA IGUAL A LA CANTIDAD PICKEO. *** */
+					/* *** SI ES IGUAL ENTONCES YA ELIMINO EL REGISTRO *** */
+					$query2 = "SELECT restante FROM fragmento WHERE id_fragmento = " . $id_fragmento;
+					$restante_actual = GetValueSQL($query2, "restante");
+					$restante_nuevo = ($cantidad_recolectada) - ($restante_actual);
+					if ($restante_nuevo < 0)
+						$restante_nuevo = 0;
+					if ($restante_nuevo == 0) {
+						$queryupdf = "UPDATE fragmento SET restante = 0, pickeo = 1 WHERE id_fragmento = " . $id_fragmento;
+						ExecuteSQL($queryupdf);
+					} else {
+						$queryupdf = "UPDATE fragmento SET restante = " . $restante_nuevo . " WHERE id_fragmento = " . $id_fragmento;
+						ExecuteSQL($queryupdf);
+					}
+				}
             }
         }
         if ($nums > 0) {

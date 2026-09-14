@@ -62,6 +62,7 @@ trait ExosApp_Perfiles
     public function app_perfiles_list(){
         $sql_perfiles = "select * from app_perfiles order by nombre";
         $ds_perfiles = DatasetSQL_WS($sql_perfiles);
+        $data=[];
         while ($row = mysqli_fetch_array($ds_perfiles)) {
             $data['item_' . $row['id']] = [
                 'id_perfil' => $row['id'],

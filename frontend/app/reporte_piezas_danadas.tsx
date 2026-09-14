@@ -57,7 +57,7 @@ export default function Reporte_Piezas_DanadasScreen() {
   };
 
   const { width, height } = useWindowDimensions();
-  const margin_height = 45;
+  const margin_height = 50;
   const _ClientHeight = height - 130 - margin_height;
   const carouselWidth = Math.round(width * 0.95);
   const carouselHeight = Math.round(height * 0.8);
@@ -557,8 +557,8 @@ export default function Reporte_Piezas_DanadasScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <_Background id_almacen={user?.id_almacen}>
+    <_Background id_almacen={user?.id_almacen}>
+      <SafeAreaView style={styles.container}>
         <_Header page_info={pageConfig} />
 
         {accessGranted ? (
@@ -812,11 +812,11 @@ export default function Reporte_Piezas_DanadasScreen() {
 
         <_Footer Show_Almacen={false} Show_Usermenu={true}>
           <View>
-            <View style={{ paddingVertical: 10 }}>
-              <Text style={{ color: theme.iconTextColor, fontSize: 14, textAlign: 'center' }}>                 
+            <View style={{ paddingBottom: 10, marginTop: 10 }}>
+              <Text style={{ color: theme.iconTextColor, fontSize: 14, textAlign: 'center' }}>
                 {t('reporte_piezas_danadas.footer_codigo_reporte')} {codigoReporte ? codigoReporte : t('reporte_piezas_danadas.footer_no_reporte')}
               </Text>
-            </View>
+            </View>*
             <View>
               <TouchableOpacity
                 style={[styles.addButton, { backgroundColor: theme.accent, opacity: saving ? 0.6 : 1 }]}
@@ -836,68 +836,68 @@ export default function Reporte_Piezas_DanadasScreen() {
           </View>
 
         </_Footer>
-      </_Background>
 
-      <_PinModal
-        visible={showPinModal}
-        title="Confirma tu PIN"
-        message={t('reporte_piezas_danadas.pin_message')}
-        onSuccess={handlePinSuccess}
-        onCancel={handlePinCancel}
-      />
+        <_PinModal
+          visible={showPinModal}
+          title="Confirma tu PIN"
+          message={t('reporte_piezas_danadas.pin_message')}
+          onSuccess={handlePinSuccess}
+          onCancel={handlePinCancel}
+        />
 
-      <_PickerModal
-        visible={showFabricantePicker}
-        onClose={() => setShowFabricantePicker(false)}
-        data={fabricantes.map(f => ({ ...f, nombre: f.fabricante }))}
-        key_name="id_fabricante"
-        onSelect={(item: iFabricante) => { setFabricante(item); setShowFabricantePicker(false); }}
-        title={t('reporte_piezas_danadas.id_fabricante')}
-      />
+        <_PickerModal
+          visible={showFabricantePicker}
+          onClose={() => setShowFabricantePicker(false)}
+          data={fabricantes.map(f => ({ ...f, nombre: f.fabricante }))}
+          key_name="id_fabricante"
+          onSelect={(item: iFabricante) => { setFabricante(item); setShowFabricantePicker(false); }}
+          title={t('reporte_piezas_danadas.id_fabricante')}
+        />
 
-      <Modal visible={showCarousel} transparent animationType="fade">
-        <View style={styles.carouselOverlay}>
-          <View style={[styles.carouselContainer, { backgroundColor: theme.card, width: carouselWidth, height: carouselHeight }]}>
-            <View style={[styles.carouselHeader, { borderBottomColor: theme.border }]}>
-              <Text style={[styles.carouselTitle, { color: theme.text }]}>
-                {carouselMode === 'pieza' ? 'Fotos de la pieza' : 'Fotos agregadas'}
-              </Text>
-              <TouchableOpacity onPress={() => setShowCarousel(false)}>
-                <MaterialCommunityIcons name="close" size={24} color={theme.text} />
-              </TouchableOpacity>
-            </View>
-            {/* _FotosCarousel normalmente mide su contenedor con onLayout, pero
+        <Modal visible={showCarousel} transparent animationType="fade">
+          <View style={styles.carouselOverlay}>
+            <View style={[styles.carouselContainer, { backgroundColor: theme.card, width: carouselWidth, height: carouselHeight }]}>
+              <View style={[styles.carouselHeader, { borderBottomColor: theme.border }]}>
+                <Text style={[styles.carouselTitle, { color: theme.text }]}>
+                  {carouselMode === 'pieza' ? 'Fotos de la pieza' : 'Fotos agregadas'}
+                </Text>
+                <TouchableOpacity onPress={() => setShowCarousel(false)}>
+                  <MaterialCommunityIcons name="close" size={24} color={theme.text} />
+                </TouchableOpacity>
+              </View>
+              {/* _FotosCarousel normalmente mide su contenedor con onLayout, pero
                 dentro del portal de un Modal ese onLayout no se dispara en RN
                 Web, así que aquí se le pasa el tamaño ya calculado con
                 useWindowDimensions en vez de dejar que se auto-mida.
                 Un solo carousel compartido: "carouselMode" decide si muestra
                 las fotos del formulario en curso o las de una pieza ya
                 guardada, para no montar los dos a la vez. */}
-            <View style={{ width: carouselWidth, height: carouselHeight - 49 }}>
-              <_FotosCarousel
-                photos={carouselMode === 'pieza' ? fotoUrls_pieza : fotoUrls}
-                keys={carouselMode === 'pieza' ? archivos_pieza.map((f: any) => f.id_foto) : archivos.map((f: any) => f.uri)}
-                allowSelect={false}
-                showDelete
-                onDelete={(key) => carouselMode === 'pieza' ? deleteFoto_byIDFoto(key) : deleteFoto_byKey(key)}
-                width={carouselWidth}
-                height={carouselHeight - 49}
-              />
+              <View style={{ width: carouselWidth, height: carouselHeight - 49 }}>
+                <_FotosCarousel
+                  photos={carouselMode === 'pieza' ? fotoUrls_pieza : fotoUrls}
+                  keys={carouselMode === 'pieza' ? archivos_pieza.map((f: any) => f.id_foto) : archivos.map((f: any) => f.uri)}
+                  allowSelect={false}
+                  showDelete
+                  onDelete={(key) => carouselMode === 'pieza' ? deleteFoto_byIDFoto(key) : deleteFoto_byKey(key)}
+                  width={carouselWidth}
+                  height={carouselHeight - 49}
+                />
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      <CustomModal
-        visible={modal.visible}
-        titulo={modal.titulo}
-        mensaje={modal.mensaje}
-        icon={modal.icon}
-        colorIcon={modal.colorIcon}
-        onClose={() => setModal({ ...modal, visible: false })}
-      />
+        <CustomModal
+          visible={modal.visible}
+          titulo={modal.titulo}
+          mensaje={modal.mensaje}
+          icon={modal.icon}
+          colorIcon={modal.colorIcon}
+          onClose={() => setModal({ ...modal, visible: false })}
+        />
 
-    </SafeAreaView>
+      </SafeAreaView>
+    </_Background>
   );
 }
 

@@ -59,7 +59,7 @@ export default function reporte_piezas_danadas_view_Screen() {
   const [loading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { width, height } = useWindowDimensions();
-  const margin_height = 45;
+  const margin_height = 50;
   const _ClientHeight = height - 130 - margin_height;
 
   // Form fields
@@ -700,9 +700,8 @@ export default function reporte_piezas_danadas_view_Screen() {
 
   // 2. CUANDO TERMINA LA CARGA (Contenedor Principal)
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-      {/* Header */}
-      <_Background id_almacen={user?.id_almacen}>
+    <_Background id_almacen={user?.id_almacen} >
+      <SafeAreaView style={[styles.container]}>
         <_Header page_info={pageConfig} />
 
         <KeyboardAvoidingView
@@ -1136,8 +1135,8 @@ export default function reporte_piezas_danadas_view_Screen() {
             )}
           </TouchableOpacity>
         </_Footer>
-      </_Background>
-    </SafeAreaView>
+      </SafeAreaView>
+    </_Background >
   );
 }
 

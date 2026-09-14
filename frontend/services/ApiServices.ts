@@ -39,7 +39,7 @@ class ApiService {
       return this.parseXmlToJson(text);
     } catch (error) {
       console.error("Error en request:", error);
-      return { result: "error", result_text: "Error de conexión" };
+      return { result: "error", result_text: "Error de conexión:" + error };
     }
   }
 
@@ -93,7 +93,7 @@ class ApiService {
       return parseNode(xmlDoc.documentElement as any);
     } catch (e) {
       console.error("Error parseando XML:", e);
-      return { result: "error", result_text: "Error de lectura XML" };
+      return { result: "error", result_text: "Error de lectura XML: " + e };
     }
   }
 
