@@ -39,8 +39,8 @@
       "cirugias_buscar":"Buscar cirugía",
       "cirugias_calendario" : "Calendario de cirugías",
       "cirugias_vista_diario" : "Vista diaria" ,
-      "reporte_piezas_danadas_view": "Ver reporte piezas dañadas",
-      "reporte_piezas_danadas": "Reportar pieza dañada",
+      "reporte_piezas_danadas_view": "Ver reportes",
+      "reporte_piezas_danadas": "Reportar pieza",
       "cirugia_detalle_view": "Detalle de cirugía"
 
     },

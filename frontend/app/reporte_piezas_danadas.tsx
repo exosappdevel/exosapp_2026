@@ -13,13 +13,13 @@ import {
   Modal,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Background, _checkBox, _Footer, _FotosCarousel, _PickerModal, _PinModal, _TouchableWithoutFeedback, hexToRGBA, playSuccessSound, playErrorSound } from '../components/elidev_components';
+import { _Header, _Background, _checkBox, _Footer, _FotosCarousel, _PickerModal, _PinModal, _TouchableWithoutFeedback, _footer_baseHeight, hexToRGBA, playSuccessSound, playErrorSound } from '../components/elidev_components';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -57,8 +57,18 @@ export default function Reporte_Piezas_DanadasScreen() {
   };
 
   const { width, height } = useWindowDimensions();
-  const margin_height = 50;
+  const margin_height = 55;
   const _ClientHeight = height - 130 - margin_height;
+  const insets = useSafeAreaInsets();
+  // _Footer flota con position:absolute (no le resta espacio al layout en
+  // flex) y su alto real en pantalla es _footer_baseHeight + insets.bottom.
+  // _ClientHeight no descuenta insets.bottom porque se calcula con
+  // useWindowDimensions() (ajeno al safe area), así que en web (insets=0)
+  // el margen fijo alcanza por coincidencia, pero en un iPhone/Android real
+  // con inset inferior >0 la caja del ScrollView se queda corta de espacio
+  // y el contenido final termina detrás del footer. Igual que en
+  // profile.tsx: se fuerza el espacio de sobra vía contentContainerStyle.
+  const footerClearance = _footer_baseHeight(false) + insets.bottom + 20;
   const carouselWidth = Math.round(width * 0.95);
   const carouselHeight = Math.round(height * 0.8);
 
@@ -563,11 +573,25 @@ export default function Reporte_Piezas_DanadasScreen() {
 
         {accessGranted ? (
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            // En Android, Expo ya deja "windowSoftInputMode: resize" por default
+            // (no hay override en app.json), así que el propio SO encoge la
+            // ventana cuando aparece el teclado. Si aquí además se usa
+            // behavior="height", KeyboardAvoidingView vuelve a encoger el alto
+            // por su cuenta ENCIMA de eso, y como el ScrollView hijo tiene un
+            // maxHeight fijo (calculado antes de que el teclado apareciera),
+            // el resultado es que su caja termina sin respetar ese maxHeight
+            // (se ve más chica/más grande de lo esperado, o salta). En Android
+            // se deja sin behavior para que solo el resize nativo del SO actúe.
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={{ flex: 1 }}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10}
           >
-            <ScrollView style={[styles.content, { maxHeight: _ClientHeight }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <ScrollView
+              style={[styles.content, { maxHeight: _ClientHeight }]}
+              contentContainerStyle={{ paddingBottom: footerClearance }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
 
               <Text style={[styles.codigoReporte, { color: theme.accent }]}>{codigoReporte}</Text>
 
@@ -816,7 +840,7 @@ export default function Reporte_Piezas_DanadasScreen() {
               <Text style={{ color: theme.iconTextColor, fontSize: 14, textAlign: 'center' }}>
                 {t('reporte_piezas_danadas.footer_codigo_reporte')} {codigoReporte ? codigoReporte : t('reporte_piezas_danadas.footer_no_reporte')}
               </Text>
-            </View>*
+            </View>
             <View>
               <TouchableOpacity
                 style={[styles.addButton, { backgroundColor: theme.accent, opacity: saving ? 0.6 : 1 }]}

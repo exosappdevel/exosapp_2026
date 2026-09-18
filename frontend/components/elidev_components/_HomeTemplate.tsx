@@ -8,7 +8,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../../context/AppContext';
 import { PanResponder } from 'react-native';
 
-import { _Header, _Footer, _MenuSection, _Background, _MenuLauncher } from '.';
+// Importados directo de sus archivos (no del barrel "."): _HomeTemplate es uno
+// de los componentes que ese mismo index.ts re-exporta, así que importar
+// desde '.' aquí cierra un ciclo (index.ts -> _HomeTemplate.tsx -> index.ts)
+// que Metro reporta como "Require cycle" en cada reload.
+import { _Header } from './_Header';
+import { _Footer } from './_Footer';
+import { _MenuSection } from './_MenuSection';
+import { _Background } from './_Background';
+import { _MenuLauncher } from './_MenuLauncher';
 import { Soon_Modal } from '../CustomModal';
 import { Tabs_Allowed, Tabs_Allowed_almacen } from '@/context/AppmenuItems';
 import { useRouter } from 'expo-router';
