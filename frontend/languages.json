@@ -260,7 +260,9 @@
       "finalize_success": "El reporte de piezas dañadas ha sido finalizado exitosamente y enviado a revisión.",
       "footer_codigo_reporte": "Código reporte:"  ,
       "footer_no_reporte": "****"  ,
-      "delete_pieza" : "Eliminar pieza"
+      "delete_pieza" : "Eliminar pieza",
+      "camera_permission_denied": "No se puede acceder a la cámara. Activa el permiso de Cámara para esta app en Ajustes.",
+      "gallery_permission_denied": "No se puede acceder a la galería. Activa el permiso de Fotos para esta app en Ajustes."
 
     }
   },

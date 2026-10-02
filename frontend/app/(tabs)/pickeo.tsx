@@ -314,7 +314,7 @@ export default function PickeoScreen() {
                     </TouchableOpacity>
                   </View>
                   <View style={styles.itemInfo}>
-                    <Text style={[styles.textMain, { color: theme.text }]} numberOfLines={2}>
+                    <Text style={[styles.textMain, { color: theme.text }]} numberOfLines={4}>
                       {item.descripcion}
                     </Text>
                     <Text style={[styles.textMain, { color: theme.accent }]}>{item.referencia}</Text>

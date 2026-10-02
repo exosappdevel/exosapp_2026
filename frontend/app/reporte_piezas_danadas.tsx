@@ -20,7 +20,6 @@ import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import CustomModal from '../components/CustomModal';
 import { _Header, _Background, _checkBox, _Footer, _FotosCarousel, _PickerModal, _PinModal, _TouchableWithoutFeedback, _footer_baseHeight, hexToRGBA, playSuccessSound, playErrorSound } from '../components/elidev_components';
-import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
 interface iFabricante {
@@ -247,28 +246,36 @@ export default function Reporte_Piezas_DanadasScreen() {
     }
   };
 
-  const pickDocument = async (pieza: any) => {
+  const pickImageFromGallery = async (pieza: any) => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*", // Permite todos los tipos de archivos
-        copyToCacheDirectory: true
+      // Antes usaba DocumentPicker con type:"*/*", que abre el explorador de
+      // archivos general (Files/iCloud/cualquier documento) en vez de la
+      // galería de fotos. mediaTypes:['images'] restringe launchImageLibraryAsync
+      // a solo imágenes, igual que el botón "Cámara" de al lado.
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        showError(t('reporte_piezas_danadas.gallery_permission_denied'));
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.5,
       });
 
-      // En las versiones nuevas de Expo, se verifica con !result.canceled
       if (!result.canceled) {
         const asset = result.assets[0];
 
         // Creamos el objeto con la estructura que necesita ApiService.uploadFileDirect
         const nuevoArchivo = {
           uri: asset.uri,
-          name: asset.name,
-          type: asset.mimeType || 'application/octet-stream',
+          name: asset.fileName || asset.uri.split('/').pop() || 'imagen.jpg',
+          type: asset.mimeType || 'image/jpeg',
           url: '',
           id: 0,
           id_foto: ''
         };
 
-        //alert(JSON.stringify(nuevoArchivo));
         // Guardamos en tu estado de archivos (el array que se subirá al final)
         if (!pieza) {
           setArchivos((prev: any) => [...prev, nuevoArchivo]);
@@ -307,12 +314,24 @@ export default function Reporte_Piezas_DanadasScreen() {
         }
       }
     } catch (err) {
-      console.error("Error al seleccionar documento:", err);
+      console.error("Error al seleccionar imagen de la galería:", err);
       showError(t('common.connectionError'));
     }
   };
   const takePhoto = async (pieza: any) => {
     try {
+      // launchCameraAsync pide el permiso solo la PRIMERA vez; si ya fue
+      // denegado antes (p.ej. en una instalación previa), iOS no vuelve a
+      // mostrar el diálogo y launchCameraAsync simplemente no abre nada, sin
+      // lanzar ningún error — por eso "la cámara no abre" pasaba en
+      // silencio. Pidiendo el permiso explícito podemos detectar ese caso y
+      // avisarle al usuario que tiene que activarlo manualmente en Ajustes.
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        showError(t('reporte_piezas_danadas.camera_permission_denied'));
+        return;
+      }
+
       let result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
       if (!result.canceled) {
         const asset = result.assets[0];
@@ -697,7 +716,7 @@ export default function Reporte_Piezas_DanadasScreen() {
                 >
                   <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas.add_fotos')}</Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 15 }}>
-                    <TouchableOpacity onPress={() => { pickDocument(null) }} style={styles.actionButton}>
+                    <TouchableOpacity onPress={() => { pickImageFromGallery(null) }} style={styles.actionButton}>
                       <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
                       <Text style={{ color: theme.text }}>Galería</Text>
                     </TouchableOpacity>
@@ -797,7 +816,7 @@ export default function Reporte_Piezas_DanadasScreen() {
                       </View>
                       <View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 15 }}>
-                          <TouchableOpacity onPress={() => { pickDocument(pieza) }} style={styles.actionButton}>
+                          <TouchableOpacity onPress={() => { pickImageFromGallery(pieza) }} style={styles.actionButton}>
                             <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
                             <Text style={{ color: theme.text }}>Galería</Text>
                           </TouchableOpacity>
