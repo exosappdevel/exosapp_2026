@@ -196,7 +196,7 @@ trait ExosApp_Almacenes
 				$limit = !Requesting("limit") ? 10 : Requesting("limit");
 				
 				/* *** De aqui tengo que enviar la info de la tabla fragmento *** */
-				$query1 = "SELECT 
+				$query = "SELECT 
 					fragmento.id_producto,
 					producto.referencia,
 					producto.nombre,
@@ -209,8 +209,8 @@ trait ExosApp_Almacenes
 						fragmento.id_fragmento 
 						ORDER BY fragmento.id_fragmento
 					) AS ids_fragmentos,
-					NOW() AS last_update
-
+					NOW() AS last_update 
+ 
 					FROM fragmento
 					
 					INNER JOIN producto 
@@ -236,7 +236,7 @@ trait ExosApp_Almacenes
 						fragmento.id_producto,
 						fragmento.id_bodega_destino";
 
-				$qresult = DatasetSQL($query1);
+				$qresult = DatasetSQL($query);
 
 				
 				$data = [];
@@ -252,7 +252,10 @@ trait ExosApp_Almacenes
 					// Primer fragmento del grupo, solamente para compatibilidad
 					//	$id_fragmento = $fragmentos[0];
 				
-					$data['prod_' . $row['id_producto']. '.' . $row['id_bodega_destino']] = [
+					//	$data['prod_' . $row['id_producto']] = [
+						//	'id' => $row['id_producto'],
+				
+					  $data['prod_' . $row['id_producto']. '.' . $row['id_bodega_destino']] = [
 						'id' => $row['id_producto']. '.' . $row['id_bodega_destino'],
 				
 						// Primer fragmento, si la APP todavía requiere este campo
@@ -271,7 +274,7 @@ trait ExosApp_Almacenes
 						'marca' => $row['marca'],
 						'fabricante' => $row['fabricante'],
 				
-						'cantidad_solicitada' => $row['sumrestante'],
+						'cantidad_solicitada' => intval($row['sumrestante']),
 						'cantidad_recolectada' => 0,
 				
 						'id_bodega_destino' => $row['id_bodega_destino'],
@@ -290,8 +293,7 @@ trait ExosApp_Almacenes
 				return [
 					'result' => 'ok',
 					'data' => $data,
-					'result_text' => 'Metodo ejecutado exitosamente en EXOSAPP.PHP V2',
-                    //'query' => $query1
+					'result_text' => 'Metodo ejecutado exitosamente en EXOSAPP.PHP V2'
 				];
 		
 			}else{ 
@@ -439,7 +441,6 @@ trait ExosApp_Almacenes
         $datos_pickeo 	= Requesting("datos_pickeo"); // JSON enviado desde la App
         $bodega_surte 	= 35;
         $nums = 0;
-        $sql_list =[];
         /* **** 
             necesito la sig estructura :
         $datos_pickeo[
@@ -513,12 +514,35 @@ trait ExosApp_Almacenes
 					* Verificamos que el fragmento todavía exista
 					* y que siga disponible.
 					*/
+					//		$query1 = "
+					//			SELECT 
+					//				fragmento.cantidad,
+					//				fragmento.restante,
+					//				fragmento.id_producto AS id_producto_real,
+					//				almacen.id_almacen AS bodega_destino
+					//			FROM fragmento
+					//			INNER JOIN remision_inv 
+					//				ON remision_inv.id_remision_inv = fragmento.id_remision_inv
+					//			INNER JOIN inventario 
+					//				ON inventario.id_inventario = remision_inv.id_inventario
+					//			INNER JOIN carpeta 
+					//				ON carpeta.id_carpeta = fragmento.id_carpeta
+					//			INNER JOIN almacen 
+					//				ON almacen.id_almacen = carpeta.id_bodega
+					//			WHERE fragmento.id_fragmento = ".$id_fragmento."
+					//			AND fragmento.restante > 0
+					//			AND fragmento.pickeo = 0
+					//		";			
+					
+					/* *** UPDATE OSWALDO - 2026/09/29 *** */
+					/* *** AHORA DESTINO FISICO VIENE DE fragmento.id_bodega_destino *** */
+					
 					$query1 = "
 						SELECT 
 							fragmento.cantidad,
 							fragmento.restante,
 							fragmento.id_producto AS id_producto_real,
-							almacen.id_almacen AS bodega_destino
+							fragmento.id_bodega_destino AS bodega_destino
 						FROM fragmento
 						INNER JOIN remision_inv 
 							ON remision_inv.id_remision_inv = fragmento.id_remision_inv
@@ -526,8 +550,6 @@ trait ExosApp_Almacenes
 							ON inventario.id_inventario = remision_inv.id_inventario
 						INNER JOIN carpeta 
 							ON carpeta.id_carpeta = fragmento.id_carpeta
-						INNER JOIN almacen 
-							ON almacen.id_almacen = carpeta.id_bodega
 						WHERE fragmento.id_fragmento = ".$id_fragmento."
 						AND fragmento.restante > 0
 						AND fragmento.pickeo = 0
@@ -595,7 +617,6 @@ trait ExosApp_Almacenes
 					";
 		
 					ExecuteSQL($queryupdf);
-                    $sql_list[] = $queryupdf;
 				}
 			}
 		}
@@ -609,13 +630,11 @@ trait ExosApp_Almacenes
         if ($nums > 0) {
             $consulta = rtrim($consulta, ",");
             ExecuteSQL($consulta);
-            $sql_list[] = $consulta;
         }
 
         // ---- Al hacer checkout, se elimina el registro de la tabla terminal_bloqueada para liberar la terminal ----
         $querydel = "DELETE FROM terminal_bloqueada WHERE id_terminal = " .$id_terminal;
         ExecuteSQL($querydel);
-        $sql_list[] = $querydel;
 
         //			[{"id_fragmento": 1, "id_terminal":1, "bodega_surte":1}]
         /*
@@ -661,7 +680,7 @@ trait ExosApp_Almacenes
         */
         return [
             'result' => 'ok',
-            //'sql' => $sql_list,
+            //'sql' => $sSQL,
             'result_text' => 'Checkout procesado correctamente en EXOSAPP.PHP',
             'nums' => $nums
         ];
