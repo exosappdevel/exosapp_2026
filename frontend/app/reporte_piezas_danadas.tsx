@@ -56,21 +56,13 @@ export default function Reporte_Piezas_DanadasScreen() {
   };
 
   const { width, height } = useWindowDimensions();
-  const margin_height = 55;
-  const _ClientHeight = height - 130 - margin_height;
+  const margin_height = 70;
+  const _ClientHeight = height - 175 - margin_height;
   const insets = useSafeAreaInsets();
-  // _Footer flota con position:absolute (no le resta espacio al layout en
-  // flex) y su alto real en pantalla es _footer_baseHeight + insets.bottom.
-  // _ClientHeight no descuenta insets.bottom porque se calcula con
-  // useWindowDimensions() (ajeno al safe area), así que en web (insets=0)
-  // el margen fijo alcanza por coincidencia, pero en un iPhone/Android real
-  // con inset inferior >0 la caja del ScrollView se queda corta de espacio
-  // y el contenido final termina detrás del footer. Igual que en
-  // profile.tsx: se fuerza el espacio de sobra vía contentContainerStyle.
-  const footerClearance = _footer_baseHeight(false) + insets.bottom + 20;
   const carouselWidth = Math.round(width * 0.95);
   const carouselHeight = Math.round(height * 0.8);
-
+  const footerClearance = _footer_baseHeight(false) + insets.bottom + 20;
+  
 
   // --- Acceso con PIN + inicio del reporte (id_reporte/codigo_reporte) ---
   const [showPinModal, setShowPinModal] = useState(false);
@@ -612,7 +604,7 @@ export default function Reporte_Piezas_DanadasScreen() {
               keyboardShouldPersistTaps="handled"
             >
 
-              <Text style={[styles.codigoReporte, { color: theme.accent }]}>{codigoReporte}</Text>
+              {/*<Text style={[styles.codigoReporte, { color: theme.accent }]}>{codigoReporte}</Text>*/}
 
               {/* SECCIÓN 1: Formulario */}
               <View style={[styles.sectionCard, { backgroundColor: hexToRGBA(theme.card, 0.8), borderColor: theme.border }]}>

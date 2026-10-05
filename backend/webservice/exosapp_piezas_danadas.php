@@ -556,7 +556,7 @@ trait ExosApp_PiezasDanadas
             $resultText 	= "Error. Datos incompletos.";
         }else{
             $resultStatus 	= "ok"; 
-            $resultText 	= "Correcto. La imagen fue guardada con exito.";	
+            $resultText 	= "Correcto. El reporte fue guardado con exito.";	
             
             $query1 = "SELECT COUNT(id_registro) AS cantidad FROM pieza_danada_reporte_inv WHERE id_reporte = ".$id_reporte;
             $total_registros = GetValueSQL($query1,"cantidad");

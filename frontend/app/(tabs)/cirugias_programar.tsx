@@ -559,7 +559,11 @@ export default function ProgramaCirugiaScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 40} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={[styles.content, { maxHeight: _ClientHeight }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} 
+                style={[styles.content, { maxHeight: _ClientHeight }]} 
+                showsVerticalScrollIndicator={false} 
+                keyboardShouldPersistTaps="handled" 
+                canCancelContentTouches={true} >
             {/* Form Card */}
             <View style={[styles.formCard, { borderWidth: 0 }]}>
 
