@@ -48,7 +48,7 @@ export default function Reporte_Piezas_DanadasScreen() {
   const pageConfig = {
     name: t('screens.reporte_piezas_danadas'),
     icon: "alert-decagram-outline",
-    previous: "home",
+    previous: "calidad",
     show_user: true,
     show_menu: true,
     show_in_recent: true,

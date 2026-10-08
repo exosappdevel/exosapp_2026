@@ -16,16 +16,14 @@ import {
   KeyboardAvoidingView,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Show_Generic_Report, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _FotosCarousel, getWebserviceFileUrl, formatDate } from '../components/elidev_components';
+import { _Header, _Show_Report_Pager, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _FotosCarousel, _DatePicker, _footer_baseHeight, getWebserviceFileUrl, formatDate } from '../components/elidev_components';
 
 
 interface PickerOption {
@@ -48,7 +46,7 @@ export default function reporte_piezas_danadas_view_Screen() {
   const pageConfig = {
     name: t('screens.reporte_piezas_danadas_view'),
     icon: "glass-fragile",
-    previous: "home",
+    previous: "calidad",
     show_user: true,
     show_menu: true,
     show_in_recent: true,
@@ -61,6 +59,11 @@ export default function reporte_piezas_danadas_view_Screen() {
   const { width, height } = useWindowDimensions();
   const margin_height = 50;
   const _ClientHeight = height - 130 - margin_height;
+  const insets = useSafeAreaInsets();
+  // _Footer flota (position:absolute) sobre el ScrollView; este espacio extra
+  // al final permite desplazar los últimos resultados por encima del footer.
+  const FOOTER_EXTRA = 56; // alto extra del footer: botón + filtro en dos filas
+  const footerClearance = _footer_baseHeight(false, FOOTER_EXTRA) + insets.bottom + 20;
 
   // Form fields
   const [fecha_ini, setFecha_ini] = useState('');
@@ -89,11 +92,14 @@ export default function reporte_piezas_danadas_view_Screen() {
   const [showEstatusPicker, setShowEstatusPicker] = useState(false);
   const [showOrderPicker, setShowOrderPicker] = useState(false);
 
-  const [showDatePicker, setShowDatePicker] = useState<string | null>(null);
-
   const scrollRef = React.useRef<ScrollView>(null);
 
   const [resultados, setResultados] = useState<any[]>([]);
+  // Filtro de texto "en vivo" (footer) sobre la lista de resultados actual.
+  const [filtroTexto, setFiltroTexto] = useState('');
+  // Reporte abierto en el detalle de pantalla completa (índice dentro de la lista
+  // ya filtrada). null = detalle cerrado.
+  const [detalleIndex, setDetalleIndex] = useState<number | null>(null);
 
   // --- Carousel de fotos de un reporte ya guardado (mismo patrón que
   // reporte_piezas_danadas.tsx) ---
@@ -149,31 +155,6 @@ export default function reporte_piezas_danadas_view_Screen() {
   }, []); // <-- DEJAMOS EL ARRAY VACÍO PARA QUE SOLO CORRA AL INICIO
 
 
-  const onDateChange_ini = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    onDateChange(event, selectedDate, setFecha_ini)
-  }
-  const onDateChange_fin = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    onDateChange(event, selectedDate, setFecha_fin)
-  }
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date, set_target?: any) => {
-    // En iOS, el picker puede quedarse abierto, en Android se cierra solo
-    setShowDatePicker(null);
-
-    if (event.type === 'set' && selectedDate) {
-      // 2. Formateamos la fecha para mostrarla en el campo de texto
-      const day = selectedDate.getDate().toString().padStart(2, '0');
-      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-      const year = selectedDate.getFullYear();
-      const formattedDate = `${day}/${month}/${year}`;
-
-      // 3. ¡CRUCIAL!: Actualizamos el estado que lee el <Text> del selector
-      set_target(formattedDate);
-    } else {
-      // Si el usuario cancela, cerramos el picker
-    }
-    setShowDatePicker(null);
-  };
-
   const [modal, setModal] = useState({
     visible: false,
     titulo: '',
@@ -192,86 +173,8 @@ export default function reporte_piezas_danadas_view_Screen() {
     });
   };
 
-  // --- Agregar/quitar fotos y eliminar un reporte ya guardado, mismo patrón
-  // que reporte_piezas_danadas.tsx (ahí "pieza" viene del formulario en
-  // memoria; aquí "item" viene de un resultado de búsqueda ya finalizado). ---
-  const pickDocument = async (item: any) => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*",
-        copyToCacheDirectory: true
-      });
-      if (result.canceled) return;
-
-      const asset = result.assets[0];
-      const nuevoArchivo = {
-        uri: asset.uri,
-        name: asset.name,
-        type: asset.mimeType || 'application/octet-stream',
-        url: '',
-        id_foto: ''
-      };
-
-      const urlServidor = await ApiService.uploadFileDirect("piezas_danadas", 'pieza', nuevoArchivo);
-      if (!urlServidor) {
-        showError(t('common.connectionError'));
-        return;
-      }
-
-      nuevoArchivo.url = urlServidor;
-      const response_foto = await ApiService.guardar_foto_reporte_piezas_danadas(item.id_registro, urlServidor, user?.id_usuario || '');
-      if (response_foto?.result === 'ok') {
-        const fotoGuardada = { id_foto: response_foto.id_foto, url: urlServidor };
-        setResultados((prev: any[]) => prev.map((r) => {
-          if (r.id_registro !== item.id_registro) return r;
-          const fotosActuales = Array.isArray(r.fotos) ? r.fotos : [];
-          return { ...r, fotos: [...fotosActuales, fotoGuardada], fotos_count: fotosActuales.length + 1 };
-        }));
-      } else {
-        showError(response_foto?.result_text || t('common.connectionError'));
-      }
-    } catch (err) {
-      console.error("Error al seleccionar documento:", err);
-    }
-  };
-
-  const takePhoto = async (item: any) => {
-    try {
-      const result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
-      if (result.canceled) return;
-
-      const asset = result.assets[0];
-      const nuevoArchivo = {
-        uri: asset.uri,
-        name: asset.uri.split('/').pop() || 'photo.jpg',
-        type: 'image/jpeg',
-        url: '',
-        id_foto: ''
-      };
-
-      const urlServidor = await ApiService.uploadFileDirect("piezas_danadas", 'pieza', nuevoArchivo);
-      if (!urlServidor) {
-        showError(t('common.connectionError'));
-        return;
-      }
-
-      const response_foto = await ApiService.guardar_foto_reporte_piezas_danadas(item.id_registro, urlServidor, user?.id_usuario || '');
-      if (response_foto?.result === 'ok') {
-        const fotoGuardada = { id_foto: response_foto.id_foto, url: urlServidor };
-        setResultados((prev: any[]) => prev.map((r) => {
-          if (r.id_registro !== item.id_registro) return r;
-          const fotosActuales = Array.isArray(r.fotos) ? r.fotos : [];
-          return { ...r, fotos: [...fotosActuales, fotoGuardada], fotos_count: fotosActuales.length + 1 };
-        }));
-      } else {
-        showError(response_foto?.result_text || t('common.connectionError'));
-      }
-    } catch (err) {
-      console.error("Error al tomar foto:", err);
-      showError(t('common.connectionError'));
-    }
-  };
-
+  // Las fotos de un reporte ya guardado solo se consultan (carrusel): no se
+  // pueden agregar ni eliminar desde esta pantalla.
   const verFotosDeReporte = (item: any) => {
     const fotos = Array.isArray(item.fotos) ? item.fotos : [];
     setArchivos_pieza(fotos.map((f: any) => ({
@@ -282,53 +185,13 @@ export default function reporte_piezas_danadas_view_Screen() {
     setShowCarousel(true);
   };
 
-  const deleteFoto_byIDFoto = async (id_foto: any) => {
-    const ejecutarEliminacion = () => {
-      setArchivos_pieza((prev: any[]) => {
-        const nuevaLista = prev.filter((f) => f.id_foto !== id_foto);
-        setShowCarousel(showCarousel && nuevaLista.length > 0);
-        return nuevaLista;
-      });
-      setResultados((prev: any[]) => prev.map((r) => {
-        const fotosActuales = Array.isArray(r.fotos) ? r.fotos : [];
-        if (!fotosActuales.some((f: any) => f.id_foto === id_foto)) return r;
-        const nuevasFotos = fotosActuales.filter((f: any) => f.id_foto !== id_foto);
-        return { ...r, fotos: nuevasFotos, fotos_count: nuevasFotos.length };
-      }));
-    };
-    if (Platform.OS === "web") {
-      if (confirm(t('reporte_piezas_danadas.delete_foto_confirm'))) {
-        const response = await ApiService.eliminar_foto_reporte_piezas_danadas(id_foto);
-        if (response?.result == "ok") {
-          ejecutarEliminacion();
-        } else {
-          showError(response?.result_text || t('common.connectionError'));
-        }
-      }
-    } else {
-      Alert.alert("Check Out", t('reporte_piezas_danadas.delete_foto_confirm'), [
-        { text: "No" },
-        {
-          text: "Sí", onPress: async () => {
-            const response = await ApiService.eliminar_foto_reporte_piezas_danadas(id_foto);
-            if (response?.result == "ok") {
-              ejecutarEliminacion();
-            } else {
-              showError(response?.result_text || t('common.connectionError'));
-            }
-          }
-        },
-      ]);
-    }
-  };
-
   const handleEliminarReporte = async (id_registro: string) => {
     const elimina = () => {
       setResultados((prev: any[]) => prev.filter((r) => r.id_registro !== id_registro));
       setExpandedSection(null);
-      // Si el carousel de fotos de este reporte estaba abierto, se cierra
-      // también, ya que esas fotos dejaron de existir al eliminarse el reporte.
-      setShowCarousel(false);
+      // Se cierra el detalle y el carousel de fotos de este reporte: esas fotos
+      // dejaron de existir al eliminarse el reporte.
+      cerrarDetalle();
       setArchivos_pieza([]);
     };
     if (Platform.OS === "web") {
@@ -357,144 +220,177 @@ export default function reporte_piezas_danadas_view_Screen() {
     }
   };
 
+  // Normaliza (minúsculas y sin acentos) para que el filtro no distinga
+  // "Cirugía" de "cirugia".
+  const normalizarTexto = (v: any) =>
+    String(v ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  const textoFiltro = normalizarTexto(filtroTexto.trim());
+  const resultadosFiltrados: any[] = textoFiltro === ''
+    ? resultados
+    : resultados.filter((r: any) =>
+      [r.codigo, r.codigo_cirugia, r.codigo_set, r.codigo_traspaso, r.referencia, r.lote, r.estatus, r.comentarios]
+        .some((campo) => normalizarTexto(campo).includes(textoFiltro))
+    );
+
+  const cerrarDetalle = () => {
+    setShowCarousel(false);
+    setDetalleIndex(null);
+  };
+
+  // Carrusel de fotos del reporte. Se pasa como "overlay" del detalle (queda
+  // anidado dentro de su Modal): en iOS un <Modal> hermano no se presenta
+  // mientras el modal de detalle sigue abierto, por eso el carrusel no se
+  // veía. Solo consulta: no se pueden agregar ni eliminar fotos aquí.
+  const renderCarrusel = () => !showCarousel ? null : (
+    <Modal visible transparent animationType="fade" onRequestClose={() => setShowCarousel(false)}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={styles.carouselOverlay}>
+          <View style={[styles.carouselContainer, { backgroundColor: theme.card, width: carouselWidth, height: carouselHeight }]}>
+            <View style={[styles.carouselHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.carouselTitle, { color: theme.text }]}>
+                {t('reporte_piezas_danadas_view.fotos_title')}
+              </Text>
+              <TouchableOpacity onPress={() => setShowCarousel(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={theme.text} />
+              </TouchableOpacity>
+            </View>
+            {/* _FotosCarousel mide su contenedor con onLayout, pero eso no se
+                dispara dentro del portal de un Modal en RN Web, así que se le
+                pasa el tamaño ya calculado con useWindowDimensions. */}
+            <View style={{ width: carouselWidth, height: carouselHeight - 49 }}>
+              <_FotosCarousel
+                photos={fotoUrls_pieza}
+                keys={archivos_pieza.map((f: any) => f.id_foto)}
+                allowSelect={false}
+                width={carouselWidth}
+                height={carouselHeight - 49}
+              />
+            </View>
+          </View>
+        </View>
+      </GestureHandlerRootView>
+    </Modal>
+  );
+
+  // Campos que muestra el detalle de un reporte.
+  const camposDetalle = (item: any) => [
+    { 'label': 'Codigo Registro', 'value': item.codigo, 'tipo_linea': 'linea' },
+    { 'label': 'Estatus', 'value': item.estatus, 'tipo_linea': 'linea' },
+    { 'label': 'Traspaso', 'value': item.codigo_traspaso, 'tipo_linea': 'linea' },
+    { 'label': 'Cirugía', 'value': item.codigo_cirugia, 'tipo_linea': 'multi_linea' },
+    { 'label': 'Activo Origen', 'value': item.codigo_set, 'tipo_linea': 'multi_linea' },
+    { 'label': 'Referencia', 'value': item.referencia, 'tipo_linea': 'linea' },
+    { 'label': 'Lote', 'value': item.lote, 'tipo_linea': 'linea' },
+    { 'label': 'Notas', 'value': item.comentarios, 'tipo_linea': 'multi_linea' }
+  ];
+
+  // Fotos (solo consulta) + eliminar reporte, debajo de los campos del detalle.
+  const renderExtrasDetalle = (item: any) => (
+    <View style={{ marginTop: 15 }}>
+      <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas_view.fotos_title')}</Text>
+
+      {(!Array.isArray(item.fotos) || item.fotos.length === 0) ? (
+        <Text style={{ color: theme.textSub, fontSize: 13, marginBottom: 10 }}>
+          {t('reporte_piezas_danadas_view.empty_fotos')}
+        </Text>
+      ) : (
+        item.fotos.map((foto: any, fIndex: number) => (
+          // Toda la fila (icono y nombre) abre el carrusel de fotos.
+          <TouchableOpacity key={"foto_" + fIndex} style={styles.fileRow} onPress={() => verFotosDeReporte(item)}>
+            <MaterialCommunityIcons name="image" size={20} color={theme.accent} />
+            <Text style={{ color: theme.text, flex: 1 }} numberOfLines={1}>
+              {(foto.url || '').split('/').pop() || `Imagen_${fIndex + 1}.jpg`}
+            </Text>
+          </TouchableOpacity>
+        ))
+      )}
+
+      <TouchableOpacity
+        style={[styles.addButton, { backgroundColor: '#e53e3e', marginTop: 15 }]}
+        onPress={() => handleEliminarReporte(item.id_registro)}
+      >
+        <MaterialCommunityIcons name="delete" size={20} color="#fff" />
+        <Text style={styles.addButtonText}>{t('reporte_piezas_danadas.delete_pieza')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderResultados = () => {
     if (loading) return <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 20 }} />;
     if (resultados.length === 0) return (<View></View>);
 
+    if (resultadosFiltrados.length === 0) {
+      return (
+        <Text style={{ color: theme.textSub, textAlign: 'center', marginTop: 20, fontSize: 14 }}>
+          {t('reporte_piezas_danadas_view.filter_no_matches')}
+        </Text>
+      );
+    }
+
     //alert(JSON.stringify(resultados));
 
-    return resultados.map((item: any, index: number) => {
-
-      return (
-        <_AccordionSection
-          key={item.id_cirugia || index}
-          scrollRef={scrollRef}
-          backgroundColor={hexToRGBA(theme.card, 1)}
-          HideTitleOnOpen={true}
-          title={
-            <View style={{ flex: 1, paddingRight: 5 }}>
-              {/* Primer Renglón */}
-              <View>
-                <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{
-                    color: theme.text,
-                    fontWeight: 'bold',
-                    fontSize: 16
-                  }}>
-                    {item.codigo}
-                  </Text>
-                  <View style={{ borderRadius: 10, padding: 5, backgroundColor: item.color }}>
-                    <Text style={{
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: 11,
-
-                    }}>
-                      {item.estatus}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={{
-                  color: theme.text,
-                  fontSize: 14
-                }}>
-                  {item.codigo_cirugia}
-                </Text>
-              </View>
-
-              {/* Segundo Renglón */}
+    // Cada fila solo abre el detalle de pantalla completa (ver _Show_Report_Pager
+    // al final del render); ya no se expande en la lista.
+    return resultadosFiltrados.map((item: any, index: number) => (
+      <_AccordionSection
+        key={item.id_registro ?? item.id_cirugia ?? index}
+        backgroundColor={hexToRGBA(theme.card, 1)}
+        title={
+          <View style={{ flex: 1, paddingRight: 5 }}>
+            {/* Primer Renglón */}
+            <View>
               <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text style={{
-                  color: theme.accent,
-                  fontSize: 12,
-                  fontStyle: 'italic'
+                  color: theme.text,
+                  fontWeight: 'bold',
+                  fontSize: 16
                 }}>
-                  {item.referencia}
+                  {item.codigo}
                 </Text>
-                <Text style={{
-                  color: theme.textSub,
-                  fontSize: 14
-                }}>
-                  {item.lote}
-                </Text>
-              </View>
-            </View>
-          }
-          isOpen={expandedSection === `res_${index}`}
-          onPress={() => setExpandedSection(expandedSection === `res_${index}` ? null : `res_${index}`)}
-          yoff={85 + (index * 80)}
-        >
-          <_Show_Generic_Report
-            titulo={'Detalle del Reporte'}
-            visible={true}
-            showShare={false}
-            item={item}
-            onClose={() => setExpandedSection(null)}
-            style_content={{ marginTop: 150 }}
-            items_fields={[
-              { 'label': 'Codigo Registro', 'value': item.codigo, 'tipo_linea': 'linea' },
-              { 'label': 'Estatus', 'value': item.estatus, 'tipo_linea': 'linea' },
-              { 'label': 'Traspaso', 'value': item.codigo_traspaso, 'tipo_linea': 'linea' },
-              { 'label': 'Cirugía', 'value': item.codigo_cirugia, 'tipo_linea': 'multi_linea' },
-              { 'label': 'Activo Origen', 'value': item.codigo_set, 'tipo_linea': 'multi_linea' },
-              { 'label': 'Referencia', 'value': item.referencia, 'tipo_linea': 'linea' },
-              { 'label': 'Lote', 'value': item.lote, 'tipo_linea': 'linea' },
-              { 'label': 'Notas', 'value': item.comentarios, 'tipo_linea': 'multi_linea' }
+                <View style={{ borderRadius: 10, padding: 5, backgroundColor: item.color }}>
+                  <Text style={{
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: 11,
 
-            ]}
-          >
-            <View style={{ marginTop: 15 }}>
-              <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas_view.fotos_title')}</Text>
-
-              {(!Array.isArray(item.fotos) || item.fotos.length === 0) ? (
-                <Text style={{ color: theme.textSub, fontSize: 13, marginBottom: 10 }}>
-                  {t('reporte_piezas_danadas_view.empty_fotos')}
-                </Text>
-              ) : (
-                item.fotos.map((foto: any, fIndex: number) => (
-                  <View key={"foto_" + fIndex} style={styles.fileRow}>
-                    <TouchableOpacity onPress={() => verFotosDeReporte(item)}>
-                      <MaterialCommunityIcons name="image" size={20} color={theme.accent} />
-                    </TouchableOpacity>
-                    <Text style={{ color: theme.text, flex: 1 }} numberOfLines={1}>
-                      {(foto.url || '').split('/').pop() || `Imagen_${fIndex + 1}.jpg`}
-                    </Text>
-                    <TouchableOpacity onPress={() => deleteFoto_byIDFoto(foto.id_foto)}>
-                      <MaterialCommunityIcons name="close-circle" size={20} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                ))
-              )}
-
-              <View style={{ marginTop: 15 }}>
-                <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas_view.add_fotos')}</Text>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 15 }}>
-                  <TouchableOpacity onPress={() => pickDocument(item)} style={styles.actionButton}>
-                    <MaterialCommunityIcons name="file-upload" size={24} color={theme.text} />
-                    <Text style={{ color: theme.text }}>Galería</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={() => takePhoto(item)} style={styles.actionButton}>
-                    <MaterialCommunityIcons name="camera" size={24} color={theme.text} />
-                    <Text style={{ color: theme.text }}>Cámara</Text>
-                  </TouchableOpacity>
+                  }}>
+                    {item.estatus}
+                  </Text>
                 </View>
               </View>
-
-              <TouchableOpacity
-                style={[styles.addButton, { backgroundColor: '#e53e3e' }]}
-                onPress={() => handleEliminarReporte(item.id_registro)}
-              >
-                <MaterialCommunityIcons name="delete" size={20} color="#fff" />
-                <Text style={styles.addButtonText}>{t('reporte_piezas_danadas.delete_pieza')}</Text>
-              </TouchableOpacity>
+              <Text style={{
+                color: theme.text,
+                fontSize: 14
+              }}>
+                {item.codigo_cirugia}
+              </Text>
             </View>
-          </_Show_Generic_Report>
-        </_AccordionSection>
 
-      );
-    });
+            {/* Segundo Renglón */}
+            <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={{
+                color: theme.accent,
+                fontSize: 12,
+                fontStyle: 'italic'
+              }}>
+                {item.referencia}
+              </Text>
+              <Text style={{
+                color: theme.textSub,
+                fontSize: 14
+              }}>
+                {item.lote}
+              </Text>
+            </View>
+          </View>
+        }
+        isOpen={false}
+        onPress={() => setDetalleIndex(index)}
+      >
+        {null}
+      </_AccordionSection>
+    ));
   };
 
   const validateForm = () => {
@@ -566,6 +462,7 @@ export default function reporte_piezas_danadas_view_Screen() {
         //alert(JSON.stringify(response));
         const resultados_count = response.data_count;
         setResultados(response.data);
+        setFiltroTexto('');
         if (resultados_count == 0) {
           //playErrorSound();
           setModal({
@@ -710,7 +607,7 @@ export default function reporte_piezas_danadas_view_Screen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 10} // Ajusta este número según el alto de tu header
         >
 
-          <ScrollView ref={scrollRef} style={[styles.content, { maxHeight: _ClientHeight }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
+          <ScrollView ref={scrollRef} style={[styles.content, { maxHeight: _ClientHeight }]} contentContainerStyle={{ paddingBottom: footerClearance }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" canCancelContentTouches={true} >
             {/* Form Card */}
             <View style={[styles.formCard, { backgroundColor: hexToRGBA(theme.card, 0), borderColor: theme.border, paddingBottom: 50 }]}>
 
@@ -747,139 +644,22 @@ export default function reporte_piezas_danadas_view_Screen() {
                     /* Contenedor de Inputs (Se atenúa si está deshabilitado) */
                     <View style={{ opacity: filtrar_fecha ? 1 : 0.4, marginTop: 10 }} pointerEvents={filtrar_fecha ? 'auto' : 'none'}>
 
-                      {/* Fecha ini */}
-                      <View style={styles.fieldContainer}>
-                        <Text style={[styles.label, { color: theme.text }]}>
-                          {t('reporte_piezas_danadas_view.fecha_ini')}
-                        </Text>
+                      {/* _DatePicker: en iOS abre el selector en un Modal (siempre al frente);
+                          el picker inline quedaba dentro del contenedor de alto fijo y los
+                          campos siguientes del formulario lo tapaban. */}
+                      <_DatePicker
+                        label={t('reporte_piezas_danadas_view.fecha_ini')}
+                        value={fecha_ini}
+                        onChange={setFecha_ini}
+                        disabled={!filtrar_fecha}
+                      />
 
-                        {Platform.OS === 'web' ? (
-                          <View style={[
-                            styles.selector,
-                            { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                          ]}>
-                            <input
-                              type="date"
-                              disabled={!filtrar_fecha}
-                              value={(() => {
-                                const partes = fecha_ini.split('/');
-                                if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
-                                return "";
-                              })()}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val) {
-                                  const [year, month, day] = val.split('-').map(Number);
-                                  onDateChange_ini({ type: 'set' } as any, new Date(year, month - 1, day));
-                                }
-                              }}
-                              style={{
-                                flex: 1,
-                                border: 'none',
-                                outline: 'none',
-                                background: 'transparent',
-                                color: theme.text,
-                                fontSize: 16,
-                                fontFamily: 'inherit',
-                                cursor: filtrar_fecha ? 'pointer' : 'default'
-                              }}
-                            />
-                            <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                          </View>
-                        ) : (
-                          <>
-                            <TouchableOpacity
-                              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                              onPress={() => setShowDatePicker('inicio')}
-                              disabled={!filtrar_fecha}
-                            >
-                              <Text style={[styles.selectorText, { color: fecha_ini ? theme.text : theme.textSub }]}>
-                                {fecha_ini || 'DD/MM/YYYY'}
-                              </Text>
-                              <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                            </TouchableOpacity>
-
-                            {showDatePicker === 'inicio' && filtrar_fecha && (
-                              <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
-                                <DateTimePicker
-                                  value={parseDate(fecha_ini)}
-                                  key="dtFechaIni"
-                                  mode="date"
-                                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                  onChange={onDateChange_ini}
-                                />
-                              </View>
-                            )}
-                          </>
-                        )}
-                      </View>
-
-                      {/* Fecha fin */}
-                      <View style={styles.fieldContainer}>
-                        <Text style={[styles.label, { color: theme.text }]}>
-                          {t('reporte_piezas_danadas_view.fecha_fin')}
-                        </Text>
-
-                        {Platform.OS === 'web' ? (
-                          <View style={[
-                            styles.selector,
-                            { backgroundColor: theme.inputBg, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }
-                          ]}>
-                            <input
-                              type="date"
-                              disabled={!filtrar_fecha}
-                              value={(() => {
-                                const partes = fecha_fin.split('/');
-                                if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
-                                return "";
-                              })()}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val) {
-                                  const [year, month, day] = val.split('-').map(Number);
-                                  onDateChange_fin({ type: 'set' } as any, new Date(year, month - 1, day));
-                                }
-                              }}
-                              style={{
-                                flex: 1,
-                                border: 'none',
-                                outline: 'none',
-                                background: 'transparent',
-                                color: theme.text,
-                                fontSize: 16,
-                                fontFamily: 'inherit',
-                                cursor: filtrar_fecha ? 'pointer' : 'default'
-                              }}
-                            />
-                            <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                          </View>
-                        ) : (
-                          <>
-                            <TouchableOpacity
-                              style={[styles.selector, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                              onPress={() => setShowDatePicker('fin')}
-                              disabled={!filtrar_fecha}
-                            >
-                              <Text style={[styles.selectorText, { color: fecha_fin ? theme.text : theme.textSub }]}>
-                                {fecha_fin || 'DD/MM/YYYY'}
-                              </Text>
-                              <MaterialCommunityIcons name="calendar-outline" size={20} color={theme.textSub} />
-                            </TouchableOpacity>
-
-                            {showDatePicker === 'fin' && filtrar_fecha && (
-                              <View style={{ backgroundColor: theme.card, borderRadius: 3 }}>
-                                <DateTimePicker
-                                  value={parseDate(fecha_fin)}
-                                  key="dtFechaFin"
-                                  mode="date"
-                                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                  onChange={onDateChange_fin}
-                                />
-                              </View>
-                            )}
-                          </>
-                        )}
-                      </View>
+                      <_DatePicker
+                        label={t('reporte_piezas_danadas_view.fecha_fin')}
+                        value={fecha_fin}
+                        onChange={setFecha_fin}
+                        disabled={!filtrar_fecha}
+                      />
 
                     </View>
                   )}
@@ -1080,60 +860,60 @@ export default function reporte_piezas_danadas_view_Screen() {
           onClose={() => setModal({ ...modal, visible: false })}
         />
 
-        {/* Se monta solo cuando showCarousel es true (en vez de dejarlo
-            siempre montado con visible={showCarousel}) para que su nodo se
-            agregue al DOM DESPUÉS del modal de detalle (que también se monta
-            bajo demanda, al expandir el acordeón). En RN Web dos <Modal>
-            simultáneos apilan por orden de montaje: si el carousel ya
-            existiera desde el primer render, quedaría detrás del modal de
-            detalle y éste lo taparía siempre. */}
-        {showCarousel && (
-          <Modal visible transparent animationType="fade" onRequestClose={() => setShowCarousel(false)}>
-            <View style={styles.carouselOverlay}>
-              <View style={[styles.carouselContainer, { backgroundColor: theme.card, width: carouselWidth, height: carouselHeight }]}>
-                <View style={[styles.carouselHeader, { borderBottomColor: theme.border }]}>
-                  <Text style={[styles.carouselTitle, { color: theme.text }]}>
-                    {t('reporte_piezas_danadas_view.fotos_title')}
-                  </Text>
-                  <TouchableOpacity onPress={() => setShowCarousel(false)}>
-                    <MaterialCommunityIcons name="close" size={24} color={theme.text} />
-                  </TouchableOpacity>
-                </View>
-                {/* _FotosCarousel mide su contenedor con onLayout, pero eso no se
-                    dispara dentro del portal de un Modal en RN Web, así que se le
-                    pasa el tamaño ya calculado con useWindowDimensions. */}
-                <View style={{ width: carouselWidth, height: carouselHeight - 49 }}>
-                  <_FotosCarousel
-                    photos={fotoUrls_pieza}
-                    keys={archivos_pieza.map((f: any) => f.id_foto)}
-                    allowSelect={false}
-                    showDelete
-                    onDelete={(key) => deleteFoto_byIDFoto(key)}
-                    width={carouselWidth}
-                    height={carouselHeight - 49}
-                  />
-                </View>
-              </View>
-            </View>
-          </Modal>
-        )}
+        {/* Detalle de reportes en pantalla completa (swipe + flechas). El carrusel
+            de fotos va como "overlay": anidado en su Modal para que iOS lo presente. */}
+        <_Show_Report_Pager
+          visible={detalleIndex !== null && resultadosFiltrados.length > 0}
+          titulo="Detalle del Reporte"
+          pages={resultadosFiltrados.map((item: any, i: number) => ({
+            key: item.id_registro ?? i,
+            items_fields: camposDetalle(item),
+            children: renderExtrasDetalle(item),
+          }))}
+          index={Math.max(0, Math.min(detalleIndex ?? 0, resultadosFiltrados.length - 1))}
+          onIndexChange={(i) => { setShowCarousel(false); setDetalleIndex(i); }}
+          onClose={cerrarDetalle}
+          overlay={renderCarrusel()}
+        />
 
-        <_Footer Show_Almacen={false} >
-          {/* Submit Button */}
-          <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: theme.accent }]}
-            onPress={handleSubmit}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="magnify" size={24} color="#fff" />
-                <Text style={styles.submitButtonText}>{t('reporte_piezas_danadas_view.search_button')}</Text>
-              </>
-            )}
-          </TouchableOpacity>
+        <_Footer Show_Almacen={false} keyboardAware extraHeight={FOOTER_EXTRA}>
+          {/* Botón de búsqueda arriba y, debajo, el filtro de texto en vivo sobre
+              los resultados ya cargados. */}
+          <View style={{ width: width - 20, alignItems: 'center' }}>
+            <TouchableOpacity
+              style={[styles.submitButton, { backgroundColor: theme.accent, marginTop: 0 }]}
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="magnify" size={24} color="#fff" />
+                  <Text style={styles.submitButtonText}>{t('reporte_piezas_danadas_view.search_button')}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <View style={[styles.filterBox, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
+              <MaterialCommunityIcons name="filter-variant" size={18} color={theme.textSub} />
+              <TextInput
+                style={[styles.filterInput, { color: theme.text }]}
+                placeholder={t('reporte_piezas_danadas_view.filter_placeholder')}
+                placeholderTextColor={theme.textSub}
+                value={filtroTexto}
+                onChangeText={setFiltroTexto}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+              />
+              {filtroTexto !== '' && (
+                <TouchableOpacity onPress={() => setFiltroTexto('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <MaterialCommunityIcons name="close-circle" size={18} color={theme.textSub} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         </_Footer>
       </SafeAreaView>
     </_Background >
@@ -1183,6 +963,22 @@ const styles = StyleSheet.create({
   },
   selectorText: {
     fontSize: 14,
+  },
+  filterBox: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    height: 44,
+    marginTop: 10,
+  },
+  filterInput: {
+    flex: 1,
+    marginLeft: 6,
+    fontSize: 14,
+    paddingVertical: 0,
   },
   submitButton: {
     flexDirection: 'row',

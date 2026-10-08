@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import {
-    View, Text, StyleSheet, TouchableOpacity, ActivityIndicator
+    View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Keyboard, Platform, LayoutAnimation
 } from "react-native";
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,6 +19,16 @@ interface FooterProps {
     Main_action?: 'home' | 'back';
     children?: React.ReactNode;
     Show_Usermenu?: boolean;
+    // El footer es position:absolute al fondo de la pantalla; en iOS el
+    // teclado lo tapa (no hay resize de ventana como en Android). Con true,
+    // el footer sube junto con el teclado para poder usar inputs dentro de él.
+    keyboardAware?: boolean;
+    // Alto adicional (px) para contenido de más de una fila dentro del footer:
+    // el contenedor de hijos mide 50px fijos y el footer 130, así que dos filas
+    // (p.ej. botón + input) no caben y se ven apretadas/recortadas. Quien use
+    // este prop debe sumarlo también a _footer_baseHeight(false, extraHeight)
+    // al calcular el espacio libre bajo el contenido.
+    extraHeight?: number;
 }
 
 interface iAlmacen {
@@ -27,12 +37,12 @@ interface iAlmacen {
     codigo: string;
 }
 
-export const _footer_baseHeight = (Show_Almacen: boolean) => {
-    return Show_Almacen ? 100 : 130;
+export const _footer_baseHeight = (Show_Almacen: boolean, extraHeight: number = 0) => {
+    return (Show_Almacen ? 100 : 130) + extraHeight;
 };
 
-export const _footer_maxHeight = (Show_Almacen: boolean) => {
-    return Show_Almacen ? 130 : 170;
+export const _footer_maxHeight = (Show_Almacen: boolean, extraHeight: number = 0) => {
+    return (Show_Almacen ? 130 : 170) + extraHeight;
 };
 
 
@@ -41,11 +51,30 @@ export const _Footer = ({
     Show_Almacen = true,
     Main_action = 'home',
     children,
-    Show_Usermenu = true
+    Show_Usermenu = true,
+    keyboardAware = false,
+    extraHeight = 0
 }: FooterProps) => {
     const router = useRouter();
     const { theme, user, setUser, appConfig } = useApp();
     const insets = useSafeAreaInsets();
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+    useEffect(() => {
+        if (!keyboardAware || Platform.OS !== 'ios') return;
+        const showSub = Keyboard.addListener('keyboardWillShow', (e) => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setKeyboardHeight(e.endCoordinates.height);
+        });
+        const hideSub = Keyboard.addListener('keyboardWillHide', () => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setKeyboardHeight(0);
+        });
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, [keyboardAware]);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [anchorPos, setAnchorPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const triggerRef = useRef<View>(null);
@@ -83,8 +112,8 @@ export const _Footer = ({
         setShowAlmacenPicker(false);
     };
 
-    const baseHeight = _footer_baseHeight(Show_Almacen) + insets.bottom;
-    const maxHeight  = _footer_maxHeight(Show_Almacen)  + insets.bottom;
+    const baseHeight = _footer_baseHeight(Show_Almacen, extraHeight) + insets.bottom;
+    const maxHeight  = _footer_maxHeight(Show_Almacen, extraHeight)  + insets.bottom;
     const footerHeight = useState(new Animated.Value(baseHeight))[0];
 
     useEffect(() => {
@@ -92,7 +121,7 @@ export const _Footer = ({
             toValue: baseHeight,
             useNativeDriver: false,
         }).start();
-    }, [Show_Almacen]);
+    }, [Show_Almacen, extraHeight]);
 
     const openUserMenu = () => {
         if (triggerRef.current) {
@@ -147,6 +176,8 @@ export const _Footer = ({
                     styles.footerContainer,
                     {
                         height: footerHeight,
+                        // El inset inferior ya queda debajo del teclado, por eso se resta.
+                        bottom: Math.max(0, keyboardHeight - insets.bottom),
                     }
                 ]}
             >
@@ -207,7 +238,7 @@ export const _Footer = ({
                                 )}
                             </TouchableOpacity>
                         ) : (
-                            <View style={[styles.footerContentChildreen]}>
+                            <View style={[styles.footerContentChildreen, { height: 50 + extraHeight }]}>
                                 {children}
                             </View>
                         )}

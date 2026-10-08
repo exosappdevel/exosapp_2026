@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ViewStyle, Image, LayoutChangeEvent } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ViewStyle, Image, LayoutChangeEvent, ScrollView as RNScrollView, useWindowDimensions, PanResponder } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useApp } from '../../context/AppContext';
 import { hexToRGBA } from './_Functions'
 import { _ZoomableView } from "./_ZoomableView";
+import { _Background } from "./_Background";
 
 export const _Report = ({ children, showShare = true }: { children: any, showShare?: boolean }) => {
     const { theme } = useApp(); // Traemos el hook si se requiere aquí
@@ -506,6 +508,197 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
     );
 };
 
+// ---------------------------------------------------------------------------
+// Detalle de reportes en PANTALLA COMPLETA con paginado horizontal.
+//
+// Cada reporte es una "página" de un ScrollView horizontal con pagingEnabled:
+// el swipe lo resuelve el propio scroll nativo (iOS/Android), sin depender de
+// un PanResponder/gesto que compita con el scroll vertical del detalle (así
+// fallaba el swipe en dispositivos reales).
+//
+// Las páginas se colocan en orden INVERSO (el reporte siguiente queda a la
+// izquierda) para que deslizar hacia la DERECHA muestre el SIGUIENTE reporte y
+// hacia la IZQUIERDA el ANTERIOR. En la barra inferior: flecha izquierda =
+// anterior, flecha derecha = siguiente, e icono de swipe al centro.
+// ---------------------------------------------------------------------------
+export interface _ReportPagerPage {
+    key: string | number;
+    items_fields?: any[];
+    children?: React.ReactNode;
+}
+export interface _Show_Report_PagerProps {
+    visible: boolean;
+    titulo: string;
+    pages: _ReportPagerPage[];
+    index: number;
+    onIndexChange: (index: number) => void;
+    onClose: () => void;
+    showShare?: boolean;
+    // Se monta dentro del propio Modal (p.ej. otro <Modal> como el carrusel de
+    // fotos): en iOS un <Modal> hermano no se presenta mientras este está abierto.
+    overlay?: React.ReactNode;
+}
+export const _Show_Report_Pager = ({ visible, titulo, pages, index, onIndexChange, onClose, showShare = false, overlay }: _Show_Report_PagerProps) => {
+    const { theme, user } = useApp();
+    const insets = useSafeAreaInsets();
+    const { width } = useWindowDimensions();
+    const pagerRef = useRef<RNScrollView>(null);
+    // Posición (en pantalla) en la que está actualmente el pager; -1 = aún sin posicionar.
+    const currentPos = useRef(-1);
+    // Posición destino mientras corre un scroll programático (flechas): se
+    // ignoran los eventos de scroll intermedios para no revertir el índice.
+    const programmaticTarget = useRef<number | null>(null);
+    const programmaticTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const n = pages.length;
+    const posDe = (i: number) => n - 1 - i;
+
+    useEffect(() => {
+        if (!visible) { currentPos.current = -1; programmaticTarget.current = null; return; }
+        if (n === 0) return;
+        const pos = n - 1 - index;
+        if (currentPos.current === pos) return;
+        const animated = currentPos.current !== -1;
+        // Se espera un instante: al abrir, el Modal/ScrollView todavía se está
+        // montando. currentPos se actualiza DENTRO del timeout: si el efecto se
+        // reinicia antes (y cancela este) el siguiente intento no se salta.
+        const id = setTimeout(() => {
+            if (animated) {
+                programmaticTarget.current = pos;
+                if (programmaticTimer.current) clearTimeout(programmaticTimer.current);
+                // Respaldo: si nunca se alcanza el destino, se vuelve a escuchar al usuario.
+                programmaticTimer.current = setTimeout(() => { programmaticTarget.current = null; }, 1200);
+            }
+            pagerRef.current?.scrollTo({ x: pos * width, animated });
+            currentPos.current = pos;
+        }, animated ? 0 : 50);
+        return () => clearTimeout(id);
+    }, [visible, index, n, width]);
+
+    useEffect(() => () => { if (programmaticTimer.current) clearTimeout(programmaticTimer.current); }, []);
+
+    // El usuario terminó de deslizar (o el scroll quedó asentado en una página).
+    const commitPos = (x: number, requireSettled: boolean) => {
+        const pos = Math.max(0, Math.min(n - 1, Math.round(x / width)));
+        // En web solo hay onScroll (sin "momentum end"): se considera asentado
+        // cuando el offset cae justo en el borde de una página.
+        if (requireSettled && Math.abs(x - pos * width) > 2) return;
+        if (programmaticTarget.current !== null) {
+            // Scroll programático en curso: solo cuenta al llegar a su destino.
+            if (pos !== programmaticTarget.current) return;
+            programmaticTarget.current = null;
+        }
+        if (pos === currentPos.current) return;
+        currentPos.current = pos;
+        const nuevo = posDe(pos);
+        if (nuevo !== index) onIndexChange(nuevo);
+    };
+
+    const hayAnterior = index > 0;
+    const haySiguiente = index < n - 1;
+
+    // Swipe sobre el encabezado y la barra inferior (donde está el icono de
+    // swipe). Esas zonas son hermanas del scroll horizontal, no hijas, así que
+    // arrastrar ahí no movía las páginas. Aquí no hay ningún scroll con el que
+    // competir, por eso un PanResponder simple sí es confiable. Mismo sentido
+    // que el paginado: derecha = siguiente, izquierda = anterior.
+    const navRef = useRef({ index, n, onIndexChange });
+    navRef.current = { index, n, onIndexChange };
+    const barSwipe = useRef(
+        PanResponder.create({
+            onMoveShouldSetPanResponder: (_, g) =>
+                Math.abs(g.dx) > 20 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
+            onPanResponderRelease: (_, g) => {
+                const { index: i, n: total, onIndexChange: cambiar } = navRef.current;
+                if (g.dx > 60 && i < total - 1) cambiar(i + 1);
+                else if (g.dx < -60 && i > 0) cambiar(i - 1);
+            },
+        })
+    ).current;
+
+    return (
+        <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <_Background id_almacen={user?.id_almacen}>
+                    {/* Encabezado */}
+                    <View style={[styles.pagerHeader, { paddingTop: insets.top + 8, borderBottomColor: theme.border }]} {...barSwipe.panHandlers}>
+                        <TouchableOpacity style={[styles.btnCerrar, { backgroundColor: theme.accent }]} onPress={onClose}>
+                            <MaterialCommunityIcons name="close" size={20} color="#fff" />
+                        </TouchableOpacity>
+                        <Text style={[styles.pagerTitulo, { color: theme.iconTextColor }]} numberOfLines={1}>{titulo}</Text>
+                        <Text style={[styles.pagerContador, { color: theme.iconTextColor }]}>{n > 0 ? `${index + 1} / ${n}` : ''}</Text>
+                    </View>
+
+                    {/* Páginas (una por reporte) */}
+                    <RNScrollView
+                        ref={pagerRef}
+                        horizontal
+                        pagingEnabled
+                        style={{ flex: 1 }}
+                        showsHorizontalScrollIndicator={false}
+                        onMomentumScrollEnd={(e) => commitPos(e.nativeEvent.contentOffset.x, false)}
+                        onScroll={(e) => commitPos(e.nativeEvent.contentOffset.x, true)}
+                        scrollEventThrottle={16}
+                        contentOffset={{ x: posDe(index) * width, y: 0 }}
+                    >
+                        {pages.map((_, pos) => {
+                            const i = n - 1 - pos;
+                            const page = pages[i];
+                            // Solo se monta el contenido de la página actual y las cercanas.
+                            const cerca = Math.abs(i - index) <= 2;
+                            return (
+                                <View key={page.key} style={{ width }}>
+                                    {cerca && (
+                                        <ScrollView
+                                            style={{ flex: 1 }}
+                                            contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 12, paddingBottom: 20 }}
+                                            showsVerticalScrollIndicator={false}
+                                            keyboardShouldPersistTaps="handled"
+                                            nestedScrollEnabled
+                                        >
+                                            <_Report showShare={showShare}>
+                                                {page.items_fields?.map((field: any, k: number) =>
+                                                    field.tipo_linea === "linea" ? (
+                                                        <_DetalleLinea key={k} label={field.label} value={field.value} />
+                                                    ) : (
+                                                        <_DetalleMultiLinea key={k} label={field.label} value={field.value} />
+                                                    )
+                                                )}
+                                                {page.children}
+                                            </_Report>
+                                        </ScrollView>
+                                    )}
+                                </View>
+                            );
+                        })}
+                    </RNScrollView>
+
+                    {/* Barra inferior: anterior | icono de swipe | siguiente */}
+                    <View style={[styles.pagerBottom, { paddingBottom: insets.bottom + 8, borderTopColor: theme.border, backgroundColor: hexToRGBA(theme.card, 0.85) }]} {...barSwipe.panHandlers}>
+                        <TouchableOpacity
+                            style={[styles.pagerArrow, { backgroundColor: theme.accent, opacity: hayAnterior ? 1 : 0.3 }]}
+                            disabled={!hayAnterior}
+                            onPress={() => onIndexChange(index -1)}
+                        >
+                            <MaterialCommunityIcons name="chevron-left" size={28} color="#fff" />
+                        </TouchableOpacity>
+                        {n > 1 && (
+                            <MaterialCommunityIcons name="gesture-swipe-horizontal" size={30} color={theme.accent} />
+                        )}
+                        <TouchableOpacity
+                            style={[styles.pagerArrow, { backgroundColor: theme.accent, opacity: haySiguiente ? 1 : 0.3 }]}
+                            disabled={!haySiguiente}
+                            onPress={() => onIndexChange(index + 1)}
+                        >
+                            <MaterialCommunityIcons name="chevron-right" size={28} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
+                </_Background>
+                {overlay}
+            </GestureHandlerRootView>
+        </Modal>
+    );
+};
+
 const styles = StyleSheet.create({
     detalleContainer: {
         paddingVertical: 15,
@@ -698,6 +891,42 @@ const styles = StyleSheet.create({
         width: '100%',
         paddingHorizontal: 15,
         paddingVertical: 12,
+    },
+    pagerHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+    },
+    pagerTitulo: {
+        flex: 1,
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginHorizontal: 10,
+    },
+    pagerContador: {
+        minWidth: 36,
+        fontSize: 13,
+        fontWeight: '600',
+        textAlign: 'right',
+    },
+    pagerBottom: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
+        paddingTop: 8,
+        borderTopWidth: 1,
+    },
+    pagerArrow: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     btnCerrar: {
         width: 36,

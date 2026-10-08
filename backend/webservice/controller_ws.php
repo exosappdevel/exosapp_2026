@@ -409,7 +409,7 @@ class WebServiceController
         $newFileName   = uniqid($filename, true) . '.' . $fileExtension;        
         
         $destination   = $uploadDir . $newFileName;
-        $publicUrl = $path . $newFileName;
+        $publicUrl = 'webservice/'. $path . $newFileName;
 
         if (move_uploaded_file($fileTmpName, $destination)) {            
             return [

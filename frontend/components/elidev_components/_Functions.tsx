@@ -29,7 +29,9 @@ export const getServerFileUrl = (webserviceUrl: string, relativePath: string): s
  * "/webservice" de appConfig.url.
  */
 export const getWebserviceFileUrl = (webserviceUrl: string, relativePath: string): string => {
-    return `${webserviceUrl}/${relativePath}`.replace(/([^:])\/\/+/g, '$1/');
+    return `${webserviceUrl}/${relativePath}`
+        .replace(/([^:])\/\/+/g, '$1/')
+        .replace('webservice/', '');
 };
 
 export const formatDate = (fecha: Date) => {
