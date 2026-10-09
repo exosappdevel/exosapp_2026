@@ -344,7 +344,21 @@ class ApiService {
   static async eliminar_foto_reporte_piezas_danadas(id_foto:string){
     return await this.request("eliminar_foto_reporte_piezas_danadas", {id_foto});  
   }
+
+  static async paqueteria_por_enviar(id_usuario:string, id_almacen:string){
+    return await this.request("paqueteria_por_enviar", {id_usuario, id_almacen});  
+  }
+  static async paqueteria_por_recibir(id_usuario:string, id_almacen:string){
+    return await this.request("paqueteria_por_recibir", {id_usuario, id_almacen});  
+  }
+
+  static async paqueteria_detalle(id_paqueteria:string){
+    return await this.request("paqueteria_detalle", {id_paqueteria});  
+  }
   
+  static async paqueteria_transito_detalle(id_paqueteria:string){
+    return await this.request("paqueteria_transito_detalle", {id_paqueteria});  
+  }
 }
 
 export default ApiService;

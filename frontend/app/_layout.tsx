@@ -35,6 +35,8 @@ export default function RootLayout() {
           <Stack.Screen name="profile" />          
           <Stack.Screen name="reporte_piezas_danadas_view"/>
           <Stack.Screen name="reporte_piezas_danadas"/>
+          <Stack.Screen name="paqueteria_por_enviar"/>
+          <Stack.Screen name="paqueteria_por_recibir"/>
           <Stack.Screen name="cirugia_detalle_view/[id_cirugia]"/>
         </Stack>
       </_ActivityTrackerWrapper>

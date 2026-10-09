@@ -12,7 +12,8 @@
       "menu_almacen" :"Almacén",
       "menu_cirugias" : "Cirugías",
       "menu_logistica" : "Logística",
-      "menu_calidad" : "Calidad"        
+      "menu_calidad" : "Calidad" ,
+      "menu_paqueteria" : "Paquetería"
     },
     "screens":{
       "home":"Inicio",
@@ -41,7 +42,9 @@
       "cirugias_vista_diario" : "Vista diaria" ,
       "reporte_piezas_danadas_view": "Ver reportes",
       "reporte_piezas_danadas": "Reportar pieza",
-      "cirugia_detalle_view": "Detalle de cirugía"
+      "cirugia_detalle_view": "Detalle de cirugía",
+      "paqueteria_por_enviar": "Paquetería por enviar",
+      "paqueteria_por_recibir": "Paquetería por recibir"
 
     },
     "login": {      
@@ -195,6 +198,40 @@
       "order_codigo_oldest" : "Número de order más antiguo" ,
       "order_fecha_newest" : "Fecha cirugia más reciente" ,
       "order_fecha_oldest" : "Fecha cirugia más antigua" 
+    },
+    "paqueteria":{
+      "detalle_title": "Detalle de paquetería",
+      "empty_enviar": "No hay paquetería por enviar.",
+      "empty_recibir": "No hay paquetería por recibir.",
+      "load_error": "No se pudo cargar la paquetería.",
+      "refresh": "Actualizar",
+      "retry": "Reintentar",
+      "productos_count": "productos",
+      "transito_title": "Información de tránsito",
+      "sin_transito": "Sin información de tránsito.",
+      "productos_title": "Productos",
+      "sin_productos": "Sin productos.",
+      "fotos_title": "Fotos",
+      "sin_fotos": "Sin fotos.",
+      "pdfs_title": "Documentos",
+      "chip_transito": "En tránsito",
+      "chip_traspaso": "Traspaso",
+      "chip_faltante": "Con faltante",
+      "f_codigo": "Código",
+      "f_origen": "Origen",
+      "f_destino": "Destino",
+      "f_total": "Productos",
+      "f_registro": "Registro",
+      "f_usuario": "Usuario",
+      "f_guia": "Guía",
+      "f_precio": "Precio",
+      "f_comentarios": "Comentarios",
+      "f_referencia": "Ref.",
+      "f_lote": "Lote",
+      "f_carpeta": "Carpeta",
+      "f_caducidad": "Cad.",
+      "filter_placeholder": "Filtrar resultados...",
+      "filter_no_matches": "Ningún resultado coincide con el filtro."
     },
     "reporte_piezas_danadas_view":{
       "search_valida_error_fechasinvalidas":"Rango de fecha no validas",

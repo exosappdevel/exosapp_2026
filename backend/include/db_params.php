@@ -56,7 +56,7 @@ function Init_DBParams(){
 	$DB_Host ="localhost";
 	$DB_User = "root";
 	$DB_Password = "";//"Ex0._GC_2025#";
-	$DB_Database ="exodos";
+	$DB_Database ="exos";
 	$DB_Init_Params = true; 
 	
 	

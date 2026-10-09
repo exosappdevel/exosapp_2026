@@ -15,4 +15,4 @@ export * from './_PickerModal'
 export * from './_DatePicker'
 export * from './_SuccessCheck'
 export * from './_PinModal'
-
+export * from './_PaqueteriaScreen'

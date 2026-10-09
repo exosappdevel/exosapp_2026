@@ -25,6 +25,7 @@ require_once "exosapp_catalogos.php";
 require_once "exosapp_cirugias.php";
 require_once "exosapp_piezas_danadas.php";
 require_once "exosapp_perfiles.php";
+require_once "exosapp_paqueteria.php";
 
 
 date_default_timezone_set('America/Mexico_City');
@@ -34,7 +35,7 @@ date_default_timezone_set('America/Mexico_City');
  */
 class ExosApp_WS
 {
-    use ExosApp_Core,ExosApp_Chatclient, ExosApp_Usuarios, ExosApp_Almacenes, ExosApp_Catalogos, ExosApp_Cirugias, ExosApp_PiezasDanadas, ExosApp_Perfiles;
+    use ExosApp_Core,ExosApp_Chatclient, ExosApp_Usuarios, ExosApp_Almacenes, ExosApp_Catalogos, ExosApp_Cirugias, ExosApp_PiezasDanadas, ExosApp_Perfiles, ExosApp_Paqueteria;
 
     /**
      * Verifica si un método existe en esta clase
@@ -55,6 +56,7 @@ class ExosApp_WS
                 ...$this->listMethods_Cirugias(),
                 ...$this->listMethods_PiezasDanadas(),
                 ...$this->listMethods_Perfiles(),
+                ...$this->listMethods_Paqueteria()
         ];
     }
     public function formato_fecha_lectura($fecha_sql){  
