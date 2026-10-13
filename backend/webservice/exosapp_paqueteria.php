@@ -92,7 +92,7 @@ trait ExosApp_Paqueteria
         $guia = Requesting("guia");
         $precio = Requesting("precio");
         $comentarios = Requesting("comentarios");        
-        if (!$id_usuario || !$id_paqueteria || !$guia || !$precio) {
+        if (!$id_usuario || !$id_paqueteria || !$guia ) {
             return $this->DatosIncorrectos();
         }
         

@@ -148,9 +148,11 @@ class WebServiceController
     {
         $id_usuario = isset($_REQUEST["id_usuario"]) ? strval($_REQUEST["id_usuario"]) : "0";
         $nombre = "";
+        if ($id_usuario == "") $id_usuario = "0";
         if (($id_usuario != "") && ($id_usuario != "0")) {
             $nombre = GetValueSQL("select coalesce(max(nombre), '') as usuario_nombre from usuario where id_usuario=" . $id_usuario, "usuario_nombre");
         }
+
         // Armamos la consulta
         $sSQL = "insert into ws_log(id, id_usuario, nombre, action, log_type, input, output) " .
             "values (0, " . $id_usuario . ",'" . $nombre . "','" . $action . "','" . $log_type . "','" . $input_esc . "', left('" . $output_esc . "', " . (63*1024) . "))";

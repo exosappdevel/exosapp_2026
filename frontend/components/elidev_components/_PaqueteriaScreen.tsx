@@ -103,7 +103,7 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
     // Formulario "Confirmar envío" (solo modo 'enviar', paquetería sin tránsito).
     const [envioItem, setEnvioItem] = useState<any | null>(null);
     const [envioGuia, setEnvioGuia] = useState('');
-    const [envioPrecio, setEnvioPrecio] = useState('');
+    const [envioPrecio, setEnvioPrecio] = useState('0');
     const [envioComentarios, setEnvioComentarios] = useState('');
     const [envioFotos, setEnvioFotos] = useState<{ uri: string; name: string; type: string }[]>([]);
     const [envioError, setEnvioError] = useState('');
@@ -201,7 +201,7 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
 
     const abrirFormEnvio = (item: any) => {
         setEnvioGuia('');
-        setEnvioPrecio('');
+        setEnvioPrecio('0');
         setEnvioComentarios('');
         setEnvioFotos([]);
         setEnvioError('');
@@ -245,7 +245,7 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
     const pedirConfirmacionEnvio = () => {
         const precio = parseFloat(envioPrecio.replace(',', '.'));
         if (envioGuia.trim() === '') { setEnvioError(t('paqueteria.form_guia_requerida')); return; }
-        if (!isFinite(precio) || precio <= 0) { setEnvioError(t('paqueteria.form_precio_invalido')); return; }
+        if (!isFinite(precio)) { setEnvioError(t('paqueteria.form_precio_invalido')); return; }
         setEnvioError('');
         setEnvioPreguntando(true);
     };
