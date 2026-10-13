@@ -359,6 +359,14 @@ class ApiService {
   static async paqueteria_transito_detalle(id_paqueteria:string){
     return await this.request("paqueteria_transito_detalle", {id_paqueteria});  
   }
+
+  static async paqueteria_confirmar_envio(id_usuario:string, id_paqueteria:string, guia:string, precio:string, comentarios:string){
+    return await this.request("paqueteria_confirmar_envio", {id_usuario, id_paqueteria, guia, precio, comentarios});  
+  }
+
+  static async paqueteria_foto_envio_add(id_usuario:string, id_paqueteria:string, url_foto:string){
+    return await this.request("paqueteria_foto_envio_add", {id_usuario, id_paqueteria, url_foto});  
+  }   
 }
 
 export default ApiService;

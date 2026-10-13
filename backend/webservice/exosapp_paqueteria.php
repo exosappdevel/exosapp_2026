@@ -9,6 +9,15 @@ trait ExosApp_Paqueteria
                 'descripcion' => 'Obtiene la lista de paquetería por enviar.',
                 'parameters' => ['id_usuario', 'id_almacen','ordenar_por(optional)'],
             ],            
+            'paqueteria_confirmar_envio' => [
+                'descripcion' => 'Confirma el envío de paquetería.',
+                'parameters' => ['id_usuario', 'id_paqueteria','guia','precio','comentarios(optional)']
+            ],
+            'paqueteria_foto_envio_add' => [
+                'descripcion' => 'Guarda una foto de la paquetería en tránsito.',
+                'parameters' => ['id_usuario','id_paqueteria','url_foto'],
+            ],
+            
             'paqueteria_por_recibir' => [
                 'descripcion' => 'Obtiene la lista de paquetería por recibir.',
                 'parameters' => ['id_usuario', 'id_almacen','ordenar_por(optional)'],
@@ -76,6 +85,66 @@ trait ExosApp_Paqueteria
                 ] );
 
     }
+
+    public function paqueteria_confirmar_envio(){
+        $id_usuario = Requesting("id_usuario");
+        $id_paqueteria = Requesting("id_paqueteria");
+        $guia = Requesting("guia");
+        $precio = Requesting("precio");
+        $comentarios = Requesting("comentarios");        
+        if (!$id_usuario || !$id_paqueteria || !$guia || !$precio) {
+            return $this->DatosIncorrectos();
+        }
+        
+    	$existe = GetValueSQL("SELECT COUNT(id_registro) AS existe FROM paqueteria_transito WHERE id_paqueteria = ".$id_paqueteria,"existe");
+
+        if($existe == 0){
+            $query = "INSERT INTO paqueteria_transito (id_paqueteria, id_usuario_kardex, guia, precio, comentarios, kardex) VALUES (".$id_paqueteria.", ".$id_usuario.", '".$guia."', '".$precio."', '".$comentarios."', NOW())";
+            if (!ExecuteSQL($query)) {
+                return ( ['result' => 'error',
+                    'result_text' => 'No se pudo registrar el envío de la paquetería.',
+                    ] );
+            }
+                     
+		    $existe_compaq = GetValueSQL("SELECT COUNT(id_registro) AS existe FROM paqueteria_compaq WHERE id_paqueteria = ".$id_paqueteria,"existe");
+		
+            if($existe_compaq > 0){                
+                ExecuteSQL("UPDATE paqueteria SET enviada = 1 WHERE id_paqueteria = ".$id_paqueteria); 
+            }
+            return ( ['result' => 'ok',
+                'result_text' => 'Se ha registrado el envío de la paquetería correctamente.',
+                ] );
+        }else{
+            return ( ['result' => 'error',
+                'result_text' => 'Ya existe un registro de transito para esta paquetería.',
+                ] );
+        }
+    }
+
+    public function paqueteria_foto_envio_add(){
+        $id_usuario = Requesting("id_usuario");
+        $id_paqueteria = Requesting("id_paqueteria");
+        $url_foto = Requesting("url_foto");
+        
+        if (!$id_usuario || !$id_paqueteria || !$url_foto) {
+            return $this->DatosIncorrectos();
+        }
+
+        $query = "INSERT INTO paqueteria_transito_fotos (id_paqueteria, foto, kardex, id_usuario_kardex) 
+                VALUES (".$id_paqueteria.",'".$url_foto."', NOW(), ".$id_usuario.")";
+        $id_foto = ExecuteSQL_ReturnID($query);	        
+        if (!$id_foto) {
+            return ( ['result' => 'error',
+                    'result_text' => 'No se pudo registrar la foto de la paquetería.',
+                    ] );
+        }
+        
+        return ( ['result' => 'ok',
+                'result_text' => 'Se ha registrado la foto de la paquetería correctamente.',
+                'data' => ['id_foto' => $id_foto]
+                ] );
+    }
+
     public function paqueteria_por_recibir(){        
         $id_usuario = Requesting("id_usuario");
         $id_almacen = Requesting("id_almacen");

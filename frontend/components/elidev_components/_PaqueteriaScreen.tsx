@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Linking, useWindowDimensions,
+    Image, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -98,6 +100,16 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
     const [showCarousel, setShowCarousel] = useState(false);
     const [fotosCarousel, setFotosCarousel] = useState<string[]>([]);
 
+    // Formulario "Confirmar envío" (solo modo 'enviar', paquetería sin tránsito).
+    const [envioItem, setEnvioItem] = useState<any | null>(null);
+    const [envioGuia, setEnvioGuia] = useState('');
+    const [envioPrecio, setEnvioPrecio] = useState('');
+    const [envioComentarios, setEnvioComentarios] = useState('');
+    const [envioFotos, setEnvioFotos] = useState<{ uri: string; name: string; type: string }[]>([]);
+    const [envioError, setEnvioError] = useState('');
+    const [envioPreguntando, setEnvioPreguntando] = useState(false);
+    const [envioEnviando, setEnvioEnviando] = useState(false);
+
     const setDetalle = (id: string, valor: DetalleState) => {
         detallesRef.current = { ...detallesRef.current, [id]: valor };
         setDetalles(detallesRef.current);
@@ -185,6 +197,103 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
         setShowCarousel(true);
     };
 
+    // ---------- Confirmar envío ----------
+
+    const abrirFormEnvio = (item: any) => {
+        setEnvioGuia('');
+        setEnvioPrecio('');
+        setEnvioComentarios('');
+        setEnvioFotos([]);
+        setEnvioError('');
+        setEnvioPreguntando(false);
+        setEnvioItem(item);
+    };
+
+    // "Descartar envío": cierra el formulario sin guardar nada.
+    const descartarEnvio = () => {
+        if (envioEnviando) return;
+        setEnvioItem(null);
+        setEnvioPreguntando(false);
+    };
+
+    const agregarFotoEnvio = async (origen: 'camara' | 'galeria') => {
+        try {
+            setEnvioError('');
+            let result;
+            if (origen === 'camara') {
+                const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                if (status !== 'granted') { setEnvioError(t('paqueteria.camara_denegada')); return; }
+                result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
+            } else {
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (status !== 'granted') { setEnvioError(t('paqueteria.galeria_denegada')); return; }
+                result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.5 });
+            }
+            if (result.canceled) return;
+            const asset = result.assets[0];
+            setEnvioFotos((prev) => [...prev, {
+                uri: asset.uri,
+                name: asset.fileName || asset.uri.split('/').pop() || 'foto.jpg',
+                type: asset.mimeType || 'image/jpeg',
+            }]);
+        } catch {
+            setEnvioError(t('common.connectionError'));
+        }
+    };
+
+    // Valida y pregunta antes de confirmar (el envío ya no se puede modificar).
+    const pedirConfirmacionEnvio = () => {
+        const precio = parseFloat(envioPrecio.replace(',', '.'));
+        if (envioGuia.trim() === '') { setEnvioError(t('paqueteria.form_guia_requerida')); return; }
+        if (!isFinite(precio) || precio <= 0) { setEnvioError(t('paqueteria.form_precio_invalido')); return; }
+        setEnvioError('');
+        setEnvioPreguntando(true);
+    };
+
+    const confirmarEnvio = async () => {
+        if (!envioItem || envioEnviando) return;
+        const item = envioItem;
+        const id = String(item.id_paqueteria);
+        const precio = parseFloat(envioPrecio.replace(',', '.'));
+        setEnvioEnviando(true);
+        setEnvioPreguntando(false);
+        setEnvioError('');
+        try {
+            const res = await ApiService.paqueteria_confirmar_envio(
+                user?.id_usuario || '', id, envioGuia.trim(), String(precio), envioComentarios.trim()
+            );
+            if (res?.result !== 'ok') {
+                setEnvioError(res?.result_text || t('paqueteria.confirm_envio_error'));
+                return;
+            }
+            // Desde aquí el envío ya quedó registrado: las fotos que fallen se reportan aparte.
+            let fallidas = 0;
+            for (const foto of envioFotos) {
+                try {
+                    const url = await ApiService.uploadFileDirect('paqueteria', 'paq', foto);
+                    const r = url ? await ApiService.paqueteria_foto_envio_add(user?.id_usuario || '', id, url) : null;
+                    if (r?.result !== 'ok') fallidas++;
+                } catch {
+                    fallidas++;
+                }
+            }
+            const actualizado = { ...item, existe_transito: 1 };
+            setLista((prev) => prev.map((it) => String(it.id_paqueteria) === id ? actualizado : it));
+            setEnvioItem(null);
+            cargarDetalle(actualizado, true);
+            if (fallidas > 0) {
+                setErrorEnvioParcial(t('paqueteria.fotos_parcial').replace('{n}', String(fallidas)));
+            }
+        } catch {
+            setEnvioError(t('common.connectionError'));
+        } finally {
+            setEnvioEnviando(false);
+        }
+    };
+
+    // Aviso (fuera del formulario, ya cerrado) cuando el envío se confirmó pero alguna foto no subió.
+    const [errorEnvioParcial, setErrorEnvioParcial] = useState('');
+
     const nombreArchivo = (ruta: string) => (ruta || '').split('/').pop() || ruta;
 
     // ---------- Detalle ----------
@@ -248,6 +357,15 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
                                 renderFilaArchivo('foto_' + i, 'image', nombreArchivo(f), () => abrirCarrusel(d.transito!.fotos))
                             )
                         )}
+                    </View>
+                ) : esEnviar && Number(item.existe_transito) === 0 ? (
+                    // Sin datos de tránsito: el envío está pendiente de confirmar.
+                    <View style={{ alignItems: 'center', marginVertical: 6 }}>
+                        <Text style={{ color: theme.textSub, fontSize: 13, textAlign: 'center' }}>{t('paqueteria.pendiente_confirmar')}</Text>
+                        <TouchableOpacity style={[styles.btnConfirmar, { backgroundColor: '#38a169' }]} onPress={() => abrirFormEnvio(item)}>
+                            <MaterialCommunityIcons name="truck-fast" size={20} color="#fff" />
+                            <Text style={styles.btnConfirmarTexto}>{t('paqueteria.confirmar_envio')}</Text>
+                        </TouchableOpacity>
                     </View>
                 ) : (
                     <Text style={{ color: theme.textSub, fontSize: 13 }}>{t('paqueteria.sin_transito')}</Text>
@@ -319,6 +437,127 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
                     </View>
                 </View>
             </GestureHandlerRootView>
+        </Modal>
+    );
+
+    // Formulario de confirmación de envío: también va como "overlay" del detalle
+    // (Modal anidado). La pregunta de confirmación es un panel dentro del mismo
+    // Modal porque Alert.alert no funciona en web.
+    const renderFormEnvio = () => !envioItem ? null : (
+        <Modal visible transparent animationType="fade" onRequestClose={descartarEnvio}>
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+                <View style={styles.carouselOverlay}>
+                    <View style={[styles.formContainer, { backgroundColor: theme.card, borderColor: theme.border, width: Math.min(width * 0.95, 520), maxHeight: height * 0.9 }]}>
+                        <View style={[styles.carouselHeader, { borderBottomColor: theme.border }]}>
+                            <Text style={[styles.carouselTitle, { color: theme.text }]} numberOfLines={1}>
+                                {t('paqueteria.form_envio_title')} · {envioItem.codigo}
+                            </Text>
+                        </View>
+                        <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+                            <Text style={[styles.formLabel, { color: theme.textSub }]}>{t('paqueteria.form_guia')}</Text>
+                            <TextInput
+                                style={[styles.formInput, { color: theme.text, backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                                value={envioGuia}
+                                onChangeText={setEnvioGuia}
+                                autoCapitalize="characters"
+                                autoCorrect={false}
+                                editable={!envioEnviando}
+                            />
+                            <Text style={[styles.formLabel, { color: theme.textSub }]}>{t('paqueteria.form_precio')}</Text>
+                            <TextInput
+                                style={[styles.formInput, { color: theme.text, backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                                value={envioPrecio}
+                                onChangeText={setEnvioPrecio}
+                                keyboardType="decimal-pad"
+                                placeholder="0.00"
+                                placeholderTextColor={theme.textSub}
+                                editable={!envioEnviando}
+                            />
+                            <Text style={[styles.formLabel, { color: theme.textSub }]}>{t('paqueteria.form_comentarios')}</Text>
+                            <TextInput
+                                style={[styles.formInput, { color: theme.text, backgroundColor: theme.inputBg, borderColor: theme.border, height: 80, textAlignVertical: 'top', paddingTop: 8 }]}
+                                value={envioComentarios}
+                                onChangeText={setEnvioComentarios}
+                                multiline
+                                editable={!envioEnviando}
+                            />
+
+                            <Text style={[styles.formLabel, { color: theme.textSub }]}>{t('paqueteria.form_fotos')} ({envioFotos.length})</Text>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                <TouchableOpacity style={[styles.btnFoto, { borderColor: theme.accent }]} onPress={() => agregarFotoEnvio('camara')} disabled={envioEnviando}>
+                                    <MaterialCommunityIcons name="camera" size={18} color={theme.accent} />
+                                    <Text style={{ color: theme.accent, marginLeft: 6 }}>{t('paqueteria.form_camara')}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.btnFoto, { borderColor: theme.accent }]} onPress={() => agregarFotoEnvio('galeria')} disabled={envioEnviando}>
+                                    <MaterialCommunityIcons name="image-multiple" size={18} color={theme.accent} />
+                                    <Text style={{ color: theme.accent, marginLeft: 6 }}>{t('paqueteria.form_galeria')}</Text>
+                                </TouchableOpacity>
+                            </View>
+                            {envioFotos.length === 0 ? (
+                                <Text style={{ color: theme.textSub, fontSize: 12, marginTop: 8 }}>{t('paqueteria.form_sin_fotos')}</Text>
+                            ) : (
+                                <View style={styles.fotosGrid}>
+                                    {envioFotos.map((f, i) => (
+                                        <View key={f.uri + i} style={styles.fotoThumbWrap}>
+                                            <Image source={{ uri: f.uri }} style={styles.fotoThumb} />
+                                            {!envioEnviando && (
+                                                <TouchableOpacity
+                                                    style={styles.fotoQuitar}
+                                                    onPress={() => setEnvioFotos((prev) => prev.filter((_, j) => j !== i))}
+                                                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                                >
+                                                    <MaterialCommunityIcons name="close" size={14} color="#fff" />
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {!!envioError && <Text style={{ color: '#e53e3e', marginTop: 10 }}>{envioError}</Text>}
+                        </ScrollView>
+
+                        <View style={[styles.formBotones, { borderTopColor: theme.border }]}>
+                            <TouchableOpacity style={[styles.formBtn, { backgroundColor: '#718096' }]} onPress={descartarEnvio} disabled={envioEnviando}>
+                                <Text style={styles.btnConfirmarTexto}>{t('paqueteria.descartar_envio')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.formBtn, { backgroundColor: '#38a169' }]} onPress={pedirConfirmacionEnvio} disabled={envioEnviando}>
+                                {envioEnviando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnConfirmarTexto}>{t('paqueteria.confirmar_envio')}</Text>}
+                            </TouchableOpacity>
+                        </View>
+
+                        {envioPreguntando && (
+                            <View style={styles.preguntaOverlay}>
+                                <View style={[styles.preguntaBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                                    <Text style={{ color: theme.text, textAlign: 'center', fontSize: 15 }}>{t('paqueteria.confirm_envio_msg')}</Text>
+                                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                                        <TouchableOpacity style={[styles.formBtn, { backgroundColor: '#718096' }]} onPress={() => setEnvioPreguntando(false)}>
+                                            <Text style={styles.btnConfirmarTexto}>{t('common.no')}</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={[styles.formBtn, { backgroundColor: '#38a169' }]} onPress={confirmarEnvio}>
+                                            <Text style={styles.btnConfirmarTexto}>{t('common.yes')}</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </KeyboardAvoidingView>
+        </Modal>
+    );
+
+    // Aviso de fotos que no subieron (el envío ya se había confirmado).
+    const renderAvisoParcial = () => !errorEnvioParcial ? null : (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setErrorEnvioParcial('')}>
+            <View style={styles.carouselOverlay}>
+                <View style={[styles.preguntaBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                    <Text style={{ color: theme.text, textAlign: 'center', fontSize: 15 }}>{errorEnvioParcial}</Text>
+                    <TouchableOpacity style={[styles.formBtn, { backgroundColor: theme.accent, marginTop: 16, alignSelf: 'stretch' }]} onPress={() => setErrorEnvioParcial('')}>
+                        <Text style={styles.btnConfirmarTexto}>{t('common.accept')}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </Modal>
     );
 
@@ -424,7 +663,7 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
                     index={Math.max(0, Math.min(detalleIndex ?? 0, listaFiltrada.length - 1))}
                     onIndexChange={(i) => { setShowCarousel(false); setDetalleIndex(i); }}
                     onClose={cerrarDetalle}
-                    overlay={renderCarrusel()}
+                    overlay={<>{renderCarrusel()}{renderFormEnvio()}{renderAvisoParcial()}</>}
                 />
 
                 <_Footer Show_Almacen={false} keyboardAware extraHeight={FOOTER_EXTRA}>
@@ -495,6 +734,20 @@ const styles = StyleSheet.create({
     refrescarTexto: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginLeft: 10 },
     filterBox: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, height: 44, marginTop: 10 },
     filterInput: { flex: 1, marginLeft: 6, fontSize: 14, paddingVertical: 0 },
+    btnConfirmar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 10, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 10 },
+    btnConfirmarTexto: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+    formContainer: { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
+    formLabel: { fontSize: 12, fontWeight: '600', marginTop: 10, marginBottom: 4 },
+    formInput: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, height: 42, fontSize: 14 },
+    btnFoto: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: 10, paddingVertical: 8 },
+    fotosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
+    fotoThumbWrap: { width: 72, height: 72 },
+    fotoThumb: { width: 72, height: 72, borderRadius: 8 },
+    fotoQuitar: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10, backgroundColor: '#e53e3e', justifyContent: 'center', alignItems: 'center' },
+    formBotones: { flexDirection: 'row', gap: 10, padding: 12, borderTopWidth: 1 },
+    formBtn: { flex: 1, borderRadius: 12, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
+    preguntaOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+    preguntaBox: { borderRadius: 14, borderWidth: 1, padding: 18, alignSelf: 'stretch' },
     carouselOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center' },
     carouselContainer: { borderRadius: 16, overflow: 'hidden' },
     carouselHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderBottomWidth: 1, height: 49 },
