@@ -663,6 +663,7 @@ export const _PaqueteriaScreen = ({ modo }: { modo: Modo }) => {
                     index={Math.max(0, Math.min(detalleIndex ?? 0, listaFiltrada.length - 1))}
                     onIndexChange={(i) => { setShowCarousel(false); setDetalleIndex(i); }}
                     onClose={cerrarDetalle}
+                    swipeNatural
                     overlay={<>{renderCarrusel()}{renderFormEnvio()}{renderAvisoParcial()}</>}
                 />
 

@@ -12,7 +12,6 @@ import {
   FlatList,
   LayoutAnimation,
   Image,
-  Alert,
   KeyboardAvoidingView,
   useWindowDimensions,
 } from 'react-native';
@@ -163,16 +162,6 @@ export default function reporte_piezas_danadas_view_Screen() {
     colorIcon: '#f56565'
   });
 
-  const showError = (mensaje: string) => {
-    setModal({
-      visible: true,
-      titulo: t('common.error'),
-      mensaje,
-      icon: 'alert-circle-outline',
-      colorIcon: '#f56565'
-    });
-  };
-
   // Las fotos de un reporte ya guardado solo se consultan (carrusel): no se
   // pueden agregar ni eliminar desde esta pantalla.
   const verFotosDeReporte = (item: any) => {
@@ -183,41 +172,6 @@ export default function reporte_piezas_danadas_view_Screen() {
       name: (f.url || '').split('/').pop() || 'foto.jpg',
     })));
     setShowCarousel(true);
-  };
-
-  const handleEliminarReporte = async (id_registro: string) => {
-    const elimina = () => {
-      setResultados((prev: any[]) => prev.filter((r) => r.id_registro !== id_registro));
-      setExpandedSection(null);
-      // Se cierra el detalle y el carousel de fotos de este reporte: esas fotos
-      // dejaron de existir al eliminarse el reporte.
-      cerrarDetalle();
-      setArchivos_pieza([]);
-    };
-    if (Platform.OS === "web") {
-      if (confirm(t('reporte_piezas_danadas_view.delete_reporte_confirm'))) {
-        const response = await ApiService.eliminar_pieza_danada(id_registro);
-        if (response?.result == "ok") {
-          elimina();
-        } else {
-          showError(response?.result_text || t('common.connectionError'));
-        }
-      }
-    } else {
-      Alert.alert("Check Out", t('reporte_piezas_danadas_view.delete_reporte_confirm'), [
-        { text: "No" },
-        {
-          text: "Sí", onPress: async () => {
-            const response = await ApiService.eliminar_pieza_danada(id_registro);
-            if (response?.result == "ok") {
-              elimina();
-            } else {
-              showError(response?.result_text || t('common.connectionError'));
-            }
-          }
-        },
-      ]);
-    }
   };
 
   // Normaliza (minúsculas y sin acentos) para que el filtro no distinga
@@ -285,7 +239,7 @@ export default function reporte_piezas_danadas_view_Screen() {
     { 'label': 'Notas', 'value': item.comentarios, 'tipo_linea': 'multi_linea' }
   ];
 
-  // Fotos (solo consulta) + eliminar reporte, debajo de los campos del detalle.
+  // Fotos (solo consulta), debajo de los campos del detalle.
   const renderExtrasDetalle = (item: any) => (
     <View style={{ marginTop: 15 }}>
       <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas_view.fotos_title')}</Text>
@@ -306,13 +260,6 @@ export default function reporte_piezas_danadas_view_Screen() {
         ))
       )}
 
-      <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: '#e53e3e', marginTop: 15 }]}
-        onPress={() => handleEliminarReporte(item.id_registro)}
-      >
-        <MaterialCommunityIcons name="delete" size={20} color="#fff" />
-        <Text style={styles.addButtonText}>{t('reporte_piezas_danadas.delete_pieza')}</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -873,6 +820,7 @@ export default function reporte_piezas_danadas_view_Screen() {
           index={Math.max(0, Math.min(detalleIndex ?? 0, resultadosFiltrados.length - 1))}
           onIndexChange={(i) => { setShowCarousel(false); setDetalleIndex(i); }}
           onClose={cerrarDetalle}
+          swipeNatural
           overlay={renderCarrusel()}
         />
 

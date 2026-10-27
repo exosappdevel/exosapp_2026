@@ -516,10 +516,11 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
 // un PanResponder/gesto que compita con el scroll vertical del detalle (así
 // fallaba el swipe en dispositivos reales).
 //
-// Las páginas se colocan en orden INVERSO (el reporte siguiente queda a la
-// izquierda) para que deslizar hacia la DERECHA muestre el SIGUIENTE reporte y
-// hacia la IZQUIERDA el ANTERIOR. En la barra inferior: flecha izquierda =
-// anterior, flecha derecha = siguiente, e icono de swipe al centro.
+// Por defecto las páginas se colocan en orden INVERSO (el reporte siguiente
+// queda a la izquierda) para que deslizar hacia la DERECHA muestre el SIGUIENTE
+// reporte y hacia la IZQUIERDA el ANTERIOR. Con swipeNatural el orden es el
+// normal: IZQUIERDA = siguiente, DERECHA = anterior. En la barra inferior:
+// flecha izquierda = anterior, flecha derecha = siguiente, e icono de swipe al centro.
 // ---------------------------------------------------------------------------
 export interface _ReportPagerPage {
     key: string | number;
@@ -534,11 +535,13 @@ export interface _Show_Report_PagerProps {
     onIndexChange: (index: number) => void;
     onClose: () => void;
     showShare?: boolean;
+    // Invierte el sentido del swipe: deslizar a la izquierda = siguiente.
+    swipeNatural?: boolean;
     // Se monta dentro del propio Modal (p.ej. otro <Modal> como el carrusel de
     // fotos): en iOS un <Modal> hermano no se presenta mientras este está abierto.
     overlay?: React.ReactNode;
 }
-export const _Show_Report_Pager = ({ visible, titulo, pages, index, onIndexChange, onClose, showShare = false, overlay }: _Show_Report_PagerProps) => {
+export const _Show_Report_Pager = ({ visible, titulo, pages, index, onIndexChange, onClose, showShare = false, swipeNatural = false, overlay }: _Show_Report_PagerProps) => {
     const { theme, user } = useApp();
     const insets = useSafeAreaInsets();
     const { width } = useWindowDimensions();
@@ -550,12 +553,13 @@ export const _Show_Report_Pager = ({ visible, titulo, pages, index, onIndexChang
     const programmaticTarget = useRef<number | null>(null);
     const programmaticTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const n = pages.length;
-    const posDe = (i: number) => n - 1 - i;
+    // Posición (página del scroll) de un índice y viceversa (la inversa es la misma función).
+    const posDe = (i: number) => swipeNatural ? i : n - 1 - i;
 
     useEffect(() => {
         if (!visible) { currentPos.current = -1; programmaticTarget.current = null; return; }
         if (n === 0) return;
-        const pos = n - 1 - index;
+        const pos = posDe(index);
         if (currentPos.current === pos) return;
         const animated = currentPos.current !== -1;
         // Se espera un instante: al abrir, el Modal/ScrollView todavía se está
@@ -572,7 +576,7 @@ export const _Show_Report_Pager = ({ visible, titulo, pages, index, onIndexChang
             currentPos.current = pos;
         }, animated ? 0 : 50);
         return () => clearTimeout(id);
-    }, [visible, index, n, width]);
+    }, [visible, index, n, width, swipeNatural]);
 
     useEffect(() => () => { if (programmaticTimer.current) clearTimeout(programmaticTimer.current); }, []);
 
@@ -601,16 +605,17 @@ export const _Show_Report_Pager = ({ visible, titulo, pages, index, onIndexChang
     // arrastrar ahí no movía las páginas. Aquí no hay ningún scroll con el que
     // competir, por eso un PanResponder simple sí es confiable. Mismo sentido
     // que el paginado: derecha = siguiente, izquierda = anterior.
-    const navRef = useRef({ index, n, onIndexChange });
-    navRef.current = { index, n, onIndexChange };
+    const navRef = useRef({ index, n, onIndexChange, swipeNatural });
+    navRef.current = { index, n, onIndexChange, swipeNatural };
     const barSwipe = useRef(
         PanResponder.create({
             onMoveShouldSetPanResponder: (_, g) =>
                 Math.abs(g.dx) > 20 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
             onPanResponderRelease: (_, g) => {
-                const { index: i, n: total, onIndexChange: cambiar } = navRef.current;
-                if (g.dx > 60 && i < total - 1) cambiar(i + 1);
-                else if (g.dx < -60 && i > 0) cambiar(i - 1);
+                const { index: i, n: total, onIndexChange: cambiar, swipeNatural: natural } = navRef.current;
+                const dx = natural ? -g.dx : g.dx; // dx > 0 = siguiente
+                if (dx > 60 && i < total - 1) cambiar(i + 1);
+                else if (dx < -60 && i > 0) cambiar(i - 1);
             },
         })
     ).current;
@@ -641,7 +646,7 @@ export const _Show_Report_Pager = ({ visible, titulo, pages, index, onIndexChang
                         contentOffset={{ x: posDe(index) * width, y: 0 }}
                     >
                         {pages.map((_, pos) => {
-                            const i = n - 1 - pos;
+                            const i = posDe(pos);
                             const page = pages[i];
                             // Solo se monta el contenido de la página actual y las cercanas.
                             const cerca = Math.abs(i - index) <= 2;
