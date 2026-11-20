@@ -13,8 +13,10 @@ import {
   LayoutAnimation,
   Image,
   KeyboardAvoidingView,
+  Switch,
   useWindowDimensions,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -22,7 +24,7 @@ import { useApp } from '../context/AppContext';
 import ApiService from '@/services/ApiServices';
 import { _TouchableWithoutFeedback } from '../components/elidev_components';
 import CustomModal from '../components/CustomModal';
-import { _Header, _Show_Report_Pager, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _FotosCarousel, _DatePicker, _footer_baseHeight, getWebserviceFileUrl, formatDate } from '../components/elidev_components';
+import { _Header, _Show_Report_Pager, _Background, hexToRGBA, _Footer, _checkBox, _AccordionSection, _FotosCarousel, _DatePicker, _footer_baseHeight, getWebserviceFileUrl, formatDate, _PinModal } from '../components/elidev_components';
 
 
 interface PickerOption {
@@ -187,6 +189,124 @@ export default function reporte_piezas_danadas_view_Screen() {
         .some((campo) => normalizarTexto(campo).includes(textoFiltro))
     );
 
+  // --- Reposición de una pieza dañada (solo si enable_traspaso = 1) ---
+  // Formulario en un Modal anidado (overlay del detalle). Aceptar pide el PIN
+  // (_PinModal valida contra user.pin), sube la foto y llama
+  // asignar_reposicion_pieza_danada; si responde ok se actualiza el item.
+  const [repItem, setRepItem] = useState<any>(null);
+  const [repDescontar, setRepDescontar] = useState(false);
+  const [repReferencia, setRepReferencia] = useState('');
+  const [repLote, setRepLote] = useState('');
+  const [repComentarios, setRepComentarios] = useState('');
+  const [repFoto, setRepFoto] = useState<{ uri: string; name: string; type: string } | null>(null);
+  const [repError, setRepError] = useState('');
+  const [repPidiendoPin, setRepPidiendoPin] = useState(false);
+  const [repEnviando, setRepEnviando] = useState(false);
+  // Mensaje de éxito: se muestra DENTRO del Modal del formulario (no en otro
+  // Modal) porque en iOS cerrar un Modal y abrir otro a la vez sobre el detalle
+  // lo deja bloqueado (sin poder usar ningún botón).
+  const [repExito, setRepExito] = useState('');
+
+  const abrirReposicion = (item: any) => {
+    setRepDescontar(false);
+    setRepReferencia('');
+    setRepLote('');
+    setRepComentarios('');
+    setRepFoto(null);
+    setRepError('');
+    setRepPidiendoPin(false);
+    setRepEnviando(false);
+    setRepExito('');
+    setRepItem(item);
+  };
+
+  const cerrarReposicion = () => {
+    if (repEnviando) return;
+    setRepPidiendoPin(false);
+    setRepExito('');
+    setRepItem(null);
+  };
+
+  const tomarFotoReposicion = async (origen: 'camara' | 'galeria') => {
+    try {
+      setRepError('');
+      let result;
+      if (origen === 'camara') {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') { setRepError(t('reporte_piezas_danadas_view.camara_denegada')); return; }
+        result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') { setRepError(t('reporte_piezas_danadas_view.galeria_denegada')); return; }
+        result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.5 });
+      }
+      if (result.canceled) return;
+      const asset = result.assets[0];
+      // El servicio guarda una sola foto (url_foto): la nueva reemplaza a la anterior.
+      setRepFoto({
+        uri: asset.uri,
+        name: asset.fileName || asset.uri.split('/').pop() || 'reposicion.jpg',
+        type: asset.mimeType || 'image/jpeg',
+      });
+    } catch {
+      setRepError(t('common.connectionError'));
+    }
+  };
+
+  // Valida los campos obligatorios y recién entonces pide el PIN.
+  const pedirPinReposicion = () => {
+    if (repReferencia.trim() === '') { setRepError(t('reporte_piezas_danadas_view.rep_ref_requerida')); return; }
+    if (repLote.trim() === '') { setRepError(t('reporte_piezas_danadas_view.rep_lote_requerido')); return; }
+    if (!repFoto) { setRepError(t('reporte_piezas_danadas_view.rep_foto_requerida')); return; }
+    setRepError('');
+    setRepPidiendoPin(true);
+  };
+
+  // PIN válido: sube la foto, registra la reposición y actualiza el item.
+  const confirmarReposicion = async () => {
+    setRepPidiendoPin(false);
+    if (!repItem || !repFoto || repEnviando) return;
+    const item = repItem;
+    setRepEnviando(true);
+    setRepError('');
+    try {
+      // Deja terminar la animación de cierre del _PinModal (Modal anidado) antes
+      // de seguir; en iOS un Modal que aún se está cerrando bloquea la UI.
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const url = await ApiService.uploadFileDirect('piezas_danadas', 'reposicion', repFoto);
+      if (!url) { setRepError(t('reporte_piezas_danadas_view.rep_foto_error')); return; }
+
+      const res = await ApiService.asignar_reposicion_pieza_danada(
+        String(user?.id_usuario ?? ''),
+        String(user?.id_almacen ?? ''),
+        '0', // id_registro de la reposición: 0 = registro nuevo
+        String(item.id_registro), // id de la pieza dañada del reporte
+        repDescontar ? '1' : '0',
+        repReferencia.trim(),
+        repLote.trim(),
+        repComentarios.trim(),
+        url,
+        String(user?.pin ?? '')
+      );
+
+      if (res?.result === 'ok') {
+        setResultados((prev) => prev.map((r: any) =>
+          r.id_registro === item.id_registro
+            ? { ...r, repuesto: '1', enable_traspaso: '0', codigo_traspaso: res.codigo || r.codigo_traspaso }
+            : r
+        ));
+        setRepExito(t('reporte_piezas_danadas_view.rep_ok').replace('{codigo}', String(res.codigo ?? '')));
+      } else {
+        setRepError(res?.result_text || t('common.error'));
+      }
+    } catch {
+      setRepError(t('common.connectionError'));
+    } finally {
+      setRepEnviando(false);
+    }
+  };
+
   const cerrarDetalle = () => {
     setShowCarousel(false);
     setDetalleIndex(null);
@@ -227,6 +347,122 @@ export default function reporte_piezas_danadas_view_Screen() {
     </Modal>
   );
 
+  // Formulario de reposición: Modal anidado en el detalle (overlay) para que iOS
+  // lo presente. El _PinModal va dentro de este mismo Modal por la misma razón.
+  const renderFormReposicion = () => !repItem ? null : (
+    <Modal visible transparent animationType="fade" onRequestClose={cerrarReposicion}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={styles.carouselOverlay}>
+          <View style={[styles.repContainer, { backgroundColor: theme.card, borderColor: theme.border, width: Math.min(width * 0.95, 520), maxHeight: height * 0.9 }]}>
+            <View style={[styles.carouselHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.carouselTitle, { color: theme.text }]} numberOfLines={1}>
+                {t('reporte_piezas_danadas_view.reponer')} · {repItem.codigo}
+              </Text>
+            </View>
+            <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+              <View style={styles.repSwitchRow}>
+                <Text style={{ color: theme.text, fontSize: 13, flex: 1, marginRight: 10 }}>
+                  {t('reporte_piezas_danadas_view.rep_descontar')}
+                </Text>
+                <Switch
+                  value={repDescontar}
+                  onValueChange={setRepDescontar}
+                  disabled={repEnviando}
+                  trackColor={{ false: theme.textSub, true: theme.markup_complete }}
+                />
+              </View>
+
+              <Text style={[styles.repLabel, { color: theme.textSub }]}>{t('reporte_piezas_danadas_view.rep_referencia')} *</Text>
+              <TextInput
+                style={[styles.repInput, { color: theme.text, backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                value={repReferencia}
+                onChangeText={setRepReferencia}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                editable={!repEnviando}
+              />
+              <Text style={[styles.repLabel, { color: theme.textSub }]}>{t('reporte_piezas_danadas_view.rep_lote')} *</Text>
+              <TextInput
+                style={[styles.repInput, { color: theme.text, backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                value={repLote}
+                onChangeText={setRepLote}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                editable={!repEnviando}
+              />
+              <Text style={[styles.repLabel, { color: theme.textSub }]}>{t('reporte_piezas_danadas_view.rep_comentarios')}</Text>
+              <TextInput
+                style={[styles.repInput, { color: theme.text, backgroundColor: theme.inputBg, borderColor: theme.border, height: 80, textAlignVertical: 'top', paddingTop: 8 }]}
+                value={repComentarios}
+                onChangeText={setRepComentarios}
+                multiline
+                editable={!repEnviando}
+              />
+
+              <Text style={[styles.repLabel, { color: theme.textSub }]}>{t('reporte_piezas_danadas_view.rep_foto')} *</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity style={[styles.repBtnFoto, { borderColor: theme.accent }]} onPress={() => tomarFotoReposicion('camara')} disabled={repEnviando}>
+                  <MaterialCommunityIcons name="camera" size={18} color={theme.accent} />
+                  <Text style={{ color: theme.accent, marginLeft: 6 }}>{t('reporte_piezas_danadas_view.rep_tomar_foto')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.repBtnFoto, { borderColor: theme.accent }]} onPress={() => tomarFotoReposicion('galeria')} disabled={repEnviando}>
+                  <MaterialCommunityIcons name="image-multiple" size={18} color={theme.accent} />
+                  <Text style={{ color: theme.accent, marginLeft: 6 }}>{t('reporte_piezas_danadas_view.rep_usar_galeria')}</Text>
+                </TouchableOpacity>
+              </View>
+              {repFoto && (
+                <View style={styles.repFotoWrap}>
+                  <Image source={{ uri: repFoto.uri }} style={styles.repFotoThumb} />
+                  {!repEnviando && (
+                    <TouchableOpacity
+                      style={styles.repFotoQuitar}
+                      onPress={() => setRepFoto(null)}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <MaterialCommunityIcons name="close" size={14} color="#fff" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+
+              {!!repError && <Text style={{ color: '#e53e3e', marginTop: 10 }}>{repError}</Text>}
+            </ScrollView>
+
+            <View style={[styles.repBotones, { borderTopColor: theme.border }]}>
+              <TouchableOpacity style={[styles.repBtn, { backgroundColor: '#718096' }]} onPress={cerrarReposicion} disabled={repEnviando}>
+                <Text style={styles.btnReponerTexto}>{t('reporte_piezas_danadas_view.rep_regresar')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.repBtn, { backgroundColor: '#38a169' }]} onPress={pedirPinReposicion} disabled={repEnviando}>
+                {repEnviando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnReponerTexto}>{t('common.accept')}</Text>}
+              </TouchableOpacity>
+            </View>
+
+            {/* Éxito: panel dentro del mismo Modal; Aceptar cierra el formulario. */}
+            {!!repExito && (
+              <View style={styles.repExitoOverlay}>
+                <View style={[styles.repAviso, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                  <Text style={{ color: theme.text, textAlign: 'center', fontSize: 15 }}>{repExito}</Text>
+                  {/* flex: 0 porque repBtn trae flex: 1 (para filas); en esta columna iOS lo aplastaba y recortaba el texto. */}
+                  <TouchableOpacity style={[styles.repBtn, { flex: 0, minHeight: 44, backgroundColor: theme.accent, marginTop: 16, alignSelf: 'stretch' }]} onPress={cerrarReposicion}>
+                    <Text style={styles.btnReponerTexto}>{t('common.accept')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <_PinModal
+          visible={repPidiendoPin}
+          title={t('reporte_piezas_danadas_view.rep_pin_title')}
+          message={t('reporte_piezas_danadas_view.rep_pin_message')}
+          onSuccess={confirmarReposicion}
+          onCancel={() => setRepPidiendoPin(false)}
+        />
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+
   // Campos que muestra el detalle de un reporte.
   const camposDetalle = (item: any) => [
     { 'label': 'Codigo Registro', 'value': item.codigo, 'tipo_linea': 'linea' },
@@ -242,6 +478,17 @@ export default function reporte_piezas_danadas_view_Screen() {
   // Fotos (solo consulta), debajo de los campos del detalle.
   const renderExtrasDetalle = (item: any) => (
     <View style={{ marginTop: 15 }}>
+      {/* enable_traspaso = 1: la pieza aún no tiene traspaso/reposición. */}
+      {Number(item.enable_traspaso) === 1 && (
+        <TouchableOpacity
+          style={[styles.btnReponer, { backgroundColor: theme.accent }]}
+          onPress={() => abrirReposicion(item)}
+        >
+          <MaterialCommunityIcons name="package-variant-closed-plus" size={20} color="#fff" />
+          <Text style={styles.btnReponerTexto}>{t('reporte_piezas_danadas_view.reponer')}</Text>
+        </TouchableOpacity>
+      )}
+
       <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas_view.fotos_title')}</Text>
 
       {(!Array.isArray(item.fotos) || item.fotos.length === 0) ? (
@@ -329,6 +576,21 @@ export default function reporte_piezas_danadas_view_Screen() {
               }}>
                 {item.lote}
               </Text>
+            </View>
+            {/* Segundo Renglón */}
+            <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'flex-start' }}>
+              <Text style={{
+                color: theme.text,
+                fontSize: 12,
+                fontStyle: 'italic'
+              }}>
+                Traspaso:                 
+              </Text>    
+              <Text style={{
+                color: item.enable_traspaso ? theme.text : theme.accent,
+                fontSize: 12,
+                fontStyle: 'italic'
+              }}>{item.codigo_traspaso || 'N/A'}</Text>              
             </View>
           </View>
         }
@@ -821,7 +1083,7 @@ export default function reporte_piezas_danadas_view_Screen() {
           onIndexChange={(i) => { setShowCarousel(false); setDetalleIndex(i); }}
           onClose={cerrarDetalle}
           swipeNatural
-          overlay={renderCarrusel()}
+          overlay={<>{renderCarrusel()}{renderFormReposicion()}</>}
         />
 
         <_Footer Show_Almacen={false} keyboardAware extraHeight={FOOTER_EXTRA}>
@@ -1024,6 +1286,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 15,
   },
+  btnReponer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginBottom: 15,
+  },
+  btnReponerTexto: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+  repContainer: { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
+  repSwitchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  repLabel: { fontSize: 12, fontWeight: '600', marginTop: 10, marginBottom: 4 },
+  repInput: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, height: 42, fontSize: 14 },
+  repBtnFoto: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: 10, paddingVertical: 8 },
+  repFotoWrap: { width: 96, height: 96, marginTop: 10 },
+  repFotoThumb: { width: 96, height: 96, borderRadius: 8 },
+  repFotoQuitar: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10, backgroundColor: '#e53e3e', justifyContent: 'center', alignItems: 'center' },
+  repBotones: { flexDirection: 'row', gap: 10, padding: 12, borderTopWidth: 1 },
+  repBtn: { flex: 1, borderRadius: 12, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
+  repAviso: { borderRadius: 14, borderWidth: 1, padding: 18, width: '85%', maxWidth: 340 },
+  repExitoOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
   carouselOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',

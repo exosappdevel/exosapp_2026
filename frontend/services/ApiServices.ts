@@ -367,6 +367,9 @@ class ApiService {
   static async paqueteria_foto_envio_add(id_usuario:string, id_paqueteria:string, url_foto:string){
     return await this.request("paqueteria_foto_envio_add", {id_usuario, id_paqueteria, url_foto});  
   }   
+  static async asignar_reposicion_pieza_danada(id_usuario:string, id_almacen:string, id_registro:string, id_pieza_danada_reporte_inv:string, descontar:string, referencia:string, lote:string, comentarios:string, url_foto:string, pin:string){
+    return await this.request("asignar_reposicion_pieza_danada", {id_usuario, id_almacen, id_registro, id_pieza_danada_reporte_inv, descontar, referencia, lote, comentarios, url_foto, pin});
+  } 
 }
 
 export default ApiService;

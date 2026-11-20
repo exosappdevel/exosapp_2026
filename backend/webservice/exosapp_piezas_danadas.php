@@ -4,7 +4,11 @@ trait ExosApp_PiezasDanadas
 {
     public function listMethods_PiezasDanadas()
     {
-        return [
+        return [ 
+            'asignar_reposicion_pieza_danada' => [
+                'descripcion' => 'Asigna la reposicion de una Pieza Dañada',
+                'parameters' => ['id_usuario','id_almacen','id_registro','id_pieza_danada_reporte_inv','descontar','referencia','lote','comentarios','url_foto','pin']
+            ],
             'piezas_danadas_reporte_estatus' => [
                 'descripcion' => 'Obtiene la lista de estatus de piezas dañadas.',
                 'parameters' => ['show_todas (opcional)']
@@ -305,7 +309,7 @@ trait ExosApp_PiezasDanadas
                 'repuesto' => $row['repuesto'],
                 'codigo_set' => $row['codigo_set'],
                 'codigo_traspaso' => $codigo_traspaso,
-                'enable_traspado' => $codigo_traspaso=="SIN TRASPASO" ? 1:0, 
+                'enable_traspaso' => $codigo_traspaso=="SIN TRASPASO" ? 1:0, 
                 'fotos_count' => count($fotos_lst),
                 'fotos' => $fotos_lst               
                 ];
@@ -588,7 +592,7 @@ trait ExosApp_PiezasDanadas
                             WHERE id_inventario = ".$id_inventario;
                         ExecuteSQL($query3);
                         
-                        /* registra el movimiento */ 
+                        /* registra el movimiento */  
                         //	$query_mov = "INSERT INTO movimiento_almacen (id_inventario, tipo, cantidad, comentarios,  kardex, id_usuario_kardex) 
                         //				VALUES (".$id_inventario.", 0, 1, 'Salida por pieza dañada - ".$row['codigo']."  ', NOW(), ".$_SESSION['id_sesion'].")";
                         //	ExecuteSQL($query_mov); 
@@ -596,7 +600,12 @@ trait ExosApp_PiezasDanadas
                         $query_invd = "SELECT cantidad FROM inventario WHERE id_inventario = ".$id_inventario;  
                         $cantidad_despues = GetValueSQL($query_invd,"cantidad");   
                         $comentarios_movimiento_almacen = "SALIDA POR PIEZA DAÑADA ".$row['codigo'];  
-                        registra_movimiento_almacen($id_inventario, 0,$cant_actual, 1, $cantidad_despues, $comentarios_movimiento_almacen);
+                        //	registra_movimiento_almacen($id_inventario, 0,$cant_actual, 1, $cantidad_despues, $comentarios_movimiento_almacen);
+						$query_mov = "INSERT INTO movimiento_almacen (id_inventario, tipo, cantidad_antes, cantidad_manipulada, cantidad_despues, comentarios, kardex, id_usuario_kardex) 
+							VALUES (".$id_inventario.", 0,".$cant_actual.",1,".$cantidad_despues.", '".$comentarios_movimiento_almacen."', NOW(), ".$id_usuario.")";  
+						ExecuteSQL($query_mov);  	
+	
+	
                     }
                 } 
                 
@@ -619,5 +628,231 @@ trait ExosApp_PiezasDanadas
             );	 
             return $result;
         }
+    } 
+
+	/* *** NOV 2026 - MODELO REPOSICION PIEZA DAÑADA *** */
+    public function asignar_reposicion_pieza_danada(){    		 
+          
+        $id_usuario 	= Requesting("id_usuario"); 
+        $id_almacen 	= Requesting("id_almacen"); 
+        
+		$id_registro 	= Requesting("id_registro");
+		$id_pieza_danada_reporte_inv 	= Requesting("id_pieza_danada_reporte_inv");
+		$descontar 		= Requesting("descontar");
+		$referencia 	= Requesting("referencia");
+		$lote 			= Requesting("lote");
+		$comentarios 	= Requesting("comentarios");
+		$url_foto 		= Requesting("url_foto");
+		$pin 			= Requesting("pin");
+		 
+		$codigo = "";
+		
+		if ($id_registro == "" || $id_usuario == "" || $id_pieza_danada_reporte_inv == "" || $descontar == "" || 
+			$referencia == "" || $lote == "" || $url_foto == "" || $pin == "" ) { 
+            $resultStatus 	= "error"; 
+            $resultText 	= "Error. Datos incompletos.";
+        }else{
+            $resultStatus 	= "ok"; 
+            $resultText 	= "Correcto. El registro fue guardado con exito.";	
+ 
+			/* *** PRIMERO BUSCO QUE EXISTA UN INVENTARIO ORIGEN PARA DESCONTAR **** */	
+			if($descontar == "1"){
+				$query3 = "SELECT COUNT(id_producto) AS existe, id_producto FROM producto WHERE referencia LIKE '".$referencia."'";
+				$existe_producto = GetValueSQL($query3,"existe");
+				if($existe_producto > 0){
+					$id_producto = GetValueSQL($query3,"id_producto");
+				
+					$query4 = "SELECT COUNT(id_inventario) AS existe, id_inventario, cantidad, codigo_2, id_fabricante, fecha_cad   
+						FROM inventario 
+						WHERE id_almacen = ".$id_almacen."
+						AND id_producto = ".$id_producto."
+						AND lote LIKE '".$lote."'
+						AND cantidad > 0";
+					$existe_inv = GetValueSQL($query4,"existe");
+				
+					if($existe_inv > 0){
+						$id_inventario 		= GetValueSQL($query4,"id_inventario");
+						$cantidad_actual 	= GetValueSQL($query4,"cantidad");
+						$codigo_2 			= GetValueSQL($query4,"codigo_2");
+						$id_fabricante 		= GetValueSQL($query4,"id_fabricante");
+						$fecha_cad  		= GetValueSQL($query4,"fecha_cad");
+						
+						$si_continua 		= 1;	
+					}else{
+						$si_continua 	= 0;
+						$resultStatus 	= "error";  
+						$resultText 	= "NO se encontró inventario o no hay existencia.  No es posible continuar con la reposición. Por favor verifique.";	 
+					}
+				}else{
+					$si_continua 	= 0;
+					$resultStatus 	= "error";   
+					$resultText 	= "NO se encontró producto con esa referencia. No es posible continuar con la reposición. Por favor verifique.";	 
+				}
+			}else{
+				$si_continua = 1;	
+			}
+					 
+			if($si_continua == 1){
+				
+				$query1 = "SELECT  pieza_danada_reporte.id_sucursal, almacen.codigo AS sucursal_destino
+					FROM pieza_danada_reporte
+					INNER JOIN pieza_danada_reporte_inv ON (pieza_danada_reporte_inv.id_reporte = pieza_danada_reporte.id_reporte)
+					INNER JOIN almacen ON (almacen.id_almacen = pieza_danada_reporte.id_sucursal)
+					WHERE pieza_danada_reporte_inv.id_registro = ".$id_pieza_danada_reporte_inv;
+				$id_sucursal_destino = GetValueSQL($query1,"id_sucursal");	
+				$sucursal_destino = GetValueSQL($query1,"sucursal_destino");					
+				
+				if($id_registro == 0){
+					/* *** guardo registro nuevo *** */				
+					$query = "INSERT INTO pieza_danada_reposicion (id_pieza_danada_reporte_inv, descuenta, referencia, lote, comentarios,
+						id_inventario_origen, id_inventario_destino, codigo, url_foto, pin_confirma_codigo, kardex, id_usuario_kardex)
+						VALUES (".$id_pieza_danada_reporte_inv.",".$descontar.", '".$referencia."', '".$lote."', '".$comentarios."',
+						0,0,'".$pin."','".$url_foto."','',NOW(),".$id_usuario.")";
+					$id_registro = ExecuteSQL_returnID($query);
+					/* si el INSERT falla no se debe seguir (ni marcar repuesto ni mover inventario) */
+					if(!$id_registro){
+						return array(
+							'codigo' 		=> "",
+							'result' 		=> "error",
+							'result_text' 	=> "Error. No se pudo registrar la reposición."
+						);
+					}
+					/* *** genero codigo *** */
+					$codigo = "REM".$id_registro.$sucursal_destino;					
+					$query2 = "UPDATE pieza_danada_reposicion SET codigo = '".$codigo."' WHERE id_registro = ".$id_registro;
+					ExecuteSQL($query2);							
+					/* *** actualizo estatus en pieza_danada_reporte_inv *** */
+					$queryup = "UPDATE pieza_danada_reporte_inv SET repuesto = 1 WHERE id_registro = ".$id_pieza_danada_reporte_inv;
+					ExecuteSQL($queryup);					
+					/* **** ahora elimino inventario **** */					
+					if($descontar == "1"){						
+						$cantidad_nueva = ($cantidad_actual) - (1);						
+						$query5 = "UPDATE inventario SET 
+							cantidad = ".$cantidad_nueva.",
+							kardex = NOW(),
+							id_usuario_kardex = ".$id_usuario."
+							WHERE id_inventario = ".$id_inventario; 
+						ExecuteSQL($query5);						
+						/* *** REGISTRO MOV ALMACEN **** */
+						$query_invd = "SELECT cantidad FROM inventario WHERE id_inventario = ".$id_inventario; 
+						$cantidad_despues = GetValueSQL($query_invd,"cantidad"); 
+						
+						$comentarios_movimiento_almacen = "SALIDA POR REPOSICION DE PIEZA DANADA - ".$codigo;  
+						//	registra_movimiento_almacen($id_inventario, 0,$cantidad_actual, 1, $cantidad_despues, $comentarios_movimiento_almacen);
+						$query_mov = "INSERT INTO movimiento_almacen (id_inventario, tipo, cantidad_antes, cantidad_manipulada, cantidad_despues, comentarios, kardex, id_usuario_kardex) 
+							VALUES (".$id_inventario.", 0,".$cantidad_actual.",1,".$cantidad_despues.", '".$comentarios_movimiento_almacen."', NOW(), ".$id_usuario.")";  
+						ExecuteSQL($query_mov); 
+					
+						/* **** ahora buscar el inventario destino *** */				
+						$query32 = "SELECT COUNT(id_inventario) AS existe, id_inventario, cantidad
+							FROM inventario
+							WHERE id_almacen = ".$id_sucursal_destino." 
+							AND id_producto = ".$id_producto."
+							AND lote = '".$lote."'";
+						$existeinvdest = GetValueSQL($query32,"existe");
+						
+						if($existeinvdest > 0){
+							/* si existe el producto en el inventario destino. Solo actualizo cantidad*/
+							$id_inventario_destino = GetValueSQL($query32,"id_inventario");
+							$cantidad_actual_destino = GetValueSQL($query32,"cantidad"); 
+							$cantidad_nueva_destino = ($cantidad_actual_destino) + (1);			
+							
+							$query42 = "UPDATE inventario SET 
+								cantidad = ".$cantidad_nueva_destino." ,
+								kardex = NOW(),
+								id_usuario_kardex = ".$id_usuario."
+								WHERE id_inventario = ".$id_inventario_destino;
+							ExecuteSQL($query42); 
+							
+							//	$query_mov2 = "INSERT INTO movimiento_almacen (id_inventario, tipo, cantidad, comentarios, kardex, id_usuario_kardex) VALUES  
+							//				(".$id_inventario_destino.", 1, ".$row['cantidad'].", 'Entrada por Traspaso ID ".$id_traspaso."', NOW(), ".$_SESSION['id_sesion'].")"; 
+							//	ExecuteSQL($query_mov2);	 
+									
+							$query_invd = "SELECT cantidad FROM inventario WHERE id_inventario = ".$id_inventario_destino;  
+							$cantidad_despues = GetValueSQL($query_invd,"cantidad");      
+							$comentarios_movimiento_almacen = "RECIBO POR REPOSICION DE PIEZA DANADA - ".$codigo;  
+							//	registra_movimiento_almacen($id_inventario_destino, 1,$cantidad_actual_destino, 1, $cantidad_despues, $comentarios_movimiento_almacen);
+							$query_mov = "INSERT INTO movimiento_almacen (id_inventario, tipo, cantidad_antes, cantidad_manipulada, cantidad_despues, comentarios, kardex, id_usuario_kardex) 
+								VALUES (".$id_inventario_destino.", 1,".$cantidad_actual_destino.",1,".$cantidad_despues.", '".$comentarios_movimiento_almacen."', NOW(), ".$id_usuario.")";  
+							ExecuteSQL($query_mov); 
+						
+							
+						}else{
+							/* NO existe en el inventario destino. Lo tengo que crear */			
+							$query52 = "SELECT COUNT(id_area) AS existe, id_area FROM area WHERE id_almacen = ".$id_sucursal_destino;
+							$existe_area = GetValueSQL($query52,"existe");
+							
+							if($existe_area > 0){
+								$id_area = GetValueSQL($query52,"id_area");
+							}else{				
+								$query62 = "INSERT INTO area (id_almacen, nombre, kardex, id_usuario_kardex)
+									VALUES (".$id_sucursal_destino.", 'Area General', NOW(), ".$id_usuario.") ";
+								$id_area = ExecuteSQL_ReturnID($query62);			
+							}			
+							$query72 = "SELECT COUNT(id_subarea) AS existe, id_subarea FROM subarea WHERE id_area = ".$id_area;
+							$existe_subarea = GetValueSQL($query72,"existe");			
+							if($existe_subarea > 0){
+								$id_subarea = GetValueSQL($query72,"id_subarea");
+							}else{				
+								$query82 = "INSERT INTO subarea (id_area, nombre, kardex, id_usuario_kardex)
+									VALUES (".$id_area.", 'Subarea General', NOW(), ".$id_usuario.") ";
+								$id_subarea = ExecuteSQL_ReturnID($query82); 				
+							}
+									
+							$query9 = "INSERT INTO inventario (id_producto, id_fabricante, codigo_2, lote, fecha_cad, id_almacen, id_area, id_subarea, nivel, cantidad, kardex, id_usuario_kardex)
+								VALUES(".$id_producto.", ".$id_fabricante.", '".$codigo_2."', '".$lote."', '".$fecha_cad."', ".$id_sucursal_destino.", ".$id_area.", ".$id_subarea.", 'Nivel General', 
+								1, NOW(), ".$id_usuario.")";
+							$id_inventario_destino = ExecuteSQL_ReturnID($query9);		
+							
+							//	$query_mov2 = "INSERT INTO movimiento_almacen (id_inventario, tipo, cantidad, comentarios, kardex, id_usuario_kardex) VALUES  
+							//				(".$id_inventario_destino.", 1, ".$row['cantidad'].", 'Entrada por Traspaso ID ".$id_traspaso."', NOW(), ".$_SESSION['id_sesion'].")"; 
+							//	ExecuteSQL($query_mov2);	
+							$cantidad_actual_destino = 0;  
+							$query_invd = "SELECT cantidad FROM inventario WHERE id_inventario = ".$id_inventario_destino;  
+							$cantidad_despues = GetValueSQL($query_invd,"cantidad");      
+							$comentarios_movimiento_almacen = "RECIBO POR REPOSICION DE PIEZA DANADA - ".$codigo;  
+							//	registra_movimiento_almacen($id_inventario_destino, 1,$cantidad_actual_destino, 1, $cantidad_despues, $comentarios_movimiento_almacen);
+							$query_mov = "INSERT INTO movimiento_almacen (id_inventario, tipo, cantidad_antes, cantidad_manipulada, cantidad_despues, comentarios, kardex, id_usuario_kardex) 
+								VALUES (".$id_inventario_destino.", 1,".$cantidad_actual_destino.",1,".$cantidad_despues.", '".$comentarios_movimiento_almacen."', NOW(), ".$id_usuario.")";  
+							ExecuteSQL($query_mov); 
+							
+						}
+					}
+					
+				}else{
+					/* *** genero codigo *** */
+					$codigo = "REM".$id_registro.$sucursal_destino;
+					
+					/* *** acutalizo registro *** */
+					$query2 = "UPDATE pieza_danada_reposicion SET
+						descuenta 		= ".$descontar.",
+						referencia 		= '".$referencia."', 
+						lote 			= '".$lote."', 
+						comentarios 	= '".$comentarios."',   
+						codigo 			= '".$codigo."', 
+						url_foto 		= '".$url_foto."',  
+						pin 			= '".$pin."',  
+						kardex 			= NOW(),
+						id_usuario_kardex = ".$id_usuario."
+					WHERE id_registro = ".$id_registro;
+					ExecuteSQL($query2);
+					
+				} 
+			} 
+		
+		}
+
+
+                
+		$result = array(
+                'codigo' 		=> $codigo, 
+                'result' 		=> $resultStatus, 
+                'result_text' 	=> $resultText
+            );	 
+            return $result;
+       
     }
+
+
 }
+
