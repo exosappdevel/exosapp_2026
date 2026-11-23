@@ -42,3 +42,25 @@ function showMessage(text, type) {
 function hideMessage() {
   $('#listMessage').hide();
 }
+
+// ---------------------------------------------------------------------
+// Almacenes (para el árbol almacén -> perfiles de la página Usuarios)
+// ---------------------------------------------------------------------
+var almacenesCache = null; // se carga una sola vez y se reusa entre dialogs
+
+function cargarAlmacenes() {
+  var dfd = $.Deferred();
+  if (almacenesCache) {
+    dfd.resolve(almacenesCache);
+    return dfd.promise();
+  }
+  apiGet('app_almacenes_list', {}).done(function (resp) {
+    if (resp && resp.result === 'ok') {
+      almacenesCache = normalizeList(resp.data);
+      dfd.resolve(almacenesCache);
+    } else {
+      dfd.reject();
+    }
+  }).fail(function () { dfd.reject(); });
+  return dfd.promise();
+}

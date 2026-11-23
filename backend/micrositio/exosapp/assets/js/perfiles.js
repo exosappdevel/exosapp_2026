@@ -1,7 +1,6 @@
 $(function () {
 
   var perfilesCache = [];
-  var usuariosCache = null; // se carga una sola vez (lazy) y se reusa entre aperturas del dialog
   var perfilesSearchText = '';
   var perfilesSortDir = 'asc';
 
@@ -13,9 +12,6 @@ $(function () {
 
     $('#btnNuevoPerfil').on('click', openNuevoPerfil);
     $('#formPerfil').on('submit', function (e) { e.preventDefault(); guardarPerfil(); });
-    $('#usuariosPerfilSearch').on('keyup', function () {
-      filtrarUsuariosPerfil($.trim($(this).val()).toLowerCase());
-    });
 
     $('#perfilesSearch').on('keyup', function () {
       perfilesSearchText = $.trim($(this).val()).toLowerCase();
@@ -92,8 +88,6 @@ $(function () {
       var $actions = $('<td>').addClass('col-actions');
       $actions.append($('<button>').addClass('btn btn-small btn-outline').text('Permisos')
         .on('click', function () { abrirPermisos(p.id_perfil, p.nombre); }));
-      $actions.append($('<button>').addClass('btn btn-small btn-outline').text('Usuarios')
-        .on('click', function () { abrirUsuariosPerfil(p.id_perfil, p.nombre); }));
       $actions.append($('<button>').addClass('btn btn-small btn-outline').text('Editar')
         .on('click', function () { openEditarPerfil(p.id_perfil); }));
       $actions.append($('<button>').addClass('btn btn-small btn-outline').text('Clonar')
@@ -124,46 +118,11 @@ $(function () {
     $('#dlgPermisos').dialog({
       autoOpen: false,
       modal: true,
-      width: 560,
-      height: 520,
+      width: 480,
+      height: 480,
       resizable: false,
       buttons: {
         'Guardar permisos': function () { guardarPermisos(); },
-        'Cerrar': function () { $(this).dialog('close'); }
-      }
-    });
-
-    $('#dlgUsuariosPerfil').dialog({
-      autoOpen: false,
-      modal: true,
-      width: 480,
-      height: 520,
-      resizable: false,
-      open: function () {
-        const $btn = $(this).dialog('widget').find('.ui-dialog-buttonpane button:first');
-        const total = $('#usuariosPerfilList > li[data-nombre] input[type=checkbox]:checked').length;
-        $btn.data('showingAll', true)
-          .button('option', 'label', 'Mostrar seleccionados (' + total + ')');
-      },
-      buttons: {
-        'Mostrar todos': function (e) {
-          const $btn = $(e.target);
-          const $items = $('#usuariosPerfilList > li[data-nombre]');
-          const showingAll = $btn.data('showingAll');
-
-          if (showingAll) {
-            $items.each(function () {
-              $(this).toggle($(this).find('input[type=checkbox]').is(':checked'));
-            });
-            const total = $('#usuariosPerfilList > li[data-nombre] input[type=checkbox]:checked').length;
-            $btn.button('option', 'label', 'Mostrar todos (' + total + ')');
-          } else {
-            $items.show();
-            $btn.button('option', 'label', 'Mostrar seleccionados (' + $items.length + ')');
-          }
-
-          $btn.data('showingAll', !showingAll);
-        },
         'Cerrar': function () { $(this).dialog('close'); }
       }
     });
@@ -261,10 +220,11 @@ $(function () {
   }
 
   // ---------------------------------------------------------------------
-  // Permisos por módulo / almacén
+  // Permisos del perfil: lista de módulos (app_perfiles_modulos). Aquí no
+  // interviene el almacén; eso se asigna por usuario en la página Usuarios.
   // ---------------------------------------------------------------------
   function abrirPermisos(idPerfil, nombrePerfil) {
-    $('#permisosAccordion').empty().text('Cargando permisos…');
+    $('#permisosLista').empty().append('<li class="checklist-loading">Cargando módulos…</li>');
     $('#dlgPermisos .permisos-perfil-nombre').text(nombrePerfil || '');
     $('#dlgPermisos').data('idPerfil', idPerfil)
       .dialog('option', 'title', 'Permisos: ' + (nombrePerfil || ''))
@@ -272,97 +232,41 @@ $(function () {
 
     apiGet('app_perfiles_permisos_get', { id_perfil: idPerfil }).done(function (resp) {
       if (!resp || resp.result !== 'ok') {
-        $('#permisosAccordion').text((resp && resp.result_text.toUpperCase()) || 'No se pudieron cargar los permisos.');
+        $('#permisosLista').empty().append($('<li class="checklist-loading">').text(
+          (resp && resp.result_text) || 'No se pudieron cargar los permisos.'));
         return;
       }
       renderPermisos(normalizeList(resp.data));
     }).fail(function () {
-      $('#permisosAccordion').text('Error de conexión con el servidor.');
+      $('#permisosLista').empty().append('<li class="checklist-loading">Error de conexión con el servidor.</li>');
     });
   }
 
   function renderPermisos(rows) {
-    var $accordion = $('#permisosAccordion');
-
-    // .empty() borra el contenido pero no destruye el widget de jQuery UI:
-    // si ya era un accordion (aperturas anteriores), hay que destruirlo antes
-    // de reconstruirlo o queda con el header sin estilo y sin colapsar.
-    if ($accordion.hasClass('ui-accordion')) {
-      $accordion.accordion('destroy');
-    }
-    $accordion.empty();
+    var $list = $('#permisosLista').empty();
 
     if (!rows.length) {
-      $accordion.text('Este perfil no tiene módulos configurados.');
+      $list.append('<li class="checklist-loading">No hay módulos configurados.</li>');
       return;
     }
 
-    var grupos = {};
-    var orden = [];
     rows.forEach(function (row) {
-      var modulo = row.modulo || '(Sin módulo)';
-      if (!grupos[modulo]) {
-        grupos[modulo] = [];
-        orden.push(modulo);
-      }
-      grupos[modulo].push(row);
+      var $checkbox = $('<input type="checkbox">')
+        .attr('data-modulo-id', row.id_modulo)
+        .prop('checked', String(row.activo) === '1');
+      var $label = $('<label>').append($checkbox)
+        .append(' ' + (row.modulo || ('Módulo #' + row.id_modulo)));
+      $list.append($('<li>').append($label));
     });
-
-    orden.forEach(function (modulo) {
-      var $header = $('<h3>').text(modulo.toUpperCase());
-      var $panel = $('<div>').addClass('permisos-panel');
-
-      var updateHeaderCount = function () {
-        var marcados = $panel.find('input[data-permiso-id]:checked').length;
-        var label = modulo.toUpperCase() + (marcados > 0 ? ' (' + marcados + ')' : '');
-        $header.text(label);
-      };
-
-      var allChecked = grupos[modulo].every(function (row) { return String(row.activo) === '1'; });
-      var $selectAllLabel = $('<label>').addClass('permisos-select-all');
-      var $selectAllCb = $('<input type="checkbox">').prop('checked', allChecked);
-      $selectAllLabel.append($selectAllCb).append(' Seleccionar todos');
-
-      var $list = $('<ul>').addClass('permisos-list');
-
-      grupos[modulo].forEach(function (row) {
-        var checked = String(row.activo) === '1';
-        var $li = $('<li>');
-        var $label = $('<label>');
-        var $checkbox = $('<input type="checkbox">')
-          .attr('data-permiso-id', row.id)
-          .prop('checked', checked)
-          .on('change', function () {
-            var todos = $panel.find('input[data-permiso-id]');
-            var marcados = todos.filter(':checked');
-            $selectAllCb.prop('checked', todos.length === marcados.length);
-            updateHeaderCount();
-          });
-        $label.append($checkbox).append(' ' + (row.almacen || ('Almacén #' + row.id_almacen)));
-        $li.append($label);
-        $list.append($li);
-      });
-
-      $selectAllCb.on('change', function () {
-        $panel.find('input[data-permiso-id]').prop('checked', $(this).is(':checked'));
-        updateHeaderCount();
-      });
-
-      $panel.append($selectAllLabel).append($list);
-      $accordion.append($header).append($panel);
-      updateHeaderCount();
-    });
-
-    $accordion.accordion({ heightStyle: 'content', collapsible: true, active: false });
   }
 
   function guardarPermisos() {
     var idPerfil = $('#dlgPermisos').data('idPerfil');
     var permisos = [];
 
-    $('#permisosAccordion input[data-permiso-id]').each(function () {
+    $('#permisosLista input[data-modulo-id]').each(function () {
       permisos.push({
-        id: $(this).attr('data-permiso-id'),
+        id_modulo: $(this).attr('data-modulo-id'),
         activo: $(this).is(':checked') ? 1 : 0
       });
     });
@@ -379,107 +283,6 @@ $(function () {
       $('#dlgPermisos').dialog('close');
     }).fail(function () {
       alert('Error de conexión con el servidor.');
-    });
-  }
-
-  // ---------------------------------------------------------------------
-  // Usuarios asignados al perfil (agregar/quitar, con búsqueda por texto)
-  // ---------------------------------------------------------------------
-  function abrirUsuariosPerfil(idPerfil, nombrePerfil) {
-    $('#usuariosPerfilSearch').val('');
-    $('#usuariosPerfilList').empty().append('<li class="checklist-loading">Cargando usuarios…</li>');
-    $('#dlgUsuariosPerfil .permisos-perfil-nombre').text(nombrePerfil || '');
-    $('#dlgUsuariosPerfil').data('idPerfil', idPerfil)
-      .dialog('option', 'title', 'Usuarios: ' + (nombrePerfil || ''))
-      .dialog('open');
-
-    $.when(cargarUsuarios(), apiGet('app_perfiles_usuarios_get', { id_perfil: idPerfil }))
-      .done(function (usuarios, asignadosResp) {
-        var asignadosData = asignadosResp[0]; // $.when pasa [data, status, xhr] por cada promesa
-        if (!asignadosData || asignadosData.result !== 'ok') {
-          $('#usuariosPerfilList').empty().append('<li class="checklist-loading">' +
-            ((asignadosData && asignadosData.result_text) || 'No se pudieron cargar los usuarios asignados.') + '</li>');
-          return;
-        }
-        var asignados = {};
-        normalizeList(asignadosData.data).forEach(function (row) {
-          asignados[String(row.id_usuario_app)] = true;
-        });
-        renderUsuariosPerfil(usuarios, asignados, idPerfil);
-      })
-      .fail(function () {
-        $('#usuariosPerfilList').empty().append('<li class="checklist-loading">Error de conexión con el servidor.</li>');
-      });
-  }
-
-  function cargarUsuarios() {
-    var dfd = $.Deferred();
-    if (usuariosCache) {
-      dfd.resolve(usuariosCache);
-      return dfd.promise();
-    }
-    apiGet('app_usuarios_list', {}).done(function (resp) {
-      if (resp && resp.result === 'ok') {
-        usuariosCache = normalizeList(resp.data);
-        dfd.resolve(usuariosCache);
-      } else {
-        dfd.reject();
-      }
-    }).fail(function () { dfd.reject(); });
-    return dfd.promise();
-  }
-
-  function renderUsuariosPerfil(usuarios, asignados, idPerfil) {
-    var $list = $('#usuariosPerfilList').empty();
-
-    if (!usuarios.length) {
-      $list.append('<li class="checklist-loading">No hay usuarios registrados.</li>');
-      actualizarContadorUsuariosPerfil();
-      return;
-    }
-
-    usuarios.forEach(function (u) {
-      var checked = !!asignados[String(u.id_usuario_app)];
-      var $li = $('<li>').attr('data-nombre', (u.nombre || '').toLowerCase());
-      var $label = $('<label>');
-      var $checkbox = $('<input type="checkbox">')
-        .prop('checked', checked)
-        .on('change', function () {
-          var action = $(this).is(':checked') ? 'app_perfiles_usuario_add' : 'app_perfiles_usuario_delete';
-          var $cb = $(this);
-          $cb.prop('disabled', true);
-          apiPost(action, { id_perfil: idPerfil, id_usuario_app: u.id_usuario_app }).done(function (resp) {
-            if (!resp || resp.result !== 'ok') {
-              alert((resp && resp.result_text) || 'No se pudo actualizar la asignación.');
-              $cb.prop('checked', !$cb.is(':checked'));
-            }
-          }).fail(function () {
-            alert('Error de conexión con el servidor.');
-            $cb.prop('checked', !$cb.is(':checked'));
-          }).always(function () {
-            $cb.prop('disabled', false);
-            actualizarContadorUsuariosPerfil();
-          });
-        });
-      $label.append($checkbox).append(' ' + ((u.nombre) || ('Usuario #' + u.id_usuario)));
-      $label.attr('title', u.usuario + ' (' + u.id_usuario + ':' + u.id_usuario_app + ')');
-      $li.append($label);
-      $list.append($li);
-    });
-
-    actualizarContadorUsuariosPerfil();
-  }
-
-  function actualizarContadorUsuariosPerfil() {
-    var $btn = $('#dlgUsuariosPerfil').dialog('widget').find('.ui-dialog-buttonpane button:first');
-    var total = $('#usuariosPerfilList > li[data-nombre] input[type=checkbox]:checked').length;
-    $btn.data('showingAll', true).button('option', 'label', 'Mostrar seleccionados (' + total + ')');
-  }
-
-  function filtrarUsuariosPerfil(texto) {
-    $('#usuariosPerfilList > li[data-nombre]').each(function () {
-      var nombre = $(this).attr('data-nombre') || '';
-      $(this).toggle(nombre.indexOf(texto) !== -1);
     });
   }
 

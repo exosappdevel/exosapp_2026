@@ -86,10 +86,16 @@ trait ExosApp_Almacenes
         if (!$id_usuario_app) {
             return ['result' => 'error', 'result_text' => 'USUARIO es necesario'];
         } else {
-            $query = "select apm.id_almacen 
-                        from app_perfiles_usuarios apu left join app_perfiles_modulos apm  on apu.id_perfil = apm.id_perfil  
-                        where apu.id_usuario_app = " . $id_usuario_app . " and apm.activo =1
-                        group by apm.id_almacen ";
+            // Almacenes del usuario: Grupos de Perfiles activos del usuario -> almacenes de sus modulos
+            // (solo modulos aun habilitados en algun perfil activo)
+            $query = "select tm.id_almacen 
+                        from app_perfiles_usuarios apu 
+                        inner join app_perfiles_tipos t on apu.id_perfil_tipo = t.id and t.activo = 1
+                        inner join app_perfiles_tipos_modulos tm on tm.id_perfil_tipo = t.id
+                        inner join app_perfiles_modulos apm on apm.id_modulo = tm.id_modulo
+                        inner join app_perfiles ap on apm.id_perfil = ap.id and ap.activo = 1
+                        where apu.id_usuario_app = " . $id_usuario_app . "
+                        group by tm.id_almacen ";
 
             $records = DatasetSQL_WS($query);   
 
@@ -110,8 +116,8 @@ trait ExosApp_Almacenes
                 
                 $qresult = DatasetSQL("SELECT a.id_almacen, a.nombre, a.codigo FROM almacen a  where a.id_almacen = " . $id_almacen);
                 $row = mysqli_fetch_array($qresult);
-                $data['item_' . $row_perfil['id_almacen']] = [
-                    'id_almacen' => $row_perfil['id_almacen'],
+                $data['item_' . $id_almacen] = [
+                    'id_almacen' => $id_almacen,
                     'nombre' => $row['nombre'],
                     'codigo' => $row['codigo']
                 ];

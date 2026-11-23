@@ -30,31 +30,67 @@ trait ExosApp_Perfiles
                 'parameters' => ['id_perfil']
             ],
             'app_perfiles_permisos_get' => [
-                'descripcion' => 'Obtiene los permisos asociados a un perfil específico.',
+                'descripcion' => 'Obtiene todos los módulos indicando cuáles tiene asignados el perfil (activo = 1).',
                 'parameters' => ['id_perfil']
             ],
             'app_perfiles_permisos_update' => [
-                'descripcion' => 'Actualiza los permisos asociados a un perfil específico.',
+                'descripcion' => 'Actualiza los módulos asignados a un perfil. permisos = JSON [{id_modulo, activo}].',
                 'parameters' => ['id_perfil', 'permisos (JSON)']
             ],
+            'app_perfiles_tipos_list' => [
+                'descripcion' => 'Obtiene la lista de Grupos de Perfiles (app_perfiles_tipos).',
+                'parameters' => []
+            ],
+            'app_perfiles_tipos_info' => [
+                'descripcion' => 'Obtiene un Grupo de Perfiles.',
+                'parameters' => ['id_perfil_tipo']
+            ],
+            'app_perfiles_tipos_add' => [
+                'descripcion' => 'Agrega un Grupo de Perfiles.',
+                'parameters' => ['nombre', 'descripcion', 'activo']
+            ],
+            'app_perfiles_tipos_update' => [
+                'descripcion' => 'Actualiza un Grupo de Perfiles.',
+                'parameters' => ['id_perfil_tipo', 'nombre', 'descripcion', 'activo']
+            ],
+            'app_perfiles_tipos_clone' => [
+                'descripcion' => 'Clona un Grupo de Perfiles con sus almacenes por módulo (no copia los usuarios asignados).',
+                'parameters' => ['id_perfil_tipo']
+            ],
+            'app_perfiles_tipos_delete' => [
+                'descripcion' => 'Elimina un Grupo de Perfiles (y sus asignaciones por cascada).',
+                'parameters' => ['id_perfil_tipo']
+            ],
+            'app_perfiles_modulos_list' => [
+                'descripcion' => 'Obtiene los perfiles activos con sus módulos (app_perfiles_modulos); una fila por perfil+módulo.',
+                'parameters' => []
+            ],
+            'app_perfiles_tipos_modulos_get' => [
+                'descripcion' => 'Obtiene los almacenes asignados por módulo dentro de un Grupo (app_perfiles_tipos_modulos; una fila por módulo+almacén).',
+                'parameters' => ['id_perfil_tipo']
+            ],
+            'app_perfiles_tipos_modulos_update' => [
+                'descripcion' => 'Asigna/quita almacenes de un módulo dentro de un Grupo. almacenes = JSON [{id_almacen, activo}].',
+                'parameters' => ['id_perfil_tipo', 'id_modulo', 'almacenes (JSON)']
+            ],
             'app_perfiles_usuario_get' => [
-                'descripcion' => 'Obtiene los perfiles asignados a un usuario específico.',
+                'descripcion' => 'Obtiene los Grupos de Perfiles asignados a un usuario (app_perfiles_usuarios).',
                 'parameters' => ['id_usuario_app']
             ],
             'app_perfiles_usuario_add' => [
-                'descripcion' => 'Asigna un perfil a un usuario específico.',
-                'parameters' => ['id_perfil', 'id_usuario_app']
+                'descripcion' => 'Asigna un Grupo de Perfiles a un usuario.',
+                'parameters' => ['id_perfil_tipo', 'id_usuario_app']
             ],
             'app_perfiles_usuario_delete' => [
-                'descripcion' => 'Elimina un perfil asignado a un usuario específico.',
-                'parameters' => ['id_perfil', 'id_usuario_app']
+                'descripcion' => 'Quita un Grupo de Perfiles a un usuario.',
+                'parameters' => ['id_perfil_tipo', 'id_usuario_app']
             ],
-            'app_perfiles_usuarios_get' => [
-                'descripcion' => "Obtiene los usuarios asignados a un perfil específico.",
-                "parameters" => ["id_perfil"]
+            'app_almacenes_list' => [
+                'descripcion' => "Obtiene la lista de almacenes.",
+                "parameters" => []
             ],
             'app_usuarios_list' => [
-                'descripcion' => "Obtiene la lista de usuarios de la aplicación.",
+                'descripcion' => "Obtiene la lista de usuarios de la aplicación (exosapp.user_profile + nombre de exos.usuario).",
                 "parameters" => []
             ]        
         ];
@@ -85,29 +121,11 @@ trait ExosApp_Perfiles
         $sql_perfil = "INSERT INTO app_perfiles (nombre, descripcion, activo) VALUES ('" . $nombre . "', '" . $descripcion . "', '" . $activo . "')";
         $id = ExecuteSQL_ReturnID_WS($sql_perfil);
 
-        $sql_modulos ="select id from app_modulos";
-        $ds_modulos = DatasetSQL_WS($sql_modulos);
+        // Un perfil nuevo no tiene módulos; se asignan con app_perfiles_permisos_update.
 
-        $sql_almacen ="select id_almacen from almacen order by id_almacen";
-        $ds_almacenes = DatasetSQL($sql_almacen);        
-        $almacenes = [];
-        while ($row_almacen = mysqli_fetch_array($ds_almacenes)) {
-            $almacenes[] = $row_almacen;
-        }
-
-        while ($row_modulo = mysqli_fetch_array($ds_modulos)) {   
-            mysqli_data_seek($ds_almacenes, 0);            
-            foreach ($almacenes as $row_almacen) {
-                $sql_insert = 'INSERT INTO app_perfiles_modulos (id_perfil, id_modulo, id_almacen,activo) VALUES (' . $id . ', ' . $row_modulo['id'] . ', ' . $row_almacen['id_almacen'] . ', 0)';
-                ExecuteSQL_WS($sql_insert);
-            }
-        }
-        
         return ( ['result' => 'ok',
                 'result_text' => 'Perfil creado exitosamente desde ExosAPP',
                 'id_perfil' => $id,
-                'sql_insert' => $sql_insert
-                //'almacenes' => $almacenes
                 ] );
     }
 
@@ -124,7 +142,7 @@ trait ExosApp_Perfiles
         $id_perfil = Requesting("id_perfil");
         $sql_perfil = "insert into app_perfiles (nombre, descripcion, activo) select concat(nombre, ' (Copia)'), descripcion, activo from app_perfiles WHERE id = " . $id_perfil;
         $id_nuevo = ExecuteSQL_ReturnID_WS($sql_perfil);
-        $sql_permisos = "insert into app_perfiles_modulos (id_perfil, id_modulo, id_almacen, activo) select " . $id_nuevo . ", id_modulo, id_almacen, activo from app_perfiles_modulos WHERE id_perfil = " . $id_perfil;
+        $sql_permisos = "insert into app_perfiles_modulos (id_perfil, id_modulo) select " . $id_nuevo . ", id_modulo from app_perfiles_modulos WHERE id_perfil = " . intval($id_perfil);
         ExecuteSQL_WS($sql_permisos);
 
         return ( ['result' => 'ok',
@@ -166,19 +184,22 @@ trait ExosApp_Perfiles
     }
 
     public function app_perfiles_permisos_get(){
-            $id_perfil = Requesting("id_perfil");
-            $sql_permisos = "select pm.*, md.modulo , mn.menu from app_perfiles_modulos pm left join app_modulos md on pm.id_modulo = md.id left join app_menus mn on md.id_menu = mn.id where pm.id_perfil=" . $id_perfil;
+            $id_perfil = intval(Requesting("id_perfil"));
+            // Todos los módulos; activo = 1 si el perfil lo tiene en app_perfiles_modulos
+            // (la existencia de la fila es el permiso). No interviene el almacén.
+            $sql_permisos = "select md.id as id_modulo, md.modulo, 
+                                    if(pm.id is null, 0, 1) as activo
+                             from app_modulos md 
+                             left join app_perfiles_modulos pm on pm.id_modulo = md.id and pm.id_perfil = " . $id_perfil . "
+                             group by md.id
+                             order by md.modulo";
             $ds_permisos = DatasetSQL_WS($sql_permisos);
+            $data = [];
             while ($row = mysqli_fetch_array($ds_permisos)) {
-                $almacen = GetValueSQL("select nombre from almacen where id_almacen=" . $row['id_almacen'], "nombre");
-                $data['item_' . $row['id']] = [
-                    'id' => $row['id'],
-                    'id_perfil' => $row['id_perfil'],
+                $data['item_' . $row['id_modulo']] = [
+                    'id_perfil' => $id_perfil,
                     'id_modulo' => $row['id_modulo'],
                     'modulo' => $row['modulo'],
-                    'menu' => $row['menu'],
-                    'id_almacen' => $row['id_almacen'],
-                    'almacen' => $almacen,
                     'activo' => $row['activo']
                 ];
             }
@@ -190,7 +211,7 @@ trait ExosApp_Perfiles
 
     public function app_perfiles_permisos_update(){
 
-        $id_perfil = Requesting("id_perfil");
+        $id_perfil = intval(Requesting("id_perfil"));
         $permisos = Requesting("permisos");
 
         $lista = json_decode($permisos, true);
@@ -199,10 +220,15 @@ trait ExosApp_Perfiles
         }
 
         foreach ($lista as $permiso) {
-            $id = intval($permiso['id']);
+            $id_modulo = intval($permiso['id_modulo']);
+            if ($id_modulo <= 0) continue;
             $activo = intval($permiso['activo']) ? 1 : 0;
-            $sql_update = "UPDATE app_perfiles_modulos SET activo = " . $activo . " WHERE id = " . $id . " AND id_perfil = " . intval($id_perfil);
-            ExecuteSQL_WS($sql_update);
+            $existe = GetValueSQL_WS("select count(id) as existe from app_perfiles_modulos where id_perfil = " . $id_perfil . " and id_modulo = '" . $id_modulo . "'", "existe");
+            if ($activo && !$existe) {
+                ExecuteSQL_WS("INSERT INTO app_perfiles_modulos (id_perfil, id_modulo) VALUES (" . $id_perfil . ", '" . $id_modulo . "')");
+            } elseif (!$activo && $existe) {
+                ExecuteSQL_WS("DELETE FROM app_perfiles_modulos WHERE id_perfil = " . $id_perfil . " AND id_modulo = '" . $id_modulo . "'");
+            }
         }
 
         return ( ['result' => 'ok',
@@ -211,89 +237,267 @@ trait ExosApp_Perfiles
                 ] );
     }
 
-    public function app_perfiles_usuario_get(){
-        $id_usuario_app = Requesting("id_usuario_app");
-        $sql_perfil_usuario = "select pu.*, p.nombre from app_perfiles_usuarios pu left join app_perfiles p on pu.id_perfil = p.id where pu.id_usuario_app = " . $id_usuario_app;
-        $ds_perfil_usuario = DatasetSQL_WS($sql_perfil_usuario);
+    // ------------------------------------------------------------------
+    // Grupos de Perfiles (app_perfiles_tipos)
+    // ------------------------------------------------------------------
+    public function app_perfiles_tipos_list(){
+        $ds = DatasetSQL_WS("select * from app_perfiles_tipos order by nombre");
         $data = [];
-        while ($row = mysqli_fetch_array($ds_perfil_usuario)) {
+        while ($row = mysqli_fetch_array($ds)) {
             $data['item_' . $row['id']] = [
-                'id' => $row['id'],
-                'id_usuario_app' => $row['id_usuario_app'],     
-                'id_perfil' => $row['id_perfil'],
-                'perfil_nombre' => $row['nombre'],                
+                'id_perfil_tipo' => $row['id'],
+                'nombre' => $row['nombre'],
+                'descripcion' => $row['descripcion'],
+                'activo' => $row['activo']
             ];
         }
         return ( ['result' => 'ok',
-                'result_text' => 'Perfiles del usuario obtenidos exitosamente desde ExosAPP',
-                'data' => $data,                       
+                'result_text' => 'Grupos de perfiles obtenidos exitosamente desde ExosAPP',
+                'data' => $data,
+                ] );
+    }
+
+    public function app_perfiles_tipos_info(){
+        $id = intval(Requesting("id_perfil_tipo"));
+        $ds = DatasetSQL_WS("select * from app_perfiles_tipos where id = " . $id);
+        $row = mysqli_fetch_array($ds);
+        if (!$row) {
+            return ['result' => 'error', 'result_text' => 'El grupo de perfiles no existe.'];
+        }
+        return ( ['result' => 'ok',
+                'result_text' => 'Grupo de perfiles obtenido exitosamente desde ExosAPP',
+                'data' => [
+                    'id_perfil_tipo' => $row['id'],
+                    'nombre' => $row['nombre'],
+                    'descripcion' => $row['descripcion'],
+                    'activo' => $row['activo']
+                ],
+                ] );
+    }
+
+    public function app_perfiles_tipos_add(){
+        $nombre = Requesting("nombre");
+        $descripcion = Requesting("descripcion");
+        $activo = intval(Requesting("activo")) ? 1 : 0;
+        if (!$nombre) {
+            return ['result' => 'error', 'result_text' => 'El nombre es obligatorio.'];
+        }
+        $id = ExecuteSQL_ReturnID_WS("INSERT INTO app_perfiles_tipos (nombre, descripcion, activo) VALUES ('" . $nombre . "', '" . $descripcion . "', " . $activo . ")");
+        if (!$id) {
+            return ['result' => 'error', 'result_text' => 'No se pudo crear el grupo de perfiles.'];
+        }
+        return ( ['result' => 'ok',
+                'result_text' => 'Grupo de perfiles creado exitosamente desde ExosAPP',
+                'id_perfil_tipo' => $id,
+                ] );
+    }
+
+    public function app_perfiles_tipos_update(){
+        $id = intval(Requesting("id_perfil_tipo"));
+        $nombre = Requesting("nombre");
+        $descripcion = Requesting("descripcion");
+        $activo = intval(Requesting("activo")) ? 1 : 0;
+        if (!$id || !$nombre) {
+            return ['result' => 'error', 'result_text' => 'Grupo y nombre son necesarios.'];
+        }
+        ExecuteSQL_WS("UPDATE app_perfiles_tipos SET nombre = '" . $nombre . "', descripcion = '" . $descripcion . "', activo = " . $activo . " WHERE id = " . $id);
+        return ( ['result' => 'ok',
+                'result_text' => 'Grupo de perfiles actualizado exitosamente desde ExosAPP',
+                'id_perfil_tipo' => $id,
+                ] );
+    }
+
+    public function app_perfiles_tipos_clone(){
+        $id = intval(Requesting("id_perfil_tipo"));
+        if (!$id) {
+            return ['result' => 'error', 'result_text' => 'Grupo es necesario.'];
+        }
+        $id_nuevo = ExecuteSQL_ReturnID_WS("insert into app_perfiles_tipos (nombre, descripcion, activo) select concat(nombre, ' (Copia)'), descripcion, activo from app_perfiles_tipos where id = " . $id);
+        if (!$id_nuevo) {
+            return ['result' => 'error', 'result_text' => 'No se pudo clonar el grupo de perfiles.'];
+        }
+        ExecuteSQL_WS("insert into app_perfiles_tipos_modulos (id_perfil_tipo, id_modulo, id_almacen) select " . intval($id_nuevo) . ", id_modulo, id_almacen from app_perfiles_tipos_modulos where id_perfil_tipo = " . $id);
+        return ( ['result' => 'ok',
+                'result_text' => 'Grupo de perfiles clonado exitosamente desde ExosAPP',
+                'id_perfil_tipo' => $id_nuevo,
+                ] );
+    }
+
+    public function app_perfiles_tipos_delete(){
+        $id = intval(Requesting("id_perfil_tipo"));
+        if (!$id) {
+            return ['result' => 'error', 'result_text' => 'Grupo es necesario.'];
+        }
+        // Las asignaciones (app_perfiles_tipos_modulos, app_perfiles_usuarios) caen por ON DELETE CASCADE.
+        ExecuteSQL_WS("DELETE FROM app_perfiles_tipos WHERE id = " . $id);
+        return ( ['result' => 'ok',
+                'result_text' => 'Grupo de perfiles eliminado exitosamente desde ExosAPP',
+                'id_perfil_tipo' => $id,
+                ] );
+    }
+
+    // Perfiles activos con sus módulos (para armar el árbol perfil -> módulo -> almacén)
+    public function app_perfiles_modulos_list(){
+        $ds = DatasetSQL_WS("select p.id as id_perfil, p.nombre as perfil, pm.id_modulo, md.modulo
+                             from app_perfiles p
+                             inner join app_perfiles_modulos pm on pm.id_perfil = p.id
+                             left join app_modulos md on md.id = pm.id_modulo
+                             where p.activo = 1
+                             order by p.nombre, md.modulo");
+        $data = [];
+        while ($row = mysqli_fetch_array($ds)) {
+            $data['item_' . $row['id_perfil'] . '_' . $row['id_modulo']] = [
+                'id_perfil' => $row['id_perfil'],
+                'perfil' => $row['perfil'],
+                'id_modulo' => $row['id_modulo'],
+                'modulo' => $row['modulo']
+            ];
+        }
+        return ( ['result' => 'ok',
+                'result_text' => 'Perfiles y módulos obtenidos exitosamente desde ExosAPP',
+                'data' => $data,
+                ] );
+    }
+
+    // Almacenes por módulo dentro de un Grupo (app_perfiles_tipos_modulos)
+    public function app_perfiles_tipos_modulos_get(){
+        $id = intval(Requesting("id_perfil_tipo"));
+        $ds = DatasetSQL_WS("select id, id_modulo, id_almacen from app_perfiles_tipos_modulos where id_perfil_tipo = " . $id);
+        $data = [];
+        while ($row = mysqli_fetch_array($ds)) {
+            $data['item_' . $row['id']] = [
+                'id_modulo' => $row['id_modulo'],
+                'id_almacen' => $row['id_almacen']
+            ];
+        }
+        return ( ['result' => 'ok',
+                'result_text' => 'Almacenes del grupo obtenidos exitosamente desde ExosAPP',
+                'data' => $data,
+                ] );
+    }
+
+    public function app_perfiles_tipos_modulos_update(){
+        $id_tipo = intval(Requesting("id_perfil_tipo"));
+        $id_modulo = intval(Requesting("id_modulo"));
+        $lista = json_decode(Requesting("almacenes"), true);
+        if (!$id_tipo || !$id_modulo || !is_array($lista)) {
+            return ['result' => 'error', 'result_text' => 'Grupo, módulo y almacenes (JSON) son necesarios.'];
+        }
+        foreach ($lista as $it) {
+            $id_almacen = intval($it['id_almacen']);
+            if ($id_almacen <= 0) continue;
+            $activo = intval($it['activo']) ? 1 : 0;
+            $where = " where id_perfil_tipo = " . $id_tipo . " and id_modulo = '" . $id_modulo . "' and id_almacen = " . $id_almacen;
+            $existe = GetValueSQL_WS("select count(id) as existe from app_perfiles_tipos_modulos" . $where, "existe");
+            if ($activo && !$existe) {
+                if (!ExecuteSQL_WS("INSERT INTO app_perfiles_tipos_modulos (id_perfil_tipo, id_modulo, id_almacen) VALUES (" . $id_tipo . ", '" . $id_modulo . "', " . $id_almacen . ")")) {
+                    return ['result' => 'error', 'result_text' => 'No se pudo asignar el almacén.'];
+                }
+            } elseif (!$activo && $existe) {
+                ExecuteSQL_WS("DELETE FROM app_perfiles_tipos_modulos" . $where);
+            }
+        }
+        return ( ['result' => 'ok',
+                'result_text' => 'Almacenes del módulo en el grupo actualizados exitosamente desde ExosAPP',
+                'id_perfil_tipo' => $id_tipo,
+                'id_modulo' => $id_modulo,
+                ] );
+    }
+
+    // ------------------------------------------------------------------
+    // Grupos de Perfiles asignados a un usuario (app_perfiles_usuarios)
+    // ------------------------------------------------------------------
+    public function app_perfiles_usuario_get(){
+        $id_usuario_app = intval(Requesting("id_usuario_app"));
+        $ds = DatasetSQL_WS("select pu.id, pu.id_perfil_tipo, t.nombre from app_perfiles_usuarios pu left join app_perfiles_tipos t on pu.id_perfil_tipo = t.id where pu.id_usuario_app = " . $id_usuario_app . " order by t.nombre");
+        $data = [];
+        while ($row = mysqli_fetch_array($ds)) {
+            $data['item_' . $row['id']] = [
+                'id' => $row['id'],
+                'id_usuario_app' => $id_usuario_app,
+                'id_perfil_tipo' => $row['id_perfil_tipo'],
+                'nombre' => $row['nombre'],
+            ];
+        }
+        return ( ['result' => 'ok',
+                'result_text' => 'Grupos del usuario obtenidos exitosamente desde ExosAPP',
+                'data' => $data,
                 ] );
     }
 
     public function app_perfiles_usuario_add(){
-        $id_perfil = Requesting("id_perfil");
-        $id_usuario_app = Requesting("id_usuario_app");
-        $sql_existe_perfil_usuario = "SELECT count(id) as existe FROM app_perfiles_usuarios WHERE id_perfil = " . $id_perfil . " AND id_usuario_app = " . $id_usuario_app;
-        $existe_perfil_usuario = getValueSQL_WS($sql_existe_perfil_usuario, "existe");
-        if ($existe_perfil_usuario > 0) {
-            return ( ['result' => 'error',
-                    'result_text' => 'El perfil ya está asignado al usuario.',
-                    'id_perfil' => $id_perfil,
-                    'id_usuario_app' => $id_usuario_app
-                    ] );
+        $id_tipo = intval(Requesting("id_perfil_tipo"));
+        $id_usuario_app = intval(Requesting("id_usuario_app"));
+        if (!$id_tipo || !$id_usuario_app) {
+            return ['result' => 'error', 'result_text' => 'Grupo y usuario son necesarios.'];
         }
-        else{
-            $sql_perfil_usuario = "INSERT INTO app_perfiles_usuarios (id_perfil, id_usuario_app) VALUES (" . $id_perfil . ", " . $id_usuario_app . ")"; 
-            executeSQL_WS($sql_perfil_usuario);
-            return ( ['result' => 'ok', 
-                    'result_text' => 'Perfil asignado al usuario exitosamente desde ExosAPP',
-                    'id_perfil' => $id_perfil,
-                    'id_usuario_app' => $id_usuario_app
-                    ] );    
+        $existe = GetValueSQL_WS("SELECT count(id) as existe FROM app_perfiles_usuarios WHERE id_perfil_tipo = " . $id_tipo . " AND id_usuario_app = " . $id_usuario_app, "existe");
+        if ($existe > 0) {
+            return ['result' => 'error', 'result_text' => 'El usuario ya tiene este grupo de perfiles.'];
         }
-     }
-
-     public function app_perfiles_usuario_delete(){
-        $id_perfil = Requesting("id_perfil");
-        $id_usuario_app = Requesting("id_usuario_app");
-        $sql_perfil_usuario = "DELETE FROM app_perfiles_usuarios WHERE id_perfil = " . $id_perfil . " AND id_usuario_app = " . $id_usuario_app;
-        executeSQL_WS($sql_perfil_usuario); 
-        return ( ['result' => 'ok', 
-                'result_text' => 'Perfil eliminado del usuario exitosamente desde ExosAPP',
-                'id_perfil' => $id_perfil,
-                'id_usuario_app' => $id_usuario_app
+        if (!ExecuteSQL_WS("INSERT INTO app_perfiles_usuarios (id_usuario_app, id_perfil_tipo) VALUES (" . $id_usuario_app . ", " . $id_tipo . ")")) {
+            return ['result' => 'error', 'result_text' => 'No se pudo asignar el grupo al usuario.'];
+        }
+        return ( ['result' => 'ok',
+                'result_text' => 'Grupo asignado al usuario exitosamente desde ExosAPP',
+                'id_perfil_tipo' => $id_tipo,
+                'id_usuario_app' => $id_usuario_app,
                 ] );
-     }
+    }
 
-     public function app_perfiles_usuarios_get(){
-        $id_perfil = Requesting("id_perfil");
-        $sql_usuarios_perfil = "select id_usuario_app from app_perfiles_usuarios where id_perfil = " . intval($id_perfil);
-        $ds_usuarios_perfil = DatasetSQL_WS($sql_usuarios_perfil);
+    public function app_perfiles_usuario_delete(){
+        $id_tipo = intval(Requesting("id_perfil_tipo"));
+        $id_usuario_app = intval(Requesting("id_usuario_app"));
+        if (!$id_tipo || !$id_usuario_app) {
+            return ['result' => 'error', 'result_text' => 'Grupo y usuario son necesarios.'];
+        }
+        ExecuteSQL_WS("DELETE FROM app_perfiles_usuarios WHERE id_perfil_tipo = " . $id_tipo . " AND id_usuario_app = " . $id_usuario_app);
+        return ( ['result' => 'ok',
+                'result_text' => 'Grupo eliminado del usuario exitosamente desde ExosAPP',
+                'id_perfil_tipo' => $id_tipo,
+                'id_usuario_app' => $id_usuario_app,
+                ] );
+    }
+
+     public function app_almacenes_list(){
+        $ds_almacenes = DatasetSQL("select id_almacen, nombre, codigo from almacen order by codigo");
         $data = [];
-        while ($row = mysqli_fetch_array($ds_usuarios_perfil)) {
-            $data['item_' . $row['id_usuario_app']] = [
-                'id_usuario_app' => $row['id_usuario_app']
+        while ($row = mysqli_fetch_array($ds_almacenes)) {
+            $data['item_' . $row['id_almacen']] = [
+                'id_almacen' => $row['id_almacen'],
+                'nombre' => $row['nombre'],
+                'codigo' => $row['codigo']
             ];
         }
         return ( ['result' => 'ok',
-                'result_text' => 'Usuarios del perfil obtenidos exitosamente desde ExosAPP',
+                'result_text' => 'Almacenes obtenidos exitosamente desde ExosAPP',
                 'data' => $data,
                 ] );
      }
 
      public function app_usuarios_list(){
-        $sql_usuarios = "select *, upper(trim(nombre)) as nombre_upper from usuario order by nombre_upper";
-        $ds_usuarios = DatasetSQL($sql_usuarios);
-        while ($row = mysqli_fetch_array($ds_usuarios)) {
-            $id_usuario_app = $this->Sync_Usuario_App($row['id_usuario']);
-            $data['item_' . $row['id_usuario']] = [
-                'id_usuario' => $row['id_usuario'],
-                'id_usuario_app' => $id_usuario_app,
-                'nombre' => $row['nombre_upper'],
-                'usuario' => $row['usuario'],
-                'id_tipo_usuario' => $row['id_tipo_usuario'],
-                'activo' => $row['activo']
-            ];
+        // Lista basada en exosapp.user_profile; el nombre sale de exos.usuario
+        // (son dos bases distintas, por eso dos consultas en vez de un JOIN).
+        $ds_profiles = DatasetSQL_WS("select id_usuario_app, id_usuario from user_profile where id_usuario > 0");
+        $perfiles = [];
+        while ($row = mysqli_fetch_array($ds_profiles)) {
+            $perfiles[intval($row['id_usuario'])] = intval($row['id_usuario_app']);
+        }
+        $data = [];
+        if (!empty($perfiles)) {
+            $ids = implode(",", array_keys($perfiles));
+            $ds_usuarios = DatasetSQL("select id_usuario, usuario, id_tipo_usuario, activo, upper(trim(nombre)) as nombre_upper 
+                                       from usuario where id_usuario in (" . $ids . ") order by nombre_upper");
+            while ($row = mysqli_fetch_array($ds_usuarios)) {
+                $data['item_' . $row['id_usuario']] = [
+                    'id_usuario' => $row['id_usuario'],
+                    'id_usuario_app' => $perfiles[intval($row['id_usuario'])],
+                    'nombre' => $row['nombre_upper'],
+                    'usuario' => $row['usuario'],
+                    'id_tipo_usuario' => $row['id_tipo_usuario'],
+                    'activo' => $row['activo']
+                ];
+            }
         }
         return ( ['result' => 'ok',
                 'result_text' => 'Usuarios obtenidos exitosamente desde ExosAPP',

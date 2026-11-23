@@ -96,6 +96,12 @@ trait ExosApp_PiezasDanadas
         $codigo_traspaso 	= Requesting("codigo_traspaso"); 
         $orderby 	        = Requesting("orderby"); 
         $limite 	        = Requesting("limite"); 
+
+        $reposicion_referencia = "";
+        $reposicion_lote = "";
+        $reposicion_comentarios = "";
+        $reposicion_url_foto = "";
+
         
         $where = "";
     
@@ -275,6 +281,20 @@ trait ExosApp_PiezasDanadas
                         
                     }
                 } 
+
+                /* **** UPDATE 2026 AHORA SE BUSCA EN pieza_danada_reposicion *** */
+                $query4 = "SELECT COUNT(id_registro) AS existe, codigo, lote, referencia, comentarios, url_foto
+                    FROM pieza_danada_reposicion 
+                    WHERE id_pieza_danada_reporte_inv = ".$row["id_registro"];
+                $existe_repo = GetValueSQL($query4,"existe");
+
+                if($existe_repo > 0){
+                    $codigo_traspaso = GetValueSQL($query4,"codigo");
+                    $reposicion_referencia = GetValueSQL($query4,"referencia");
+                    $reposicion_lote = GetValueSQL($query4,"lote");
+                    $reposicion_comentarios = GetValueSQL($query4,"comentarios");
+                    $reposicion_url_foto = GetValueSQL($query4,"url_foto");
+                }
                 
             }else{ 
                 $codigo_traspaso = "SIN TRASPASO";
@@ -288,6 +308,12 @@ trait ExosApp_PiezasDanadas
                 $fotos_lst['item_'.$row_foto['id_foto']] = [
                     'id_foto' => $row_foto['id_foto'],
                     'url' => $row_foto['url']
+                ];
+            }
+            if ($reposicion_url_foto != "") {
+                $fotos_lst['item_reposicion'] = [
+                    'id_foto' => 'reposicion',
+                    'url' => $reposicion_url_foto
                 ];
             }
 
@@ -311,7 +337,11 @@ trait ExosApp_PiezasDanadas
                 'codigo_traspaso' => $codigo_traspaso,
                 'enable_traspaso' => $codigo_traspaso=="SIN TRASPASO" ? 1:0, 
                 'fotos_count' => count($fotos_lst),
-                'fotos' => $fotos_lst               
+                'fotos' => $fotos_lst ,
+                'reposicion_referencia' => $reposicion_referencia,
+                'reposicion_lote' => $reposicion_lote,
+                'reposicion_comentarios' => $reposicion_comentarios,
+                'reposicion_url_foto' => $reposicion_url_foto
                 ];
 
         }

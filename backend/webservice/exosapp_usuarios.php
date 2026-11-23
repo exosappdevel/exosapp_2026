@@ -122,12 +122,18 @@ trait ExosApp_Usuarios
             // --- Modulos : reemplaza el acceso a menus, ahora e utiliza el perfiles de usuario
             
             $modulos = [];
-            $sSQL_modulos = "select ap.nombre, apm.*
+            // Usuario -> Grupos de Perfiles activos (app_perfiles_usuarios); cada Grupo asigna, por modulo,
+            // los almacenes (app_perfiles_tipos_modulos). El modulo debe seguir habilitado en algun
+            // perfil activo (app_perfiles_modulos, existencia de fila = modulo habilitado).
+            $sSQL_modulos = "select tm.id_almacen, tm.id_modulo
                                 from app_perfiles_usuarios apu
-                                left join app_perfiles ap  on apu.id_perfil =ap.id  
-                                left join app_perfiles_modulos apm on apu.id_perfil  = apm.id_perfil and apm.activo =1 
-                            where apu.id_usuario_app =" . $id_usuario_app . " 
-                            order BY apm.id_almacen, apm.id_modulo";
+                                inner join app_perfiles_tipos t on apu.id_perfil_tipo = t.id and t.activo = 1
+                                inner join app_perfiles_tipos_modulos tm on tm.id_perfil_tipo = t.id
+                                inner join app_perfiles_modulos apm on apm.id_modulo = tm.id_modulo
+                                inner join app_perfiles ap on apm.id_perfil = ap.id and ap.activo = 1
+                            where apu.id_usuario_app =" . $id_usuario_app . "
+                            group by tm.id_almacen, tm.id_modulo
+                            order BY tm.id_almacen, tm.id_modulo";
             
             $records_modulos_usuario = DatasetSQL_WS($sSQL_modulos);
             $modulos_count = 0;
@@ -151,7 +157,7 @@ trait ExosApp_Usuarios
             }
 
             if ($almacen_group != ""){
-                $modulos["id_almacen_" .  $almacen_group] = $modulos_ids = ";";
+                $modulos["id_almacen_" .  $almacen_group] = $modulos_ids;
                 $modulos_count = $modulos_count + 1;
             }
             

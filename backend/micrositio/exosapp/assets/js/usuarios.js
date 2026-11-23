@@ -1,7 +1,6 @@
 $(function () {
 
   var usuariosCache = [];
-  var perfilesCache = null; // se carga una sola vez (lazy) y se reusa entre aperturas del dialog
 
   init();
 
@@ -68,14 +67,15 @@ $(function () {
   }
 
   // ---------------------------------------------------------------------
-  // Perfiles asignados al usuario (agregar/quitar)
+  // Perfiles del usuario: lista de todos los Grupos de Perfiles; quedan
+  // marcados los que existen en app_perfiles_usuarios para el usuario.
   // ---------------------------------------------------------------------
   function setupDialogs() {
     $('#dlgPerfilesUsuario').dialog({
       autoOpen: false,
       modal: true,
-      width: 420,
-      height: 480,
+      width: 520,
+      height: 520,
       resizable: false,
       buttons: {
         'Cerrar': function () { $(this).dialog('close'); }
@@ -84,39 +84,32 @@ $(function () {
   }
 
   function abrirPerfilesUsuario(idUsuarioApp, nombreUsuario) {
-    $('#perfilesUsuarioList').empty().append('<li class="checklist-loading">Cargando perfiles…</li>');
+    $('#perfilesUsuarioList').empty().append('<li class="checklist-loading">Cargando grupos de perfiles…</li>');
     $('#dlgPerfilesUsuario .permisos-perfil-nombre').text(nombreUsuario || '');
     $('#dlgPerfilesUsuario').dialog('option', 'title', 'Perfiles: ' + (nombreUsuario || '')).dialog('open');
 
-    $.when(cargarPerfiles(), apiGet('app_perfiles_usuario_get', { id_usuario_app: idUsuarioApp }))
-      .done(function (perfiles, asignadosResp) {
+    $.when(cargarGrupos(), apiGet('app_perfiles_usuario_get', { id_usuario_app: idUsuarioApp }))
+      .done(function (grupos, asignadosResp) {
         var asignadosData = asignadosResp[0]; // $.when agrupa (data, status, jqXHR) en un array
         if (!asignadosData || asignadosData.result !== 'ok') {
-          $('#perfilesUsuarioList').empty().append('<li class="checklist-loading">' +
-            ((asignadosData && asignadosData.result_text) || 'No se pudieron cargar los perfiles asignados.') + '</li>');
+          $('#perfilesUsuarioList').empty().append($('<li class="checklist-loading">').text(
+            (asignadosData && asignadosData.result_text) || 'No se pudieron cargar los grupos asignados.'));
           return;
         }
         var asignados = {};
-        normalizeList(asignadosData.data).forEach(function (row) {
-          asignados[String(row.id_perfil)] = true;
-        });
-        renderPerfilesUsuario(perfiles, asignados, idUsuarioApp);
+        normalizeList(asignadosData.data).forEach(function (row) { asignados[String(row.id_perfil_tipo)] = true; });
+        renderGruposUsuario(grupos, asignados, idUsuarioApp);
       })
       .fail(function () {
         $('#perfilesUsuarioList').empty().append('<li class="checklist-loading">Error de conexión con el servidor.</li>');
       });
   }
 
-  function cargarPerfiles() {
+  function cargarGrupos() {
     var dfd = $.Deferred();
-    if (perfilesCache) {
-      dfd.resolve(perfilesCache);
-      return dfd.promise();
-    }
-    apiGet('app_perfiles_list', {}).done(function (resp) {
+    apiGet('app_perfiles_tipos_list', {}).done(function (resp) {
       if (resp && resp.result === 'ok') {
-        perfilesCache = normalizeList(resp.data);
-        dfd.resolve(perfilesCache);
+        dfd.resolve(normalizeList(resp.data));
       } else {
         dfd.reject();
       }
@@ -124,39 +117,37 @@ $(function () {
     return dfd.promise();
   }
 
-  function renderPerfilesUsuario(perfiles, asignados, idUsuarioApp) {
+  function renderGruposUsuario(grupos, asignados, idUsuarioApp) {
     var $list = $('#perfilesUsuarioList').empty();
 
-    if (!perfiles.length) {
-      $list.append('<li class="checklist-loading">No hay perfiles registrados.</li>');
+    if (!grupos.length) {
+      $list.append('<li class="checklist-loading">No hay grupos de perfiles registrados.</li>');
       return;
     }
 
-    perfiles.forEach(function (p) {
-      var checked = !!asignados[String(p.id_perfil)];
-      var $li = $('<li>');
-      var $label = $('<label>');
-      var $checkbox = $('<input type="checkbox">')
-        .prop('checked', checked)
+    grupos.forEach(function (g) {
+      var inactivo = String(g.activo) !== '1';
+      var $cb = $('<input type="checkbox">').prop('checked', !!asignados[String(g.id_perfil_tipo)])
         .on('change', function () {
-          var action = $(this).is(':checked') ? 'app_perfiles_usuario_add' : 'app_perfiles_usuario_delete';
-          var $cb = $(this);
-          $cb.prop('disabled', true);
-          apiPost(action, { id_perfil: p.id_perfil, id_usuario_app: idUsuarioApp }).done(function (resp) {
-            if (!resp || resp.result !== 'ok') {
-              alert((resp && resp.result_text) || 'No se pudo actualizar la asignación.');
-              $cb.prop('checked', !$cb.is(':checked'));
-            }
-          }).fail(function () {
-            alert('Error de conexión con el servidor.');
-            $cb.prop('checked', !$cb.is(':checked'));
-          }).always(function () {
-            $cb.prop('disabled', false);
-          });
+          var $this = $(this);
+          var checked = $this.is(':checked');
+          $this.prop('disabled', true);
+          apiPost(checked ? 'app_perfiles_usuario_add' : 'app_perfiles_usuario_delete',
+            { id_perfil_tipo: g.id_perfil_tipo, id_usuario_app: idUsuarioApp })
+            .done(function (resp) {
+              if (!resp || resp.result !== 'ok') {
+                alert((resp && resp.result_text) || 'No se pudo actualizar la asignación.');
+                $this.prop('checked', !checked);
+              }
+            })
+            .fail(function () {
+              alert('Error de conexión con el servidor.');
+              $this.prop('checked', !checked);
+            })
+            .always(function () { $this.prop('disabled', false); });
         });
-      $label.append($checkbox).append(' ' + (p.nombre || ('Perfil #' + p.id_perfil)));
-      $li.append($label);
-      $list.append($li);
+      var $label = $('<label>').append($cb).append(' ' + (g.nombre || ('Grupo #' + g.id_perfil_tipo)) + (inactivo ? ' (inactivo)' : ''));
+      $list.append($('<li>').append($label));
     });
   }
 

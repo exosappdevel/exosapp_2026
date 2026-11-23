@@ -441,6 +441,21 @@ body.login-body {
   cursor: pointer;
 }
 
+/* Asignación expandible de almacenes (usuario + perfil) */
+.asignacion-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.asignacion-arrow { width: 14px; color: var(--color-text-sub); }
+.asignacion-title { flex: 1; }
+.asignacion-almacenes { padding: 8px 0 4px 24px; }
+.asignacion-almacenes li { padding: 4px 0; }
+
 /* jQuery UI overrides para acercarse a la paleta de la app */
 .ui-dialog .ui-dialog-titlebar {
   background: var(--color-bg-dark);

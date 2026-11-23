@@ -1,13 +1,13 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
-$page_title = 'Perfiles';
+$page_title = 'Perfiles Generales';
 $active_module = 'perfiles';
 $page_scripts = ['assets/js/perfiles.js'];
 require_once __DIR__ . '/../includes/layout_header.php';
 ?>
 
   <div class="panel-header">
-    <h1>Perfiles de usuario</h1>
+    <h1>Perfiles Generales</h1>
     <button id="btnNuevoPerfil" class="btn btn-primary">+ Nuevo perfil</button>
   </div>
 
@@ -53,19 +53,10 @@ require_once __DIR__ . '/../includes/layout_header.php';
   </form>
 </div>
 
-<!-- Dialog: Permisos por módulo -->
+<!-- Dialog: Permisos (módulos del perfil) -->
 <div id="dlgPermisos" title="Permisos del perfil" style="display:none;">
   <p class="permisos-perfil-nombre"></p>
-  <div id="permisosAccordion"></div>
-</div>
-
-<!-- Dialog: Usuarios asignados al perfil -->
-<div id="dlgUsuariosPerfil" title="Usuarios del perfil" style="display:none;">
-  <p class="permisos-perfil-nombre"></p>
-  <div class="search-box">
-    <input type="text" id="usuariosPerfilSearch" placeholder="Buscar usuario por nombre…">
-  </div>
-  <ul id="usuariosPerfilList" class="checklist"></ul>
+  <ul id="permisosLista" class="checklist"></ul>
 </div>
 
 <?php require_once __DIR__ . '/../includes/layout_footer.php'; ?>

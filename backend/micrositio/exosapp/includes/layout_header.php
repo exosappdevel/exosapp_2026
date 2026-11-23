@@ -6,8 +6,9 @@
 // antes de incluirlo.
 
 $modules = [
-    ['key' => 'perfiles', 'label' => 'Perfiles', 'url' => BASE_URL . 'perfiles/index.php'],
-    ['key' => 'usuarios', 'label' => 'Usuarios', 'url' => BASE_URL . 'usuarios/index.php'],
+    ['key' => 'perfiles', 'label' => 'Perfiles Generales', 'url' => BASE_URL . 'perfiles/index.php'],
+    ['key' => 'grupos', 'label' => 'Perfiles-Grupos', 'url' => BASE_URL . 'grupos/index.php'],
+    ['key' => 'usuarios', 'label' => 'Perfiles-Usuarios', 'url' => BASE_URL . 'usuarios/index.php'],
 ];
 ?>
 <!DOCTYPE html>

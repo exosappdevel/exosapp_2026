@@ -472,7 +472,10 @@ export default function reporte_piezas_danadas_view_Screen() {
     { 'label': 'Activo Origen', 'value': item.codigo_set, 'tipo_linea': 'multi_linea' },
     { 'label': 'Referencia', 'value': item.referencia, 'tipo_linea': 'linea' },
     { 'label': 'Lote', 'value': item.lote, 'tipo_linea': 'linea' },
-    { 'label': 'Notas', 'value': item.comentarios, 'tipo_linea': 'multi_linea' }
+    { 'label': 'Notas', 'value': item.comentarios, 'tipo_linea': 'multi_linea' },
+    { 'label': 'Reposición Referencia', 'value':item.reposicion_referencia , 'tipo_linea': 'linea' },
+    { 'label': 'Reposición Lote', 'value':item.reposicion_lote , 'tipo_linea': 'linea' },
+    { 'label': 'Reposición Comentarios', 'value':item.reposicion_comentarios , 'tipo_linea': 'multi_linea' }
   ];
 
   // Fotos (solo consulta), debajo de los campos del detalle.
