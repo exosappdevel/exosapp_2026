@@ -22,12 +22,22 @@ export const _Report = ({ children, showShare = true }: { children: any, showSha
 }
 
 
-export const _DetalleLinea = ({ label, value, label_style, value_style }: { label: string, value: any, label_style?: any, value_style?: any }) => {
+// bg_color (opcional): muestra el valor como una "pastilla" con ese fondo y texto blanco
+// (p.ej. el estatus con el color que manda el backend).
+export const _DetalleLinea = ({ label, value, label_style, value_style, bg_color }: { label: string, value: any, label_style?: any, value_style?: any, bg_color?: string }) => {
     const { theme } = useApp();
     return (
-        <View style={styles.rowDetalle}>
+        <View style={[styles.rowDetalle, bg_color ? { alignItems: 'center' } : null]}>
             <Text style={[styles.labelDetalle, { color: theme.textSub }, label_style]}>{label}:</Text>
-            <Text style={[styles.valueDetalle, { color: theme.accent }, value_style]}>{value || '---'}</Text>
+            {bg_color ? (
+                <View style={{ width: '50%', alignItems: 'flex-end' }}>
+                    <View style={{ borderRadius: 10, paddingVertical: 4, paddingHorizontal: 10, backgroundColor: bg_color }}>
+                        <Text style={[{ fontSize: 12, fontWeight: 'bold', color: 'white' }, value_style]}>{value || '---'}</Text>
+                    </View>
+                </View>
+            ) : (
+                <Text style={[styles.valueDetalle, { color: theme.accent }, value_style]}>{value || '---'}</Text>
+            )}
         </View>
     );
 };
@@ -487,6 +497,7 @@ export const _Show_Generic_Report = ({ visible, titulo, onClose, item, items_fie
                                             key={index}
                                             label={field.label}
                                             value={field.value}
+                                            bg_color={field.bg_color}
                                         />
                                     ) : (
                                         <_DetalleMultiLinea
@@ -663,7 +674,7 @@ export const _Show_Report_Pager = ({ visible, titulo, pages, index, onIndexChang
                                             <_Report showShare={showShare}>
                                                 {page.items_fields?.map((field: any, k: number) =>
                                                     field.tipo_linea === "linea" ? (
-                                                        <_DetalleLinea key={k} label={field.label} value={field.value} />
+                                                        <_DetalleLinea key={k} label={field.label} value={field.value} bg_color={field.bg_color} />
                                                     ) : (
                                                         <_DetalleMultiLinea key={k} label={field.label} value={field.value} />
                                                     )

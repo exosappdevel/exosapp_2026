@@ -109,6 +109,7 @@ export default function reporte_piezas_danadas_view_Screen() {
   const carouselHeight = Math.round(winHeight * 0.8);
   const [archivos_pieza, setArchivos_pieza] = useState<any[]>([]);
   const [showCarousel, setShowCarousel] = useState(false);
+  const [carouselTitulo, setCarouselTitulo] = useState('');
   // Las fotos ya están en el servidor (vienen de buscar_pieza_danada_registro_general
   // como {id_foto, url} con url relativa), a diferencia de reporte_piezas_danadas.tsx
   // donde "archivos" son locales; por eso aquí sí se pasan por getWebserviceFileUrl.
@@ -166,13 +167,17 @@ export default function reporte_piezas_danadas_view_Screen() {
 
   // Las fotos de un reporte ya guardado solo se consultan (carrusel): no se
   // pueden agregar ni eliminar desde esta pantalla.
-  const verFotosDeReporte = (item: any) => {
-    const fotos = Array.isArray(item.fotos) ? item.fotos : [];
+  // Las fotos de la reposición vienen en el mismo arreglo con id_foto = 'reposicion'.
+  const esFotoReposicion = (f: any) => String(f?.id_foto) === 'reposicion';
+  const fotosDelItem = (item: any): any[] => Array.isArray(item?.fotos) ? item.fotos : [];
+
+  const verFotosDeReporte = (fotos: any[], titulo: string) => {
     setArchivos_pieza(fotos.map((f: any) => ({
       id_foto: f.id_foto,
       uri: getWebserviceFileUrl(appConfig.url, f.url),
       name: (f.url || '').split('/').pop() || 'foto.jpg',
     })));
+    setCarouselTitulo(titulo);
     setShowCarousel(true);
   };
 
@@ -323,7 +328,7 @@ export default function reporte_piezas_danadas_view_Screen() {
           <View style={[styles.carouselContainer, { backgroundColor: theme.card, width: carouselWidth, height: carouselHeight }]}>
             <View style={[styles.carouselHeader, { borderBottomColor: theme.border }]}>
               <Text style={[styles.carouselTitle, { color: theme.text }]}>
-                {t('reporte_piezas_danadas_view.fotos_title')}
+                {carouselTitulo}
               </Text>
               <TouchableOpacity onPress={() => setShowCarousel(false)}>
                 <MaterialCommunityIcons name="close" size={24} color={theme.text} />
@@ -466,17 +471,44 @@ export default function reporte_piezas_danadas_view_Screen() {
   // Campos que muestra el detalle de un reporte.
   const camposDetalle = (item: any) => [
     { 'label': 'Codigo Registro', 'value': item.codigo, 'tipo_linea': 'linea' },
-    { 'label': 'Estatus', 'value': item.estatus, 'tipo_linea': 'linea' },
-    { 'label': 'Traspaso', 'value': item.codigo_traspaso, 'tipo_linea': 'linea' },
+    // Mismos fondos que en la lista: estatus con el color del backend; traspaso rojo
+    // si aún se puede reponer (enable_traspaso = 1) y verde si ya tiene traspaso.
+    { 'label': 'Estatus', 'value': item.estatus, 'tipo_linea': 'linea', 'bg_color': item.color },
+    { 'label': 'Traspaso', 'value': item.codigo_traspaso || 'N/A', 'tipo_linea': 'linea', 'bg_color': Number(item.enable_traspaso) === 1 ? 'red' : 'green' },
     { 'label': 'Cirugía', 'value': item.codigo_cirugia, 'tipo_linea': 'multi_linea' },
     { 'label': 'Activo Origen', 'value': item.codigo_set, 'tipo_linea': 'multi_linea' },
     { 'label': 'Referencia', 'value': item.referencia, 'tipo_linea': 'linea' },
     { 'label': 'Lote', 'value': item.lote, 'tipo_linea': 'linea' },
     { 'label': 'Notas', 'value': item.comentarios, 'tipo_linea': 'multi_linea' },
-    { 'label': 'Reposición Referencia', 'value':item.reposicion_referencia , 'tipo_linea': 'linea' },
-    { 'label': 'Reposición Lote', 'value':item.reposicion_lote , 'tipo_linea': 'linea' },
-    { 'label': 'Reposición Comentarios', 'value':item.reposicion_comentarios , 'tipo_linea': 'multi_linea' }
+    { 'label': 'Reposición Referencia', 'value': item.reposicion_referencia, 'tipo_linea': 'linea' },
+    { 'label': 'Reposición Lote', 'value': item.reposicion_lote, 'tipo_linea': 'linea' },
+    { 'label': 'Reposición Comentarios', 'value': item.reposicion_comentarios, 'tipo_linea': 'multi_linea' }
   ];
+
+  // Sección de fotos (solo consulta): cada fila abre el carrusel de esa misma lista.
+  const renderSeccionFotos = (titulo: string, fotos: any[], mostrarVacio: boolean) => {
+    if (fotos.length === 0 && !mostrarVacio) return null;
+    return (
+      <View style={{ marginTop: 15 }}>
+        <Text style={[styles.label, { color: theme.text }]}>{titulo}</Text>
+        {fotos.length === 0 ? (
+          <Text style={{ color: theme.textSub, fontSize: 13, marginBottom: 10 }}>
+            {t('reporte_piezas_danadas_view.empty_fotos')}
+          </Text>
+        ) : (
+          fotos.map((foto: any, fIndex: number) => (
+            // Toda la fila (icono y nombre) abre el carrusel de fotos.
+            <TouchableOpacity key={"foto_" + String(foto.id_foto) + "_" + fIndex} style={styles.fileRow} onPress={() => verFotosDeReporte(fotos, titulo)}>
+              <MaterialCommunityIcons name="image" size={20} color={theme.accent} />
+              <Text style={{ color: theme.text, flex: 1 }} numberOfLines={1}>
+                {(foto.url || '').split('/').pop() || `Imagen_${fIndex + 1}.jpg`}
+              </Text>
+            </TouchableOpacity>
+          ))
+        )}
+      </View>
+    );
+  };
 
   // Fotos (solo consulta), debajo de los campos del detalle.
   const renderExtrasDetalle = (item: any) => (
@@ -492,22 +524,17 @@ export default function reporte_piezas_danadas_view_Screen() {
         </TouchableOpacity>
       )}
 
-      <Text style={[styles.label, { color: theme.text }]}>{t('reporte_piezas_danadas_view.fotos_title')}</Text>
+      {renderSeccionFotos(
+        t('reporte_piezas_danadas_view.fotos_title'),
+        fotosDelItem(item).filter((f: any) => !esFotoReposicion(f)),
+        true
+      )}
 
-      {(!Array.isArray(item.fotos) || item.fotos.length === 0) ? (
-        <Text style={{ color: theme.textSub, fontSize: 13, marginBottom: 10 }}>
-          {t('reporte_piezas_danadas_view.empty_fotos')}
-        </Text>
-      ) : (
-        item.fotos.map((foto: any, fIndex: number) => (
-          // Toda la fila (icono y nombre) abre el carrusel de fotos.
-          <TouchableOpacity key={"foto_" + fIndex} style={styles.fileRow} onPress={() => verFotosDeReporte(item)}>
-            <MaterialCommunityIcons name="image" size={20} color={theme.accent} />
-            <Text style={{ color: theme.text, flex: 1 }} numberOfLines={1}>
-              {(foto.url || '').split('/').pop() || `Imagen_${fIndex + 1}.jpg`}
-            </Text>
-          </TouchableOpacity>
-        ))
+      {/* Solo aparece si el reporte ya tiene fotos de reposición. */}
+      {renderSeccionFotos(
+        t('reporte_piezas_danadas_view.fotos_reposicion_title'),
+        fotosDelItem(item).filter(esFotoReposicion),
+        false
       )}
 
     </View>
@@ -537,6 +564,7 @@ export default function reporte_piezas_danadas_view_Screen() {
           <View style={{ flex: 1, paddingRight: 5 }}>
             {/* Primer Renglón */}
             <View>
+              
               <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text style={{
                   color: theme.text,
@@ -545,16 +573,7 @@ export default function reporte_piezas_danadas_view_Screen() {
                 }}>
                   {item.codigo}
                 </Text>
-                <View style={{ borderRadius: 10, padding: 5, backgroundColor: item.color }}>
-                  <Text style={{
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: 11,
 
-                  }}>
-                    {item.estatus}
-                  </Text>
-                </View>
               </View>
               <Text style={{
                 color: theme.text,
@@ -562,6 +581,7 @@ export default function reporte_piezas_danadas_view_Screen() {
               }}>
                 {item.codigo_cirugia}
               </Text>
+              
             </View>
 
             {/* Segundo Renglón */}
@@ -580,21 +600,27 @@ export default function reporte_piezas_danadas_view_Screen() {
                 {item.lote}
               </Text>
             </View>
-            {/* Segundo Renglón */}
-            <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'flex-start' }}>
-              <Text style={{
-                color: theme.text,
-                fontSize: 12,
-                fontStyle: 'italic'
-              }}>
-                Traspaso:                 
-              </Text>    
-              <Text style={{
-                color: item.enable_traspaso ? theme.text : theme.accent,
-                fontSize: 12,
-                fontStyle: 'italic'
-              }}>{item.codigo_traspaso || 'N/A'}</Text>              
-            </View>
+
+            <View style={{ marginTop: 2, flexDirection: 'row', justifyContent: 'space-between' }}>
+                <View style={{ borderRadius: 10, paddingVertical: 5, paddingHorizontal: 10, backgroundColor: item.color }}>
+                  <Text style={{
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: 12,
+
+                  }}>
+                    {item.estatus}
+                  </Text>
+                </View>
+                <View style={{ borderRadius: 10, paddingVertical: 5, paddingHorizontal: 10, backgroundColor: Number(item.enable_traspaso)===1 ? 'red' : 'green' }}>
+                  <Text style={{
+                    color: 'white',
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                  }}>{item.codigo_traspaso || 'N/A'}</Text>
+                </View>
+              </View>
+           
           </View>
         }
         isOpen={false}
